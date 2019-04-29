@@ -46,12 +46,15 @@ if __name__ == '__main__':
         with open(opts.vocab, 'rb') as f:
             vocab = pickle.load(f)
             max_len = opts.max_len
-
-
+    print("max length ", max_len)
+    print("done with vocab")
     #ohf = OneHotFeaturizer(vocab=vocab, padlength=max_len + 5)
     #oh_smiles = ohf.featurize(smiles)
 
-    oh_smiles = np.array([convert_to_embed(smi) for smi in tqdm(smiles)])
+    sd = []
+    for smi in tqdm(smiles):
+        sd.append(convert_to_embed(smi))
+    oh_smiles = np.array(sd)
     print(oh_smiles.shape)
 
 
