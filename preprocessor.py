@@ -40,10 +40,10 @@ if __name__ == '__main__':
         vocab = { c : v for v, c in enumerate(vocab)}
 
 
-        with open(opts.out + "vocab.pkl", 'w') as f:
+        with open(opts.out + "vocab.pkl", 'wb') as f:
             pickle.dump(vocab, f)
     else:
-        with open(opts.vocab, 'r') as f:
+        with open(opts.vocab, 'rb') as f:
             vocab = pickle.load(f)
             max_len = opts.max_len
 
