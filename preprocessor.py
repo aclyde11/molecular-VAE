@@ -63,4 +63,4 @@ if __name__ == '__main__':
     print(oh_smiles.shape)
 
 
-    np.savez("out.npz", arr=oh_smiles)
+    np.save("out", arr=oh_smiles)
