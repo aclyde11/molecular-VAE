@@ -26,6 +26,7 @@ if __name__ == '__main__':
     max_len = 0
     smiles = []
 
+
     if opts.vocab is None:
         with open(opts.train_path) as f:
             for smi in tqdm(f):
@@ -43,6 +44,10 @@ if __name__ == '__main__':
         with open(opts.out + "vocab.pkl", 'wb') as f:
             pickle.dump(vocab, f)
     else:
+        with open(opts.train_path) as f:
+            for smi in tqdm(f):
+                smi = smi.rstrip()
+                smiles.append(smi)
         with open(opts.vocab, 'rb') as f:
             vocab = pickle.load(f)
             max_len = opts.max_len
