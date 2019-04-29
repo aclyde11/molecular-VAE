@@ -32,13 +32,14 @@ if __name__ == '__main__':
 
     vocab.add(' ')
     vocab = list(vocab)
+    vocab = { c : v for v, c in enumerate(vocab)}
 
 
 
     #ohf = OneHotFeaturizer(vocab=vocab, padlength=max_len + 5)
     #oh_smiles = ohf.featurize(smiles)
 
-    oh_smiles = np.array([convert_to_embed(smi) for smi in smiles])
+    oh_smiles = np.array([convert_to_embed(smi) for smi in tqdm(smiles)])
     print(oh_smiles.shape)
 
 
