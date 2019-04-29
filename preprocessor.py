@@ -63,4 +63,4 @@ if __name__ == '__main__':
     print(oh_smiles.shape)
 
 
-    np.savez_compressed('output.npz', arr=oh_smiles)
+    np.savez("out.npz", arr=oh_smiles)
