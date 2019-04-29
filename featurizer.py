@@ -1,15 +1,12 @@
 import numpy as np
 
-CHARSET = [' ', '#', '(', ')', '+', '-', '/', '1', '2', '3', '4', '5', '6', '7',
-        '8', '=', '@', 'B', 'C', 'F', 'H', 'I', 'N', 'O', 'P', 'S', '[', '\\', ']',
-        'c', 'l', 'n', 'o', 'r', 's']
-
 class OneHotFeaturizer(object):
-    def __init__(self, charset=CHARSET, padlength=120):
-        self.charset = CHARSET
+    def __init__(self, charset, padlength):
+        self.charset = charset
         self.pad_length = padlength
 
     def featurize(self, smiles):
+
         return np.array([self.one_hot_encode(smi) for smi in smiles])
 
     def one_hot_array(self, i):
@@ -37,4 +34,4 @@ class OneHotFeaturizer(object):
         return z1
 
     def decode_smiles_from_index(self, vec):
-        return ''.join(map(lambda x: CHARSET[x], vec)).strip()
+        return ''.join(map(lambda x: self.charset[x], vec)).strip()
