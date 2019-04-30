@@ -9,7 +9,16 @@ import pandas as pd
 import pickle
 from tqdm import tqdm
 
+def onehot_initialization_v2(a):
+    ncols = len(vocab)
+    out = np.zeros( (a.size,ncols), dtype=np.uint8)
+    out[np.arange(a.size),a.ravel()] = 1
+    out.shape = a.shape + (ncols,)
+    return out
+
 def loss_function(recon_x, x, mu, logvar):
+    x = onehot_initialization_v2(x)
+    print(x.shape)
     BCE = F.cross_entropy(recon_x, x, size_average=False)
     KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
     return BCE + KLD
@@ -44,6 +53,8 @@ epochs = 100
 model = MolecularVAE(max_len=max_len, word_embedding_size=50, vocab_size=len(vocab)).cuda()
 model = nn.DataParallel(model)
 optimizer = optim.Adam(model.parameters())
+
+
 
 def train(epoch):
     model.train()
