@@ -38,7 +38,7 @@ class MolecularVAE(nn.Module):
         self.max_len = max_len
         self.word_embedding_size = word_embedding_size
         self.vocab_size = vocab_size
-        print("VOCAB SIZE " , len(vocab_size))
+        print("VOCAB SIZE " , vocab_size)
 
         self.embedding = nn.Embedding(vocab_size, word_embedding_size)
         self.linear = TimeDistributed(nn.Linear(h_size, vocab_size))
