@@ -10,7 +10,7 @@ import pickle
 from tqdm import tqdm
 
 def loss_function(recon_x, x, mu, logvar):
-    BCE = torch.nn.cross_entropy(recon_x, x, size_average=False)
+    BCE = F.cross_entropy(recon_x, x, size_average=False)
     KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
     return BCE + KLD
 
