@@ -21,7 +21,7 @@ df = pd.read_csv("/vol/ml/aclyde/ZINC/zinc_cleaned.smi", header=None)
 max_len = 0
 vocab = set()
 for i in tqdm(df.itertuples(index=False)):
-    for c in i:
+    for c in i[0]:
         vocab.add(c)
     max_len = max(max_len, len(i))
 
