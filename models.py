@@ -42,13 +42,13 @@ class MolecularVAE(nn.Module):
         self.embedding = nn.Embedding(vocab_size, word_embedding_size)
         self.linear = TimeDistributed(nn.Linear(word_embedding_size, vocab_size))
 
-        self.conv1d1 = nn.Conv1d(word_embedding_size, 9, kernel_size=20)
-        self.conv1d2 = nn.Conv1d(9, 9, kernel_size=9)
-        self.conv1d3 = nn.Conv1d(9, 10, kernel_size=11)
-        self.conv1d4 = nn.Conv1d(10, 10, kernel_size=10)
-        self.conv1d5 = nn.Conv1d(10, 10, kernel_size=10)
+        self.conv1d1 = nn.Conv1d(word_embedding_size, 9, kernel_size=30)
+        self.conv1d2 = nn.Conv1d(9, 9, kernel_size=30)
+        self.conv1d3 = nn.Conv1d(9, 10, kernel_size=20)
+        self.conv1d4 = nn.Conv1d(10, 10, kernel_size=20)
+        self.conv1d5 = nn.Conv1d(10, 10, kernel_size=20)
 
-        self.fc0 = nn.Linear(195, 435)
+        self.fc0 = nn.Linear(180, 435)
         self.fc11 = nn.Linear(435, latent_size)
         self.fc12 = nn.Linear(435, latent_size)
 
