@@ -45,8 +45,8 @@ class MolecularVAE(nn.Module):
         self.conv1d1 = nn.Conv1d(word_embedding_size, 9, kernel_size=20)
         self.conv1d2 = nn.Conv1d(9, 9, kernel_size=9)
         self.conv1d3 = nn.Conv1d(9, 10, kernel_size=11)
-        self.conv1d3 = nn.Conv1d(10, 10, kernel_size=10)
-        self.conv1d3 = nn.Conv1d(10, 10, kernel_size=10)
+        self.conv1d4 = nn.Conv1d(10, 10, kernel_size=10)
+        self.conv1d5 = nn.Conv1d(10, 10, kernel_size=10)
 
         self.fc0 = nn.Linear(195, 435)
         self.fc11 = nn.Linear(435, latent_size)
@@ -60,6 +60,9 @@ class MolecularVAE(nn.Module):
         h = F.relu(self.conv1d1(x.permute(0,2,1)))
         h = F.relu(self.conv1d2(h))
         h = F.relu(self.conv1d3(h))
+        h = F.relu(self.conv1d4(h))
+        h = F.relu(self.conv1d5(h))
+
         h = h.view(h.size(0), -1)
         h = F.selu(self.fc0(h))
         return self.fc11(h), self.fc12(h)
