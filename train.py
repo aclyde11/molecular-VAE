@@ -22,7 +22,7 @@ df_train = df[~msk]
 df_test = df[~msk]
 
 max_len = 255
-vocab = pickle.load(open("vocab.pkl", 'wb'))
+vocab = pickle.load(open("outvocab.pkl", 'wb'))
 
 train_dataset = MoleLoader(df_train, vocab, max_len)
 test_dataset  = MoleLoader(df_test, vocab, max_len)
