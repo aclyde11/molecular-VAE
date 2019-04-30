@@ -26,6 +26,7 @@ for i in tqdm(df.itertuples(index=False)):
     max_len = max(max_len, len(i))
 
 vocab = {c : i for i, c in enumerate(list(vocab))}
+print(vocab)
 msk = np.random.rand(len(df)) < 0.8
 df_train = df[~msk]
 df_test = df[~msk]
