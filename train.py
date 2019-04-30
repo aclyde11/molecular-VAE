@@ -34,8 +34,8 @@ max_len = 255
 
 train_dataset = MoleLoader(df_train, vocab, max_len)
 test_dataset  = MoleLoader(df_test, vocab, max_len)
-train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=250, shuffle=True, num_workers = 64, pin_memory = True)
-test_loader  = torch.utils.data.DataLoader(test_dataset, batch_size=250, shuffle=True, num_workers =  64, pin_memory = True)
+train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=250, shuffle=True, num_workers = 0, pin_memory = True)
+test_loader  = torch.utils.data.DataLoader(test_dataset, batch_size=250, shuffle=True, num_workers =  0, pin_memory = True)
 torch.manual_seed(42)
 
 epochs = 100
