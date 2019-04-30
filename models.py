@@ -32,7 +32,7 @@ class TimeDistributed(nn.Module):
         return y
 
 class MolecularVAE(nn.Module):
-    def __init__(self, max_len, word_embedding_size, vocab_size, latent_size=292):
+    def __init__(self, max_len, word_embedding_size, vocab_size, h_size = 501, latent_size=292):
         super(MolecularVAE, self).__init__()
 
         self.max_len = max_len
@@ -40,7 +40,7 @@ class MolecularVAE(nn.Module):
         self.vocab_size = vocab_size
 
         self.embedding = nn.Embedding(vocab_size, word_embedding_size)
-        self.linear = TimeDistributed(nn.Linear(word_embedding_size, vocab_size))
+        self.linear = TimeDistributed(nn.Linear(h_size, vocab_size))
 
         self.conv1d1 = nn.Conv1d(word_embedding_size, 9, kernel_size=30)
         self.conv1d2 = nn.Conv1d(9, 9, kernel_size=30)
@@ -53,7 +53,7 @@ class MolecularVAE(nn.Module):
         self.fc12 = nn.Linear(500, latent_size)
 
         self.fc2 = nn.Linear(latent_size, latent_size)
-        self.gru = nn.GRU(latent_size, 501, 3, batch_first=True)
+        self.gru = nn.GRU(latent_size, h_size, 3, batch_first=True)
 
 
     def encode(self, x):
@@ -65,7 +65,6 @@ class MolecularVAE(nn.Module):
         h = F.relu(self.conv1d5(h))
 
         h = h.view(bs[0], -1)
-        print("h ", h.shape)
         h = F.selu(self.fc0(h))
         return self.fc11(h), self.fc12(h)
 
@@ -82,8 +81,6 @@ class MolecularVAE(nn.Module):
         z = F.selu(self.fc2(z))
         z = z.view(z.size(0), 1, z.size(-1)).repeat(1, self.max_len, 1)
         out, _ = self.gru(z)
-        print(out.shape)
-
         out = self.linear(out)
         return out
 
