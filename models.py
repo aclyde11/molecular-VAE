@@ -57,7 +57,7 @@ class MolecularVAE(nn.Module):
 
 
     def encode(self, x):
-        h = F.relu(self.conv1d1(x))
+        h = F.relu(self.conv1d1(x.permute(0,2,1)))
         h = F.relu(self.conv1d2(h))
         h = F.relu(self.conv1d3(h))
         h = h.view(h.size(0), -1)
