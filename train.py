@@ -24,7 +24,7 @@ for i in tqdm(df.itertuples(index=False)):
     for c in i[0]:
         vocab.add(c)
     max_len = max(max_len, len(i))
-
+vocab.add(' ')
 vocab = {c : i for i, c in enumerate(list(vocab))}
 print(vocab)
 msk = np.random.rand(len(df)) < 0.8
