@@ -38,6 +38,7 @@ class MolecularVAE(nn.Module):
         self.max_len = max_len
         self.word_embedding_size = word_embedding_size
         self.vocab_size = vocab_size
+        print("VOCAB SIZE " , len(vocab_size))
 
         self.embedding = nn.Embedding(vocab_size, word_embedding_size)
         self.linear = TimeDistributed(nn.Linear(h_size, vocab_size))
@@ -82,6 +83,7 @@ class MolecularVAE(nn.Module):
         z = z.view(z.size(0), 1, z.size(-1)).repeat(1, self.max_len, 1)
         out, _ = self.gru(z)
         out = self.linear(out)
+        print(out.shape)
         return out
 
     def forward(self, x):
