@@ -82,6 +82,8 @@ class MolecularVAE(nn.Module):
         z = F.selu(self.fc2(z))
         z = z.view(z.size(0), 1, z.size(-1)).repeat(1, self.max_len, 1)
         out, _ = self.gru(z)
+        print(out.shape)
+
         out = self.linear(out)
         return out
 
