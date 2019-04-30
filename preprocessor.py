@@ -48,9 +48,10 @@ if __name__ == '__main__':
             for smi in tqdm(f):
                 smi = smi.rstrip()
                 smiles.append(smi)
+                max_len = max(len(smi), max_len)
+
         with open(opts.vocab, 'rb') as f:
             vocab = pickle.load(f)
-            max_len = opts.max_len
     print("max length ", max_len)
     print("done with vocab")
     #ohf = OneHotFeaturizer(vocab=vocab, padlength=max_len + 5)
