@@ -7,7 +7,7 @@ from data_loader import MoleLoader
 from models import MolecularVAE
 import pandas as pd
 import pickle
-
+from tqdm import tqdm
 
 def loss_function(recon_x, x, mu, logvar):
     BCE = torch.cross_entropy(recon_x, x, size_average=False)
@@ -17,6 +17,15 @@ def loss_function(recon_x, x, mu, logvar):
 
 
 df = pd.read_csv("/vol/ml/aclyde/ZINC/zinc_cleaned.smi", header=None)
+
+max_len = 0
+vocab = set()
+for i in tqdm(df.itertuples(index=False)):
+    for c in i:
+        vocab.add(c)
+    max_len = max(max_len, len(i))
+
+vocab = {c : i for i, c in enumerate(list(vocab))}
 msk = np.random.rand(len(df)) < 0.8
 df_train = df[~msk]
 df_test = df[~msk]
@@ -32,7 +41,7 @@ torch.manual_seed(42)
 
 epochs = 100
 
-model = MolecularVAE().cuda()
+model = MolecularVAE(max_len=max_len, word_embedding_size=50, vocab_size=len(vocab)).cuda()
 model = nn.DataParallel(model)
 optimizer = optim.Adam(model.parameters())
 
