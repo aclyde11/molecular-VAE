@@ -59,6 +59,7 @@ if __name__ == '__main__':
     sd = []
     for smi in tqdm(smiles):
         sd.append(convert_to_embed(smi))
+    print(sd[0])
     oh_smiles = np.array(sd)
     print(oh_smiles.shape)
 
