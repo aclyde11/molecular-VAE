@@ -26,7 +26,7 @@ def loss_function(recon_x, x, mu, logvar):
     x = x.contiguous().view(-1)
 
 
-    BCE = nn.CrossEntropyLoss(recon_x, x)
+    BCE = nn.CrossEntropyLoss(recon_x, x, reduce='sum')
     KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
     return BCE + KLD
 
