@@ -23,7 +23,7 @@ def loss_function(recon_x, x, mu, logvar):
     print("then ", recon_x.shape, x.shape)
 
     recon_x = recon_x.contiguous().view(-1, len(vocab))
-    x = x.view(-1)
+    x = x.contiguous().view(-1)
 
 
     BCE = nn.CrossEntropyLoss(recon_x, x)
