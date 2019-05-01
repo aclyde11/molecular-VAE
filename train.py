@@ -20,9 +20,10 @@ def loss_function(recon_x, x, mu, logvar):
     print("ORIGN ", recon_x.shape, x.shape)
     recon_x = recon_x.permute(1, 0, 2)
     x = x.permute(1,0)
+    print("then ", recon_x.shape, x.shape)
+
     recon_x = recon_x.contiguous().view(-1, len(vocab))
     x = x.view(-1)
-    print("then ", recon_x.shape, x.shape)
 
 
     BCE = nn.CrossEntropyLoss(recon_x, x)
