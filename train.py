@@ -17,9 +17,13 @@ def onehot_initialization_v2(a):
     return out
 
 def loss_function(recon_x, x, mu, logvar):
+    print("ORIGN ", recon_x.shape, x.shape)
     recon_x = recon_x.permute(1, 0, 2)
+    x = x.permute(1,0)
     recon_x = recon_x.view(-1, len(vocab))
     x = x.view(-1)
+    print("then ", recon_x.shape, x.shape)
+
 
     BCE = nn.CrossEntropyLoss(recon_x, x)
     KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
