@@ -11,7 +11,7 @@ from tqdm import tqdm
 
 def onehot_initialization_v2(a):
     ncols = len(vocab)
-    out = np.zeros( (a.size,ncols), dtype=np.uint8)
+    out = np.zeros( (a.size(),ncols), dtype=np.uint8)
     out[np.arange(a.size),a.ravel()] = 1
     out.shape = a.shape + (ncols,)
     return out
