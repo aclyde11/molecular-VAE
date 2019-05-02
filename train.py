@@ -111,3 +111,8 @@ def test(epoch):
 for epoch in range(1, epochs + 1):
     train_loss = train(epoch)
     test(epoch)
+
+    torch.save( { 'model_state_dict' : model.module.state_dict(),
+                  'optimizer_state_dict' : optimizer.state_dict(),
+                  'epoch' : epoch
+    }, "save.pt")
