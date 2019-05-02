@@ -17,11 +17,8 @@ def onehot_initialization_v2(a):
     return out
 
 def loss_function(recon_x, x, mu, logvar):
-    print("ORIGN ", recon_x.shape, x.shape)
     recon_x = recon_x.permute(1, 0, 2)
     x = x.permute(1,0)
-    print("then ", recon_x.shape, x.shape)
-
     recon_x = recon_x.contiguous().view(-1, len(vocab))
     x = x.contiguous().view(-1)
 
@@ -51,8 +48,8 @@ max_len = 255
 lossf = nn.CrossEntropyLoss()
 train_dataset = MoleLoader(df_train, vocab, max_len)
 test_dataset  = MoleLoader(df_test, vocab, max_len)
-train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=250, shuffle=True, num_workers = 0, pin_memory = True)
-test_loader  = torch.utils.data.DataLoader(test_dataset, batch_size=250, shuffle=True, num_workers =  0, pin_memory = True)
+train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=1024, shuffle=True, num_workers = 32, pin_memory = True)
+test_loader  = torch.utils.data.DataLoader(test_dataset, batch_size=1024, shuffle=True, num_workers =  32, pin_memory = True)
 torch.manual_seed(42)
 
 epochs = 100

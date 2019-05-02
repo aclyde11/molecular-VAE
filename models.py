@@ -83,7 +83,6 @@ class MolecularVAE(nn.Module):
         z = z.view(z.size(0), 1, z.size(-1)).repeat(1, self.max_len, 1)
         out, _ = self.gru(z)
         out = self.linear(out)
-        print(out.shape)
         return out
 
     def forward(self, x):
