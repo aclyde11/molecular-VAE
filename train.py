@@ -26,7 +26,7 @@ def loss_function(recon_x, x, mu, logvar):
     x = x.contiguous().view(-1)
 
 
-    BCE = nn.CrossEntropyLoss(recon_x, x, reduce='sum')
+    BCE = lossf(recon_x, x)
     KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
     return BCE + KLD
 
@@ -48,7 +48,7 @@ df_train = df[~msk]
 df_test = df[~msk]
 
 max_len = 255
-
+lossf = nn.CrossEntropyLoss()
 train_dataset = MoleLoader(df_train, vocab, max_len)
 test_dataset  = MoleLoader(df_test, vocab, max_len)
 train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=250, shuffle=True, num_workers = 0, pin_memory = True)
