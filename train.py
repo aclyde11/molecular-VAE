@@ -56,7 +56,7 @@ epochs = 100
 
 model = MolecularVAE(max_len=max_len, word_embedding_size=50, vocab_size=len(vocab)).cuda()
 model = nn.DataParallel(model)
-optimizer = optim.Adam(model.parameters(), lr=0.01)
+optimizer = optim.Adam(model.parameters(), lr=3e-3)
 
 
 
