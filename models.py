@@ -32,7 +32,7 @@ class TimeDistributed(nn.Module):
         return y
 
 class MolecularVAE(nn.Module):
-    def __init__(self, max_len, word_embedding_size, vocab_size, h_size = 501, latent_size=292):
+    def __init__(self, max_len, word_embedding_size, vocab_size, h_size = 501, latent_size=512):
         super(MolecularVAE, self).__init__()
 
         self.max_len = max_len

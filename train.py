@@ -61,7 +61,7 @@ epochs = 100
 
 model = MolecularVAE(max_len=max_len, word_embedding_size=50, vocab_size=len(vocab)).cuda()
 model = nn.DataParallel(model)
-optimizer = optim.Adam(model.parameters(), lr=3e-3)
+optimizer = optim.Adam(model.parameters(), lr=1.0e-3 * 16.0)
 
 log_interval = 100
 
@@ -76,6 +76,8 @@ def train(epoch):
 
         loss = loss_function(recon_batch, data, mu, logvar)
         loss.backward()
+        torch.nn.utils.clip_grad_norm(model.parameters(), 5.0)
+
         train_loss += loss
         optimizer.step()
         if batch_idx % log_interval == 0:
