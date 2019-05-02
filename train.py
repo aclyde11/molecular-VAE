@@ -32,13 +32,18 @@ def loss_function(recon_x, x, mu, logvar):
 df = pd.read_csv("/vol/ml/aclyde/ZINC/zinc_cleaned.smi", header=None)
 
 max_len = 0
+
+
 vocab = set()
 for i in tqdm(df.itertuples(index=False)):
     for c in i[0]:
         vocab.add(c)
     max_len = max(max_len, len(i))
 vocab.add(' ')
+
+
 vocab = {c : i for i, c in enumerate(list(vocab))}
+charset = {i : c for i, c in enumerate(list(vocab))}
 print(vocab)
 msk = np.random.rand(len(df)) < 0.8
 df_train = df[~msk]
@@ -58,6 +63,7 @@ model = MolecularVAE(max_len=max_len, word_embedding_size=50, vocab_size=len(voc
 model = nn.DataParallel(model)
 optimizer = optim.Adam(model.parameters(), lr=3e-3)
 
+log_interval = 100
 
 
 def train(epoch):
@@ -72,7 +78,7 @@ def train(epoch):
         loss.backward()
         train_loss += loss
         optimizer.step()
-        if batch_idx % 100 == 0:
+        if batch_idx % log_interval == 0:
             print(f'train: {epoch} / {batch_idx}\t{loss:.4f}')
     print('train', train_loss / len(train_loader.dataset))
     return train_loss / len(train_loader.dataset)
@@ -84,6 +90,19 @@ def test(epoch):
         data = data.cuda()
         recon_batch, mu, logvar = model(data)
         test_loss += loss_function(recon_batch, data, mu, logvar).item()
+
+        if batch_idx % log_interval == 0:
+            _, preds = torch.max(recon_batch, dim=2)
+            preds = preds.cpu().numpy()
+            targets_copy = data.cpu().numpy()
+            for i in range(4):
+                sample = preds[i, ...]
+                target = targets_copy[i, ...]
+                print("ORIG: {}\nNEW : {}".format(
+                    "".join([charset[chars] for chars in target]),
+                    "".join([charset[chars] for chars in sample])
+                ))
+
     print('test', test_loss / len(test_loader))
     return test_loss
 
