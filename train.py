@@ -48,8 +48,8 @@ max_len = 255
 lossf = nn.CrossEntropyLoss()
 train_dataset = MoleLoader(df_train, vocab, max_len)
 test_dataset  = MoleLoader(df_test, vocab, max_len)
-train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=3072, shuffle=True, num_workers = 32, pin_memory = True)
-test_loader  = torch.utils.data.DataLoader(test_dataset, batch_size=3072, shuffle=True, num_workers =  32, pin_memory = True)
+train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=4096, shuffle=True, num_workers = 32, pin_memory = True)
+test_loader  = torch.utils.data.DataLoader(test_dataset, batch_size=4096, shuffle=True, num_workers =  32, pin_memory = True)
 torch.manual_seed(42)
 
 epochs = 100
@@ -73,7 +73,7 @@ def train(epoch):
         train_loss += loss
         optimizer.step()
         if batch_idx % 100 == 0:
-            print(f'{epoch} / {batch_idx}\t{loss:.4f}')
+            print(f'train: {epoch} / {batch_idx}\t{loss:.4f}')
     print('train', train_loss / len(train_loader.dataset))
     return train_loss / len(train_loader.dataset)
 
