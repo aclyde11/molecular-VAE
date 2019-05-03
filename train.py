@@ -38,7 +38,7 @@ vocab = set()
 for i in tqdm(df.itertuples(index=False)):
     for c in i[0]:
         vocab.add(c)
-    max_len = max(max_len, len(i))
+    max_len = max(max_len, i[0])
 vocab.add(' ')
 
 
