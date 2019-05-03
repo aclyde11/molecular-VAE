@@ -23,5 +23,5 @@ class MoleLoader(torch.utils.data.Dataset):
         smile = str(self.df.iloc[item, 0]).ljust(self.max_len, ' ')
         embedding = np.array([self.vocab[x] for x in smile])
         embedding = torch.LongTensor(embedding)
-
+        print(embedding.shape)
         return embedding
