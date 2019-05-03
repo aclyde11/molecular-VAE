@@ -43,30 +43,31 @@ class MolecularVAE(nn.Module):
         self.embedding = nn.Embedding(vocab_size, word_embedding_size)
         self.linear = TimeDistributed(nn.Linear(h_size, vocab_size))
 
-        self.conv1d1 = nn.Conv1d(word_embedding_size, 9, kernel_size=30)
-        self.conv1d2 = nn.Conv1d(9, 9, kernel_size=30)
-        self.conv1d3 = nn.Conv1d(9, 10, kernel_size=20)
-        self.conv1d4 = nn.Conv1d(10, 10, kernel_size=20)
-        self.conv1d5 = nn.Conv1d(10, 10, kernel_size=20)
+        self.conv1d1 = nn.Conv1d(word_embedding_size, 9, kernel_size=9)
+        self.conv1d2 = nn.Conv1d(9, 9, kernel_size=9)
+        self.conv1d3 = nn.Conv1d(9, 10, kernel_size=9)
+        # self.conv1d4 = nn.Conv1d(10, 10, kernel_size=9)
+        # self.conv1d5 = nn.Conv1d(10, 10, kernel_size=9)
 
-        self.fc0 = nn.Linear(10 * (max_len - 30 - 30 - 20 - 20 - 20 + 5), 500)
+        self.fc0 = nn.Linear(10 * (max_len - 9 - 9 - 9 - 9 - 9 + 3), 500)
         self.fc11 = nn.Linear(500, latent_size)
         self.fc12 = nn.Linear(500, latent_size)
 
         self.fc2 = nn.Linear(latent_size, latent_size)
         self.gru = nn.GRU(latent_size, h_size, 3, batch_first=True)
-
+        self.relu = nn.ReLU()
+        self.selu = nn.SELU()
 
     def encode(self, x):
         bs = x.shape
-        h = F.relu(self.conv1d1(x.permute(0,2,1)))
-        h = F.relu(self.conv1d2(h))
-        h = F.relu(self.conv1d3(h))
-        h = F.relu(self.conv1d4(h))
-        h = F.relu(self.conv1d5(h))
+        h = self.relu(self.conv1d1(x.permute(0,2,1)))
+        h = self.relu(self.conv1d2(h))
+        h = self.relu(self.conv1d3(h))
+        # h = self.relu(self.conv1d4(h))
+        # h = self.relu(self.conv1d5(h))
 
         h = h.view(bs[0], -1)
-        h = F.selu(self.fc0(h))
+        h = self.selu(self.fc0(h))
         return self.fc11(h), self.fc12(h)
 
     def reparametrize(self, mu, logvar):
@@ -79,7 +80,7 @@ class MolecularVAE(nn.Module):
             return mu
 
     def decode(self, z):
-        z = F.selu(self.fc2(z))
+        z = self.selu(self.fc2(z))
         z = z.view(z.size(0), 1, z.size(-1)).repeat(1, self.max_len, 1)
         out, _ = self.gru(z)
         out = self.linear(out)
