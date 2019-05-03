@@ -66,6 +66,7 @@ class MolecularVAE(nn.Module):
         h = F.relu(self.conv1d5(h))
 
         h = h.view(bs[0], -1)
+        print(h.shape)
         h = F.selu(self.fc0(h))
         return self.fc11(h), self.fc12(h)
 
