@@ -49,7 +49,7 @@ class MolecularVAE(nn.Module):
         # self.conv1d4 = nn.Conv1d(10, 10, kernel_size=9)
         # self.conv1d5 = nn.Conv1d(10, 10, kernel_size=9)
 
-        self.fc0 = nn.Linear(10 * (max_len - 9 - 9 - 9 - 9 - 9 + 3), 500)
+        self.fc0 = nn.Linear(680, 500)
         self.fc11 = nn.Linear(500, latent_size)
         self.fc12 = nn.Linear(500, latent_size)
 
