@@ -30,7 +30,7 @@ def loss_function(recon_x, x, mu, logvar):
 
 
 df = pd.read_csv("/vol/ml/aclyde/ZINC/zinc_cleaned.smi", header=None)
-
+df = df.iloc[0:2000000,:]
 max_len = 0
 
 
@@ -49,7 +49,7 @@ msk = np.random.rand(len(df)) < 0.8
 df_train = df[~msk]
 df_test = df[~msk]
 
-max_len = 255
+max_len += 2
 lossf = nn.CrossEntropyLoss()
 train_dataset = MoleLoader(df_train, vocab, max_len)
 test_dataset  = MoleLoader(df_test, vocab, max_len)
