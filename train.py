@@ -30,7 +30,7 @@ def loss_function(recon_x, x, mu, logvar):
 
 
 df = pd.read_csv("/vol/ml/aclyde/ZINC/zinc_cleaned.smi", header=None)
-df = df.iloc[0:2000000,:]
+df = df.iloc[0:150000,:]
 max_len = 0
 
 
@@ -53,13 +53,13 @@ max_len += 2
 lossf = nn.CrossEntropyLoss()
 train_dataset = MoleLoader(df_train, vocab, max_len)
 test_dataset  = MoleLoader(df_test, vocab, max_len)
-train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=256, shuffle=True, num_workers = 32, pin_memory = True)
-test_loader  = torch.utils.data.DataLoader(test_dataset, batch_size=256, shuffle=True, num_workers =  32, pin_memory = True)
+train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=600, shuffle=True, num_workers = 32, pin_memory = True)
+test_loader  = torch.utils.data.DataLoader(test_dataset, batch_size=600, shuffle=True, num_workers =  32, pin_memory = True)
 torch.manual_seed(42)
 
 epochs = 100
 
-model = MolecularVAE(max_len=max_len, word_embedding_size=50, vocab_size=len(vocab)).cuda()
+model = MolecularVAE(max_len=max_len, word_embedding_size=70, vocab_size=len(vocab)).cuda()
 #model = nn.DataParallel(model)
 optimizer = optim.Adam(model.parameters(), lr=8.5e-4)
 
