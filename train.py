@@ -114,5 +114,7 @@ for epoch in range(1, epochs + 1):
 
     torch.save( { 'model_state_dict' : model.state_dict(),
                   'optimizer_state_dict' : optimizer.state_dict(),
-                  'epoch' : epoch
+                  'epoch' : epoch,
+                  'charset' : charset,
+                  'max_len' : max_len
     }, "save.pt")
