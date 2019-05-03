@@ -60,7 +60,7 @@ torch.manual_seed(42)
 epochs = 100
 
 model = MolecularVAE(max_len=max_len, word_embedding_size=50, vocab_size=len(vocab)).cuda()
-model = nn.DataParallel(model)
+#model = nn.DataParallel(model)
 optimizer = optim.Adam(model.parameters(), lr=1.0e-3)
 
 log_interval = 100
@@ -112,7 +112,7 @@ for epoch in range(1, epochs + 1):
     train_loss = train(epoch)
     test(epoch)
 
-    torch.save( { 'model_state_dict' : model.module.state_dict(),
+    torch.save( { 'model_state_dict' : model.state_dict(),
                   'optimizer_state_dict' : optimizer.state_dict(),
                   'epoch' : epoch
     }, "save.pt")
