@@ -10,7 +10,7 @@ class MoleLoader(torch.utils.data.Dataset):
         self.df = df
         self.vocab = vocab
         self.max_len = max_len
-        self.one_hot_encoder =  OneHotEncoder(categories=[list(range(len(vocab)))], handle_unknown='error')
+        self.one_hot_encoder =  OneHotEncoder(categories=[list(range(len(vocab)))], handle_unknown='error', sparse=False)
 
 
 

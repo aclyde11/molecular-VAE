@@ -72,10 +72,11 @@ log_interval = 100
 def train(epoch):
     model.train()
     train_loss = 0
-    for batch_idx, data in enumerate(train_loader):
+    for batch_idx, (data, ohe) in enumerate(train_loader):
         data = data.cuda()
+        ohe = ohe.cuda()
         optimizer.zero_grad()
-        recon_batch, mu, logvar = model(data)
+        recon_batch, mu, logvar = model(ohe)
 
         loss = loss_function(recon_batch, data, mu, logvar)
         loss.backward()
@@ -91,9 +92,11 @@ def train(epoch):
 def test(epoch):
     model.eval()
     test_loss = 0
-    for batch_idx, data in enumerate(test_loader):
+    for batch_idx, (data, ohe) in enumerate(test_loader):
         data = data.cuda()
-        recon_batch, mu, logvar = model(data)
+        ohe = ohe.cuda()
+
+        recon_batch, mu, logvar = model(ohe)
         test_loss += loss_function(recon_batch, data, mu, logvar).item()
 
         if batch_idx % log_interval == 0:
