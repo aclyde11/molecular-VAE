@@ -17,15 +17,13 @@ def onehot_initialization_v2(a):
     return out
 
 def loss_function(recon_x, x, mu, logvar):
-    # recon_x = recon_x.permute(1, 0, 2)
-    # x = x.permute(1,0)
-    # recon_x = recon_x.contiguous().view(-1, len(vocab))
-    # x = x.contiguous().view(-1)
-    #
-    #
-    # BCE = lossf(recon_x, x)
-    # KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
-    # return BCE + KLD
+    recon_x = recon_x.contiguous().view(-1, len(vocab))
+    x = x.contiguous().view(-1)
+
+
+    BCE = lossf(recon_x, x)
+    KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
+    return BCE + KLD
     BCE = lossf(recon_x, x)
     KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
     return BCE + KLD
