@@ -1,13 +1,32 @@
-import numpy as np
-from sklearn import model_selection
 import torch
-import torch.utils.data
-from torch import nn, optim
-from torch.nn import functional as F
+import torch.nn as nn
 from torch.autograd import Variable
+
+class Flatten(nn.Module):
+
+    def forward(self, x):
+        size = x.size()  # read in N, C, H, W
+        return x.view(size[0], -1)
+
+
+class Repeat(nn.Module):
+
+    def __init__(self, rep):
+        super(Repeat, self).__init__()
+
+        self.rep = rep
+
+    def forward(self, x):
+        size = tuple(x.size())
+        size = (size[0], 1) + size[1:]
+        x_expanded = x.view(*size)
+        n = [1 for _ in size]
+        n[1] = self.rep
+        return x_expanded.repeat(*n)
 
 
 class TimeDistributed(nn.Module):
+
     def __init__(self, module, batch_first=True):
         super(TimeDistributed, self).__init__()
         self.module = module
@@ -19,71 +38,121 @@ class TimeDistributed(nn.Module):
             return self.module(x)
 
         # Squash samples and timesteps into a single axis
-        x_reshape = x.contiguous().view(-1, x.size(-1))  # (samples * timesteps, input_size)
+        # (samples * timesteps, input_size)
+        x_reshape = x.contiguous().view(-1, x.size(-1))
 
         y = self.module(x_reshape)
 
         # We have to reshape Y
         if self.batch_first:
-            y = y.contiguous().view(x.size(0), -1, y.size(-1))  # (samples, timesteps, output_size)
+            # (samples, timesteps, output_size)
+            y = y.contiguous().view(x.size(0), -1, y.size(-1))
         else:
-            y = y.view(-1, x.size(1), y.size(-1))  # (timesteps, samples, output_size)
+            # (timesteps, samples, output_size)
+            y = y.view(-1, x.size(1), y.size(-1))
 
         return y
 
-class MolecularVAE(nn.Module):
-    def __init__(self, max_len, vocab_size, h_size = 501, latent_size=292):
-        super(MolecularVAE, self).__init__()
 
-        self.max_len = max_len
-        self.vocab_size = vocab_size
-        print("VOCAB SIZE " , vocab_size)
+class SELU(nn.Module):
 
-        self.linear = TimeDistributed(nn.Linear(h_size, vocab_size))
+    def __init__(self, alpha=1.6732632423543772848170429916717,
+                 scale=1.0507009873554804934193349852946, inplace=False):
+        super(SELU, self).__init__()
 
-        self.conv1d1 = nn.Conv1d(vocab_size, 9, kernel_size=9)
-        self.conv1d2 = nn.Conv1d(9, 9, kernel_size=9)
-        self.conv1d3 = nn.Conv1d(9, 10, kernel_size=9)
-        # self.conv1d4 = nn.Conv1d(10, 10, kernel_size=9)
-        # self.conv1d5 = nn.Conv1d(10, 10, kernel_size=9)
-
-        self.fc0 = nn.Linear(880, 500)
-        self.fc11 = nn.Linear(500, latent_size)
-        self.fc12 = nn.Linear(500, latent_size)
-
-        self.fc2 = nn.Linear(latent_size, latent_size)
-        self.gru = nn.GRU(latent_size, h_size, 3, batch_first=True)
-        self.relu = nn.ReLU()
-        self.selu = nn.SELU()
-
-    def encode(self, x):
-        bs = x.shape
-        h = self.relu(self.conv1d1(x.permute(0,2,1)))
-        h = self.relu(self.conv1d2(h))
-        h = self.relu(self.conv1d3(h))
-        # h = self.relu(self.conv1d4(h))
-        # h = self.relu(self.conv1d5(h))
-
-        h = h.view(bs[0], -1)
-        h = self.selu(self.fc0(h))
-        return self.fc11(h), self.fc12(h)
-
-    def reparametrize(self, mu, logvar):
-        if self.training:
-            std = torch.exp(logvar.mul(0.5))
-            eps = Variable(std.data.new(std.size()).normal_())
-            return eps.mul(std).add_(mu)
-        else:
-            return mu
-
-    def decode(self, z):
-        z = self.selu(self.fc2(z))
-        z = z.view(z.size(0), 1, z.size(-1)).repeat(1, self.max_len, 1)
-        out, _ = self.gru(z)
-        out = self.linear(out)
-        return out
+        self.scale = scale
+        self.elu = nn.ELU(alpha=alpha, inplace=inplace)
 
     def forward(self, x):
-        mu, logvar = self.encode(x)
-        z = self.reparametrize(mu, logvar)
-        return self.decode(z), mu, logvar
+        return self.scale * self.elu(x)
+
+
+def ConvSELU(i, o, kernel_size=3, padding=0, p=0.):
+    model = [nn.Conv1d(i, o, kernel_size=kernel_size, padding=padding),
+             SELU(inplace=True)
+             ]
+    if p > 0.:
+        model += [nn.Dropout(p)]
+    return nn.Sequential(*model)
+
+
+class Lambda(nn.Module):
+
+    def __init__(self, i=435, o=292, scale=1E-2):
+        super(Lambda, self).__init__()
+
+        self.scale = scale
+        self.z_mean = nn.Linear(i, o)
+        self.z_log_var = nn.Linear(i, o)
+
+    def forward(self, x):
+        self.mu = self.z_mean(x)
+        self.log_v = self.z_log_var(x)
+        eps = self.scale * Variable(torch.randn(*self.log_v.size())
+                                    ).type_as(self.log_v)
+        return self.mu + torch.exp(self.log_v / 2.) * eps, self.mu, self.logvar
+
+class MolecularVAE(nn.Module):
+    def __init__(self, max_len=120, latent_size=292, vocab_size=35):
+        super(MolecularVAE, self).__init__()
+
+        self.encoder = MolEncoder(max_len, latent_size, vocab_size)
+        self.decoder = MolDecoder(max_len, latent_size, vocab_size)
+
+    def forward(self, x):
+        x, mu, logvar = self.encoder(x)
+        return self.decoder(x), mu, logvar
+
+class MolEncoder(nn.Module):
+
+    def __init__(self, max_len=120, latent_size=292, vocab_size=35):
+        super(MolEncoder, self).__init__()
+
+        self.i = max_len
+
+        self.conv_1 = ConvSELU(vocab_size, 9, kernel_size=9)
+        self.conv_2 = ConvSELU(9, 9, kernel_size=9)
+        self.conv_3 = ConvSELU(9, 10, kernel_size=11)
+        self.dense_1 = nn.Sequential(nn.Linear((vocab_size - 29 + 3) * 10, 435),
+                                     SELU(inplace=True))
+
+        self.lmbd = Lambda(435, latent_size)
+
+    def forward(self, x):
+        out = self.conv_1(x)
+        out = self.conv_2(out)
+        out = self.conv_3(out)
+        out = Flatten()(out)
+        out = self.dense_1(out)
+
+        return self.lmbd(out)
+
+    def vae_loss(self, x_decoded_mean, x):
+        z_mean, z_log_var = self.lmbd.mu, self.lmbd.log_v
+
+        bce = nn.BCELoss(size_average=True)
+        xent_loss = self.i * bce(x_decoded_mean, x.detach())
+        kl_loss = -0.5 * torch.mean(1. + z_log_var - z_mean ** 2. -
+                                    torch.exp(z_log_var))
+
+        return kl_loss + xent_loss
+
+
+class MolDecoder(nn.Module):
+
+    def __init__(self, i=292, o=120, c=35):
+        super(MolDecoder, self).__init__()
+
+        self.latent_input = nn.Sequential(nn.Linear(i, i),
+                                          SELU(inplace=True))
+        self.repeat_vector = Repeat(o)
+        self.gru = nn.GRU(i, 501, 3, batch_first=True)
+        self.decoded_mean = TimeDistributed(nn.Sequential(nn.Linear(501, c),
+                                                          nn.Softmax())
+                                            )
+
+    def forward(self, x):
+        out = self.latent_input(x)
+        out = self.repeat_vector(out)
+        out, h = self.gru(out)
+        return self.decoded_mean(out)
