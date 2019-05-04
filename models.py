@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 
+
 class Flatten(nn.Module):
 
     def forward(self, x):
@@ -92,8 +93,9 @@ class Lambda(nn.Module):
                                     ).type_as(self.log_v)
         return self.mu + torch.exp(self.log_v / 2.) * eps, self.mu, self.log_v
 
+
 class MolecularVAE(nn.Module):
-    def __init__(self,  i=120, o=292, c=35):
+    def __init__(self, i=120, o=292, c=35):
         super(MolecularVAE, self).__init__()
 
         self.encoder = MolEncoder(i=i, o=o, c=c)
@@ -103,9 +105,10 @@ class MolecularVAE(nn.Module):
         x, mu, logvar = self.encoder(x)
         return self.decoder(x), mu, logvar
 
+
 class MolEncoder(nn.Module):
 
-    def __init__(self,  i=120, o=292, c=35):
+    def __init__(self, i=120, o=292, c=35):
         super(MolEncoder, self).__init__()
 
         self.i = i
