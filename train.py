@@ -19,14 +19,10 @@ def onehot_initialization_v2(a):
 def loss_function(recon_x, x, mu, logvar):
     recon_x = recon_x.contiguous().view(-1, len(vocab))
     x = x.contiguous().view(-1)
-
-
-    BCE = lossf(recon_x, x)
+    bce = nn.BCELoss(size_average=True)
+    xent_loss = max_len * bce(recon_x, x)
     KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
-    return BCE + KLD
-    BCE = lossf(recon_x, x)
-    KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
-    return BCE + KLD
+    return xent_loss + KLD
 
 
 
