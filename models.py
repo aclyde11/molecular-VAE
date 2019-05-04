@@ -110,7 +110,7 @@ class MolEncoder(nn.Module):
 
         self.i = max_len
 
-        self.conv_1 = ConvSELU(max_len, 9, kernel_size=9)
+        self.conv_1 = ConvSELU(35, 9, kernel_size=9)
         self.conv_2 = ConvSELU(9, 9, kernel_size=9)
         self.conv_3 = ConvSELU(9, 10, kernel_size=11)
         self.dense_1 = nn.Sequential(nn.Linear((max_len - 29 + 3) * 10, 435),
@@ -122,6 +122,7 @@ class MolEncoder(nn.Module):
         out = self.conv_1(x)
         out = self.conv_2(out)
         out = self.conv_3(out)
+        print(out.shape)
         out = Flatten()(out)
         out = self.dense_1(out)
 
