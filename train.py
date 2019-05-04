@@ -56,7 +56,7 @@ torch.manual_seed(42)
 
 epochs = 1000
 
-model = MolecularVAE(max_len=max_len, vocab_size=len(vocab)).cuda()
+model = MolecularVAE(i=max_len, c=len(vocab)).cuda()
 #model = nn.DataParallel(model)
 optimizer = optim.Adam(model.parameters())
 

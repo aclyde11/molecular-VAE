@@ -93,11 +93,11 @@ class Lambda(nn.Module):
         return self.mu + torch.exp(self.log_v / 2.) * eps, self.mu, self.log_v
 
 class MolecularVAE(nn.Module):
-    def __init__(self, max_len=120, latent_size=292, vocab_size=35):
+    def __init__(self,  i=120, o=292, c=35):
         super(MolecularVAE, self).__init__()
 
-        self.encoder = MolEncoder(max_len, latent_size, vocab_size)
-        self.decoder = MolDecoder(max_len, latent_size, vocab_size)
+        self.encoder = MolEncoder(i=i, o=o, c=c)
+        self.decoder = MolDecoder(i=i, o=o, c=c)
 
     def forward(self, x):
         x, mu, logvar = self.encoder(x)
@@ -105,18 +105,18 @@ class MolecularVAE(nn.Module):
 
 class MolEncoder(nn.Module):
 
-    def __init__(self, max_len=120, latent_size=292, vocab_size=35):
+    def __init__(self,  i=120, o=292, c=35):
         super(MolEncoder, self).__init__()
 
-        self.i = max_len
+        self.i = i
 
-        self.conv_1 = ConvSELU(max_len, 9, kernel_size=9)
+        self.conv_1 = ConvSELU(i, 9, kernel_size=9)
         self.conv_2 = ConvSELU(9, 9, kernel_size=9)
         self.conv_3 = ConvSELU(9, 10, kernel_size=11)
-        self.dense_1 = nn.Sequential(nn.Linear((vocab_size - 29 + 3) * 10, 435),
+        self.dense_1 = nn.Sequential(nn.Linear((c - 29 + 3) * 10, 435),
                                      SELU(inplace=True))
 
-        self.lmbd = Lambda(435, latent_size)
+        self.lmbd = Lambda(435, o)
 
     def forward(self, x):
         out = self.conv_1(x)
