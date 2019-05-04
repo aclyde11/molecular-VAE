@@ -90,7 +90,7 @@ class Lambda(nn.Module):
         self.log_v = self.z_log_var(x)
         eps = self.scale * Variable(torch.randn(*self.log_v.size())
                                     ).type_as(self.log_v)
-        return self.mu + torch.exp(self.log_v / 2.) * eps, self.mu, self.logvar
+        return self.mu + torch.exp(self.log_v / 2.) * eps, self.mu, self.log_v
 
 class MolecularVAE(nn.Module):
     def __init__(self, max_len=120, latent_size=292, vocab_size=35):
