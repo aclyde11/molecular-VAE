@@ -10,7 +10,7 @@ class MoleLoader(torch.utils.data.Dataset):
         self.df = df
         self.vocab = vocab
         self.max_len = max_len
-        self.one_hot_encoder =  OneHotEncoder(categories=list(range(len(vocab))) ,handle_unknown='error')
+        self.one_hot_encoder =  OneHotEncoder(handle_unknown='error')
 
 
 
@@ -18,7 +18,8 @@ class MoleLoader(torch.utils.data.Dataset):
         return self.df.shape[0]
 
     def one_hot_encode(self, item):
-        s = self.one_hot_encoder.fit(item.reshape(-1, 1))
+        items = item.reshape(-1, 1)
+        s = self.one_hot_encoder.fit_transform(items)
         # stacks = []
         # for i in item:
         #     print(i)
