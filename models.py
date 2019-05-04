@@ -4,7 +4,7 @@ import torch
 import torch.utils.data
 from torch import nn, optim
 from torch.nn import functional as F
-
+from torch.autograd import Variable
 
 
 class TimeDistributed(nn.Module):
@@ -68,12 +68,11 @@ class MolecularVAE(nn.Module):
         h = self.selu(self.fc0(h))
         return self.fc11(h), self.fc12(h)
 
-    def reparametrize(self, mu, logvar):
+    def reparameterize(self, mu, logvar):
         if self.training:
-            std = torch.exp(0.5 * logvar)
-            eps = 1e-2 * torch.randn_like(std)
-            w = eps.mul(std).add_(mu)
-            return w
+            std = torch.exp(logvar.mul(0.5))
+            eps = Variable(std.data.new(std.size()).normal_())
+            return eps.mul(std).add_(mu)
         else:
             return mu
 
