@@ -99,7 +99,7 @@ class MolecularVAE(nn.Module):
         super(MolecularVAE, self).__init__()
 
         self.encoder = MolEncoder(i=i, o=o, c=c)
-        self.decoder = MolDecoder(i=i, o=o, c=c)
+        self.decoder = MolDecoder(i=o, o=i, c=c)
 
     def forward(self, x):
         x, mu, logvar = self.encoder(x)
@@ -156,6 +156,7 @@ class MolDecoder(nn.Module):
                                             )
 
     def forward(self, x):
+        print(x.shape)
         out = self.latent_input(x)
         out = self.repeat_vector(out)
         out, h = self.gru(out)
