@@ -68,7 +68,7 @@ class MolecularVAE(nn.Module):
         h = self.selu(self.fc0(h))
         return self.fc11(h), self.fc12(h)
 
-    def reparameterize(self, mu, logvar):
+    def reparametrize(self, mu, logvar):
         if self.training:
             std = torch.exp(logvar.mul(0.5))
             eps = Variable(std.data.new(std.size()).normal_())
