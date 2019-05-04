@@ -32,18 +32,16 @@ class TimeDistributed(nn.Module):
         return y
 
 class MolecularVAE(nn.Module):
-    def __init__(self, max_len, word_embedding_size, vocab_size, h_size = 501, latent_size=292):
+    def __init__(self, max_len, vocab_size, h_size = 501, latent_size=292):
         super(MolecularVAE, self).__init__()
 
         self.max_len = max_len
-        self.word_embedding_size = word_embedding_size
         self.vocab_size = vocab_size
         print("VOCAB SIZE " , vocab_size)
 
-        self.embedding = nn.Embedding(vocab_size, word_embedding_size)
         self.linear = TimeDistributed(nn.Linear(h_size, vocab_size))
 
-        self.conv1d1 = nn.Conv1d(word_embedding_size, 9, kernel_size=9)
+        self.conv1d1 = nn.Conv1d(vocab_size, 9, kernel_size=9)
         self.conv1d2 = nn.Conv1d(9, 9, kernel_size=9)
         self.conv1d3 = nn.Conv1d(9, 10, kernel_size=9)
         # self.conv1d4 = nn.Conv1d(10, 10, kernel_size=9)
