@@ -110,7 +110,7 @@ class MolEncoder(nn.Module):
 
         self.i = max_len
 
-        self.conv_1 = ConvSELU(vocab_size, 9, kernel_size=9)
+        self.conv_1 = ConvSELU(max_len, 9, kernel_size=9)
         self.conv_2 = ConvSELU(9, 9, kernel_size=9)
         self.conv_3 = ConvSELU(9, 10, kernel_size=11)
         self.dense_1 = nn.Sequential(nn.Linear((vocab_size - 29 + 3) * 10, 435),
