@@ -18,7 +18,7 @@ class MoleLoader(torch.utils.data.Dataset):
         return self.df.shape[0]
 
     def one_hot_encode(self, item):
-        s = self.one_hot_encoder.fit(item)
+        s = self.one_hot_encoder.fit(item.reshape(-1, 1))
         # stacks = []
         # for i in item:
         #     print(i)
