@@ -156,7 +156,6 @@ class MolDecoder(nn.Module):
                                             )
 
     def forward(self, x):
-        print(x.shape)
         out = self.latent_input(x)
         out = self.repeat_vector(out)
         out, h = self.gru(out)
