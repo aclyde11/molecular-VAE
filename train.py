@@ -58,7 +58,7 @@ train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=600, shuffl
 test_loader  = torch.utils.data.DataLoader(test_dataset, batch_size=600, shuffle=True, num_workers =  32, pin_memory = True)
 torch.manual_seed(42)
 
-epochs = 100
+epochs = 1000
 
 model = MolecularVAE(max_len=max_len, vocab_size=len(vocab)).cuda()
 #model = nn.DataParallel(model)
