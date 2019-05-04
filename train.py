@@ -17,7 +17,7 @@ def onehot_initialization_v2(a):
     return out
 
 def loss_function(recon_x, x, mu, logvar):
-    recon_x = recon_x.contiguous().view(-1, len(vocab))
+    recon_x = recon_x.contiguous().view(-1)
     x = x.contiguous().view(-1)
     bce = nn.BCELoss(size_average=True)
     xent_loss = max_len * bce(recon_x, x)
@@ -74,7 +74,7 @@ def train(epoch):
         optimizer.zero_grad()
         recon_batch, mu, logvar = model(ohe)
 
-        loss = loss_function(recon_batch, data, mu, logvar)
+        loss = loss_function(recon_batch, ohe, mu, logvar)
         loss.backward()
         torch.nn.utils.clip_grad_norm(model.parameters(), 5.0)
 
@@ -93,7 +93,7 @@ def test(epoch):
         ohe = ohe.cuda()
 
         recon_batch, mu, logvar = model(ohe)
-        test_loss += loss_function(recon_batch, data, mu, logvar).item()
+        test_loss += loss_function(recon_batch, ohe, mu, logvar).item()
 
         if batch_idx % log_interval == 0:
             _, preds = torch.max(recon_batch, dim=2)
