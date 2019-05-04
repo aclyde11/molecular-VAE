@@ -18,13 +18,14 @@ class MoleLoader(torch.utils.data.Dataset):
         return self.df.shape[0]
 
     def one_hot_encode(self, item):
-        stacks = []
-        for i in item:
-            print(i)
-            tmp = self.one_hot_encoder.fit(i)
-            print(tmp.shape)
-            stacks.append(tmp)
-        s = np.stack(stacks)
+        s = self.one_hot_encoder.fit(item)
+        # stacks = []
+        # for i in item:
+        #     print(i)
+        #     tmp = self.one_hot_encoder.fit(i)
+        #     print(tmp.shape)
+        #     stacks.append(tmp)
+        # s = np.stack(stacks)
         print(s.shape)
         return s
 
