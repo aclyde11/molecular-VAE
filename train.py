@@ -28,8 +28,6 @@ def loss_function(recon_x, x, mu, logvar):
 
 df = pd.read_csv("/vol/ml/aclyde/ZINC/zinc_cleaned.smi", header=None)
 df = df.iloc[0:500000,:]
-print(df.head())
-print(df.shape)
 max_len = 0
 
 
@@ -46,6 +44,8 @@ for i in tqdm(df.itertuples(index=True)):
 vocab.add(' ')
 
 df = df.drop(bads, axis=0)
+print(df.head())
+print(df.shape)
 
 vocab = {c : i for i, c in enumerate(list(vocab))}
 charset = {i : c for i, c in enumerate(list(vocab))}
