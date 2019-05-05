@@ -113,24 +113,21 @@ class MolEncoder(nn.Module):
 
         self.i = i
 
-        self.conv_1 = ConvSELU(c, 18, kernel_size=21)
-        self.conv_2 = ConvSELU(18, 10, kernel_size=11)
-        self.conv_3 = ConvSELU(10, 10, kernel_size=11)
-        self.conv_4 = ConvSELU(10, 10, kernel_size=11)
-        self.conv_5 = ConvSELU(10, 10, kernel_size=11)
+        self.conv_1 = ConvSELU(i, i, kernel_size=11)
+        self.conv_2 = ConvSELU(i, 128, kernel_size=9)
+        self.conv_3 = ConvSELU(128, 64, kernel_size=5)
+        self.conv_4 = ConvSELU(32, 32, kernel_size=4)
 
-        self.dense_1 = nn.Sequential(nn.Linear((i - 65 + 5) * 10, 512),
+        self.dense_1 = nn.Sequential(nn.Linear((c - 29 + 5) * 32, 512),
                                      SELU(inplace=True))
 
         self.lmbd = Lambda(512, o)
 
     def forward(self, x):
-        x = x.permute(0, 2, 1)
         out = self.conv_1(x)
         out = self.conv_2(out)
         out = self.conv_3(out)
         out = self.conv_4(out)
-        out = self.conv_5(out)
         out = Flatten()(out)
         out = self.dense_1(out)
 
