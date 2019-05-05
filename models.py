@@ -129,6 +129,8 @@ class MolEncoder(nn.Module):
         out = self.conv_1(x)
         out = self.conv_2(out)
         out = self.conv_3(out)
+        out = self.conv_4(out)
+        out = self.conv_5(out)
         out = Flatten()(out)
         out = self.dense_1(out)
 
