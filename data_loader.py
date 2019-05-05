@@ -2,7 +2,7 @@ import torch
 from torchvision import datasets, transforms
 import numpy as np
 from sklearn.preprocessing import OneHotEncoder
-
+from rdkit import Chem
 class MoleLoader(torch.utils.data.Dataset):
     def __init__(self, df, vocab, max_len=70, num=None):
         super(MoleLoader, self).__init__()
@@ -25,6 +25,7 @@ class MoleLoader(torch.utils.data.Dataset):
 
     def __getitem__(self, item):
         smile = str(self.df.iloc[item, 0]).ljust(self.max_len, ' ')
+        smile = Chem.MolToSmiles(smile, True)
         embedding = np.array([self.vocab[x] for x in smile])
         embedding_ohe = self.one_hot_encode(embedding)
         return torch.LongTensor(embedding), torch.FloatTensor(embedding_ohe)
