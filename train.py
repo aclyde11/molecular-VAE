@@ -34,13 +34,18 @@ max_len = 0
 
 
 vocab = set()
-for i in tqdm(df.itertuples(index=False)):
-    i = str(Chem.MolToSmiles(Chem.MolFromSmiles(i[0]), True))
-    for c in i[0]:
-        vocab.add(c)
-    max_len = max(max_len, len(i[0]))
+bads = []
+for i in tqdm(df.itertuples(index=True)):
+    try:
+        i = str(Chem.MolToSmiles(Chem.MolFromSmiles(i[1]), True))
+        for c in i[0]:
+            vocab.add(c)
+        max_len = max(max_len, len(i[0]))
+    except:
+        bads.append(i[0])
 vocab.add(' ')
 
+df = df.drop(bads, axis=0)
 
 vocab = {c : i for i, c in enumerate(list(vocab))}
 charset = {i : c for i, c in enumerate(list(vocab))}
