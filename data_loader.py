@@ -25,7 +25,7 @@ class MoleLoader(torch.utils.data.Dataset):
 
     def __getitem__(self, item):
         smile = str(self.df.iloc[item, 0]).ljust(self.max_len, ' ')
-        smile = Chem.MolToSmiles(smile, True)
+        smile = Chem.MolToSmiles(Chem.MolFromSmiles(smile), True)
         embedding = np.array([self.vocab[x] for x in smile])
         embedding_ohe = self.one_hot_encode(embedding)
         return torch.LongTensor(embedding), torch.FloatTensor(embedding_ohe)
