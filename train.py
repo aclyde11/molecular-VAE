@@ -27,7 +27,9 @@ def loss_function(recon_x, x, mu, logvar):
 
 
 df = pd.read_csv("/vol/ml/aclyde/ZINC/zinc_cleaned.smi", header=None)
-df = df.iloc[0:150000,:]
+df = df.iloc[0:300000,:]
+print(df.head())
+print(df.shape)
 max_len = 0
 
 
@@ -66,11 +68,8 @@ log_interval = 100
 def train(epoch):
     model.train()
     train_loss = 0
-    for batch_idx, (data, ohe) in enumerate(train_loader):
-        data = data.cuda()
+    for batch_idx, (_, ohe) in enumerate(train_loader):
         ohe = ohe.cuda()
-        print(data.shape)
-        print(ohe.shape)
         optimizer.zero_grad()
         recon_batch, mu, logvar = model(ohe)
 
