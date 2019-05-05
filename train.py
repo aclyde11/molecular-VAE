@@ -36,7 +36,7 @@ bads = []
 for i in tqdm(df.itertuples(index=True)):
     try:
         i = str(Chem.MolToSmiles(Chem.MolFromSmiles(i[1]), True))
-        for c in i[0]:
+        for c in i:
             vocab.add(c)
         max_len = max(max_len, len(i[0]))
     except:
