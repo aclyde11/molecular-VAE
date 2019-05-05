@@ -27,7 +27,7 @@ def loss_function(recon_x, x, mu, logvar):
 
 
 df = pd.read_csv("/vol/ml/aclyde/ZINC/zinc_cleaned.smi", header=None)
-df = df.iloc[0:1000000,:]
+df = df.iloc[0:500000,:]
 print(df.head())
 print(df.shape)
 max_len = 0
