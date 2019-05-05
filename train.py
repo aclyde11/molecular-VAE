@@ -60,7 +60,7 @@ epochs = 1000
 
 model = MolecularVAE(i=max_len, c=len(vocab)).cuda()
 #model = nn.DataParallel(model)
-optimizer = optim.Adam(model.parameters(), lr=0.001 * 2)
+optimizer = optim.Adam(model.parameters(), lr=0.001)
 scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=0.1, patience=10, verbose=True, cooldown=3)
 log_interval = 100
 
