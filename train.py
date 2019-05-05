@@ -8,7 +8,7 @@ from models import MolecularVAE
 import pandas as pd
 import pickle
 from tqdm import tqdm
-
+from rdkit import Chem
 def onehot_initialization_v2(a):
     ncols = len(vocab)
     out = np.zeros( (a.size,ncols), dtype=np.uint8)
@@ -35,6 +35,7 @@ max_len = 0
 
 vocab = set()
 for i in tqdm(df.itertuples(index=False)):
+    i = str(Chem.MolToSmiles(Chem.MolFromSmiles(i[0]), True))
     for c in i[0]:
         vocab.add(c)
     max_len = max(max_len, len(i[0]))
