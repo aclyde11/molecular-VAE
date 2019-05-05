@@ -118,7 +118,7 @@ class MolEncoder(nn.Module):
         self.conv_3 = ConvSELU(128, 64, kernel_size=5)
         self.conv_4 = ConvSELU(64, 32, kernel_size=4)
 
-        self.dense_1 = nn.Sequential(nn.Linear((c - 29 + 5) * 32, 512),
+        self.dense_1 = nn.Sequential(nn.Linear((c - 29 + 4) * 32, 512),
                                      SELU(inplace=True))
 
         self.lmbd = Lambda(512, o)
