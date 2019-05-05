@@ -61,7 +61,7 @@ epochs = 1000
 model = MolecularVAE(i=max_len, c=len(vocab)).cuda()
 #model = nn.DataParallel(model)
 optimizer = optim.Adam(model.parameters())
-
+scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=0.1, patience=15, verbose=True, cooldown=10)
 log_interval = 100
 
 
@@ -77,7 +77,7 @@ def train(epoch):
         loss.backward()
         torch.nn.utils.clip_grad_norm(model.parameters(), 5.0)
 
-        train_loss += loss
+        train_loss += loss.item()
         optimizer.step()
         if batch_idx % log_interval == 0:
             print(f'train: {epoch} / {batch_idx}\t{loss:.4f}')
@@ -111,11 +111,14 @@ def test(epoch):
 
 for epoch in range(1, epochs + 1):
     train_loss = train(epoch)
-    test(epoch)
-
+    val_loss = test(epoch)
+    scheduler.step(val_loss)
+    for param_group in optimizer.param_groups:
+        lr = param_group['lr']
     torch.save( { 'model_state_dict' : model.state_dict(),
                   'optimizer_state_dict' : optimizer.state_dict(),
                   'epoch' : epoch,
                   'charset' : charset,
-                  'max_len' : max_len
+                  'max_len' : max_len,
+                  'lr'      : lr
     }, "save.pt")
