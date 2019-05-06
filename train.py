@@ -19,7 +19,7 @@ def onehot_initialization_v2(a):
 def loss_function(recon_x, x, mu, logvar):
     recon_x = recon_x.contiguous().view(-1)
     x = x.contiguous().view(-1)
-    bce = nn.CrossEntropyLoss(size_average=True)
+    bce = nn.BCELoss(size_average=True)
     xent_loss = max_len * bce(recon_x, x)
     KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
     return xent_loss + KLD
@@ -27,7 +27,7 @@ def loss_function(recon_x, x, mu, logvar):
 
 
 df = pd.read_csv("/vol/ml/aclyde/ZINC/zinc_cleaned.smi", header=None)
-df = df.iloc[0:100000,:]
+df = df.iloc[0:250000,:]
 max_len = 0
 
 
@@ -74,12 +74,12 @@ log_interval = 100
 def train(epoch):
     model.train()
     train_loss = 0
-    for batch_idx, (data, ohe) in enumerate(train_loader):
+    for batch_idx, (_, ohe) in enumerate(train_loader):
         ohe = ohe.cuda()
         optimizer.zero_grad()
         recon_batch, mu, logvar = model(ohe)
 
-        loss = loss_function(recon_batch, data, mu, logvar)
+        loss = loss_function(recon_batch, ohe, mu, logvar)
         loss.backward()
         torch.nn.utils.clip_grad_norm(model.parameters(), 5.0)
 
