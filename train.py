@@ -21,8 +21,9 @@ def loss_function(recon_x, x, mu, logvar):
     x = x.contiguous().view(-1)
     bce = nn.BCELoss(size_average=True)
     xent_loss = max_len * bce(recon_x, x)
-    KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
-    return xent_loss + KLD
+    kl_loss = -0.5 * torch.mean(1. + mu - logvar ** 2. -
+                                torch.exp(mu))
+    return xent_loss + kl_loss
 
 
 

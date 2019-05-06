@@ -123,6 +123,7 @@ class MolEncoder(nn.Module):
         self.lmbd = Lambda(435, o)
 
     def forward(self, x):
+        x = self.embedding(x)
         out = self.conv_1(x)
         out = self.conv_2(out)
         out = self.conv_3(out)
@@ -131,15 +132,15 @@ class MolEncoder(nn.Module):
 
         return self.lmbd(out)
 
-    def vae_loss(self, x_decoded_mean, x):
-        z_mean, z_log_var = self.lmbd.mu, self.lmbd.log_v
-
-        bce = nn.BCELoss(size_average=True)
-        xent_loss = self.i * bce(x_decoded_mean, x.detach())
-        kl_loss = -0.5 * torch.mean(1. + z_log_var - z_mean ** 2. -
-                                    torch.exp(z_log_var))
-
-        return kl_loss + xent_loss
+    # def vae_loss(self, x_decoded_mean, x):
+    #     z_mean, z_log_var = self.lmbd.mu, self.lmbd.log_v
+    #
+    #     bce = nn.BCELoss(size_average=True)
+    #     xent_loss = self.i * bce(x_decoded_mean, x.detach())
+    #     kl_loss = -0.5 * torch.mean(1. + z_log_var - z_mean ** 2. -
+    #                                 torch.exp(z_log_var))
+    #
+    #     return kl_loss + xent_loss
 
 
 class MolDecoder(nn.Module):
