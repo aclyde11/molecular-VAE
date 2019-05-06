@@ -114,14 +114,14 @@ class MolEncoder(nn.Module):
         self.i = i
         self.embedding = nn.Embedding(num_embeddings=c, embedding_dim=word_embedding_size)
 
-        self.gru = nn.LSTM(word_embedding_size, 128, 3, batch_first=True)
+        self.gru = nn.LSTM(word_embedding_size, 64, 3, batch_first=True)
         self.conv_1 = ConvSELU(i, 15, kernel_size=9)
         self.conv_2 = ConvSELU(15, 15, kernel_size=9)
         self.conv_3 = ConvSELU(15, 15, kernel_size=11)
 
-        self.dense_1 = nn.Sequential(nn.Linear((128 - 29 + 3) * 15, 435),
+        self.dense_1 = nn.Sequential(nn.Linear((64 - 29 + 3) * 15, o),
                                      SELU(inplace=True))
-        self.lmbd = Lambda(435, o)
+        self.lmbd = Lambda(o, o)
 
     def forward(self, x):
         x = self.embedding(x)
@@ -153,8 +153,8 @@ class MolDecoder(nn.Module):
         self.latent_input = nn.Sequential(nn.Linear(i, i),
                                           SELU(inplace=True))
         self.repeat_vector = Repeat(o)
-        self.gru = nn.LSTM(i, 501, 4, batch_first=True)
-        self.decoded_mean = TimeDistributed(nn.Sequential(nn.Linear(501, c),
+        self.gru = nn.LSTM(i, 512, 5, batch_first=True)
+        self.decoded_mean = TimeDistributed(nn.Sequential(nn.Linear(512, c),
                                                           nn.Softmax())
                                             )
 

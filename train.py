@@ -32,7 +32,7 @@ def loss_function(recon_x, x, mu, logvar):
 
 
 df = pd.read_csv("/vol/ml/aclyde/ZINC/zinc_cleaned.smi", header=None)
-df = df.iloc[0:750000,:]
+df = df.iloc[0:1000000,:]
 max_len = 0
 
 
@@ -69,7 +69,7 @@ torch.manual_seed(42)
 
 epochs = 3000
 
-model = MolecularVAE(i=max_len, c=len(vocab)).cuda()
+model = MolecularVAE(i=max_len, c=len(vocab), o=512).cuda()
 #model = nn.DataParallel(model)
 optimizer = optim.Adam(model.parameters(), lr=0.001 * 1.0)
 scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=0.75, patience=10, verbose=True, threshold=1e-3)
@@ -89,7 +89,7 @@ def train(epoch):
 
             loss = loss_function(recon_batch, ohe, mu, logvar)
             loss.backward()
-            torch.nn.utils.clip_grad_norm(model.parameters(), 5.0)
+            torch.nn.utils.clip_grad_norm(model.parameters(), 3.0)
             experirment.log_metric('loss', loss.item())
             train_loss += loss.item()
             optimizer.step()
@@ -135,6 +135,7 @@ def test(epoch):
         return float(test_loss) / float(n)
 
 for epoch in range(1, epochs + 1):
+    experirment.log_current_epoch(epoch)
     train_loss = train(epoch)
     val_loss = test(epoch)
     print(val_loss)
