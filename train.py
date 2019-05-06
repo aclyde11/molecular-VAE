@@ -38,7 +38,7 @@ for i in tqdm(df.itertuples(index=True)):
         i = str(Chem.MolToSmiles(Chem.MolFromSmiles(i[1]), True))
         for c in i:
             vocab.add(c)
-        max_len = max(max_len, len(i[0]))
+        max_len = max(max_len, len(i))
     except:
         bads.append(i[0])
 vocab.add(' ')
