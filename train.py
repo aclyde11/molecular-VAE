@@ -1,3 +1,5 @@
+from comet_ml import Experiment
+
 import numpy as np
 import torch
 import torch.utils.data
@@ -10,7 +12,6 @@ import pickle
 from tqdm import tqdm
 from rdkit import Chem
 
-from comet_ml import Experiment
 
 def onehot_initialization_v2(a):
     ncols = len(vocab)
