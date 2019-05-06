@@ -9,6 +9,9 @@ import pandas as pd
 import pickle
 from tqdm import tqdm
 from rdkit import Chem
+
+from comet_ml import Experiment
+
 def onehot_initialization_v2(a):
     ncols = len(vocab)
     out = np.zeros( (a.size,ncols), dtype=np.uint8)
@@ -28,7 +31,7 @@ def loss_function(recon_x, x, mu, logvar):
 
 
 df = pd.read_csv("/vol/ml/aclyde/ZINC/zinc_cleaned.smi", header=None)
-df = df.iloc[0:500000,:]
+df = df.iloc[0:1000000,:]
 max_len = 0
 
 
@@ -59,8 +62,8 @@ max_len += 2
 lossf = nn.CrossEntropyLoss()
 train_dataset = MoleLoader(df_train, vocab, max_len)
 test_dataset  = MoleLoader(df_test, vocab, max_len)
-train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=300, shuffle=True, num_workers = 32, pin_memory = True)
-test_loader  = torch.utils.data.DataLoader(test_dataset, batch_size=300, shuffle=True, num_workers =  32, pin_memory = True)
+train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=1024, shuffle=True, num_workers = 32, pin_memory = True)
+test_loader  = torch.utils.data.DataLoader(test_dataset, batch_size=1024, shuffle=True, num_workers =  32, pin_memory = True)
 torch.manual_seed(42)
 
 epochs = 3000
@@ -68,54 +71,65 @@ epochs = 3000
 model = MolecularVAE(i=max_len, c=len(vocab)).cuda()
 #model = nn.DataParallel(model)
 optimizer = optim.Adam(model.parameters(), lr=0.001)
-scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=0.1, patience=15, verbose=True, cooldown=5)
+scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=0.1, patience=10, verbose=True)
 log_interval = 100
 
+experirment = Experiment(project_name='pytorch', auto_metric_logging=False)
 
 def train(epoch):
-    model.train()
-    train_loss = 0
-    for batch_idx, (data, ohe) in enumerate(train_loader):
-        data = data.cuda()
-        ohe = ohe.cuda()
-        optimizer.zero_grad()
-        recon_batch, mu, logvar = model(data)
+    with experirment.train():
+        model.train()
+        train_loss = 0
+        for batch_idx, (data, ohe) in enumerate(train_loader):
+            data = data.cuda()
+            ohe = ohe.cuda()
+            optimizer.zero_grad()
+            recon_batch, mu, logvar = model(data)
 
-        loss = loss_function(recon_batch, ohe, mu, logvar)
-        loss.backward()
-        torch.nn.utils.clip_grad_norm(model.parameters(), 5.0)
-
-        train_loss += loss.item()
-        optimizer.step()
-        if batch_idx % log_interval == 0:
-            print(f'train: {epoch} / {batch_idx}\t{loss:.4f}')
-    print('train', train_loss / len(train_loader.dataset))
-    return train_loss / len(train_loader.dataset)
+            loss = loss_function(recon_batch, ohe, mu, logvar)
+            loss.backward()
+            torch.nn.utils.clip_grad_norm(model.parameters(), 5.0)
+            experirment.log_metric('loss', loss.item())
+            train_loss += loss.item()
+            optimizer.step()
+            if batch_idx % log_interval == 0:
+                print(f'train: {epoch} / {batch_idx}\t{loss:.4f}')
+        print('train', train_loss / len(train_loader.dataset))
+        return train_loss / len(train_loader.dataset)
 
 def test(epoch):
-    model.eval()
-    test_loss = 0
-    for batch_idx, (data, ohe) in enumerate(test_loader):
-        data = data.cuda()
-        ohe = ohe.cuda()
+    with experirment.test():
+        model.eval()
+        test_loss = 0
+        for batch_idx, (data, ohe) in enumerate(test_loader):
+            data = data.cuda()
+            ohe = ohe.cuda()
 
-        recon_batch, mu, logvar = model(data)
-        test_loss += loss_function(recon_batch, ohe, mu, logvar).item()
-
-        if batch_idx % log_interval == 0:
+            recon_batch, mu, logvar = model(data)
+            loss =  loss_function(recon_batch, ohe, mu, logvar)
+            test_loss += loss.item()
+            experirment.log_metric('loss', loss.item())
+            num_right = 0
             _, preds = torch.max(recon_batch, dim=2)
-            preds = preds.cpu().numpy()
-            targets_copy = data.cpu().numpy()
-            for i in range(4):
-                sample = preds[i, ...]
-                target = targets_copy[i, ...]
-                print("ORIG: {}\nNEW : {}".format(
-                    "".join([charset[chars] for chars in target]),
-                    "".join([charset[chars] for chars in sample])
-                ))
 
-    print('test', test_loss / len(test_loader))
-    return test_loss
+            for i in range(recon_batch.shape[0]):
+                num_right += int(torch.eq(preds[i,...], data[i,...]))
+
+            experirment.log_metric('accuracy', float(num_right)/float(recon_batch.shape[0]))
+
+            if batch_idx % log_interval == 0:
+                preds = preds.cpu().numpy()
+                targets_copy = data.cpu().numpy()
+                for i in range(4):
+                    sample = preds[i, ...]
+                    target = targets_copy[i, ...]
+                    print("ORIG: {}\nNEW : {}".format(
+                        "".join([charset[chars] for chars in target]),
+                        "".join([charset[chars] for chars in sample])
+                    ))
+
+        print('test', test_loss / len(test_loader))
+        return test_loss
 
 for epoch in range(1, epochs + 1):
     train_loss = train(epoch)
