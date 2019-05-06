@@ -121,7 +121,7 @@ class MolEncoder(nn.Module):
 
         self.dense_1 = nn.Sequential(nn.Linear((128 - 29 + 3) * 15, 435),
                                      SELU(inplace=True))
-        self.lmbd = Lambda(292, o)
+        self.lmbd = Lambda(435, o)
 
     def forward(self, x):
         x = self.embedding(x)
