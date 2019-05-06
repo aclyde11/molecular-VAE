@@ -114,8 +114,8 @@ class MolEncoder(nn.Module):
         self.i = i
         self.embedding = nn.Embedding(num_embeddings=c, embedding_dim=36)
 
-        self.gru = nn.LSTM(i, 292, 2, batch_first=True)
-        self.conv_1 = ConvSELU(i, 15, kernel_size=9)
+        self.gru = nn.LSTM(c, 292, 2, batch_first=True)
+        self.conv_1 = ConvSELU(292, 15, kernel_size=9)
         self.conv_2 = ConvSELU(15, 15, kernel_size=9)
         self.conv_3 = ConvSELU(15, 15, kernel_size=11)
 
