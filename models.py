@@ -108,18 +108,18 @@ class MolecularVAE(nn.Module):
 
 class MolEncoder(nn.Module):
 
-    def __init__(self, i=120, o=292, c=35):
+    def __init__(self, i=120, o=292, c=35, word_embedding_size=36):
         super(MolEncoder, self).__init__()
 
         self.i = i
-        self.embedding = nn.Embedding(num_embeddings=c, embedding_dim=36)
+        self.embedding = nn.Embedding(num_embeddings=c, embedding_dim=word_embedding_size)
 
-        self.gru = nn.LSTM(c, 292, 2, batch_first=True)
-        self.conv_1 = ConvSELU(292, 15, kernel_size=9)
+        self.gru = nn.LSTM(word_embedding_size, 292, 2, batch_first=True)
+        self.conv_1 = ConvSELU(i, 15, kernel_size=9)
         self.conv_2 = ConvSELU(15, 15, kernel_size=9)
         self.conv_3 = ConvSELU(15, 15, kernel_size=11)
 
-        self.dense_1 = nn.Sequential(nn.Linear((36 - 29 + 3) * 15, 435),
+        self.dense_1 = nn.Sequential(nn.Linear((292 - 29 + 3) * 15, 435),
                                      SELU(inplace=True))
         self.lmbd = Lambda(292, o)
 
