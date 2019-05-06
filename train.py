@@ -114,7 +114,7 @@ def test(epoch):
             _, preds = torch.max(recon_batch, dim=2)
 
             for i in range(recon_batch.shape[0]):
-                num_right += int(torch.eq(preds[i,...], data[i,...]))
+                num_right += int(torch.equals(preds[i,...], data[i,...]))
 
             experirment.log_metric('accuracy', float(num_right)/float(recon_batch.shape[0]))
 
