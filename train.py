@@ -70,8 +70,8 @@ epochs = 3000
 
 model = MolecularVAE(i=max_len, c=len(vocab)).cuda()
 #model = nn.DataParallel(model)
-optimizer = optim.Adam(model.parameters(), lr=0.001)
-scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=0.1, patience=10, verbose=True)
+optimizer = optim.Adam(model.parameters(), lr=0.001 * 4)
+scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=0.8, patience=10, verbose=True)
 log_interval = 100
 
 experirment = Experiment(project_name='pytorch', auto_metric_logging=False)
