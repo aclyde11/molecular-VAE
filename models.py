@@ -125,7 +125,7 @@ class MolEncoder(nn.Module):
 
     def forward(self, x):
         x = self.embedding(x)
-        x, _, _ = self.gru(x)
+        x, _ = self.gru(x)
         out = self.conv_1(x)
         out = self.conv_2(out)
         out = self.conv_3(out)
@@ -161,5 +161,5 @@ class MolDecoder(nn.Module):
     def forward(self, x):
         out = self.latent_input(x)
         out = self.repeat_vector(out)
-        out, h, c = self.gru(out)
+        out, h = self.gru(out)
         return self.decoded_mean(out)
