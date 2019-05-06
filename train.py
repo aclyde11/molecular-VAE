@@ -138,6 +138,7 @@ for epoch in range(1, epochs + 1):
     lr = 0
     for param_group in optimizer.param_groups:
         lr = param_group['lr']
+    experirment.log_metric('lr', lr)
     torch.save( { 'model_state_dict' : model.state_dict(),
                   'optimizer_state_dict' : optimizer.state_dict(),
                   'epoch' : epoch,
