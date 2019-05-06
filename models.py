@@ -112,7 +112,7 @@ class MolEncoder(nn.Module):
         super(MolEncoder, self).__init__()
 
         self.i = i
-        self.embedding = nn.Embedding(num_embeddings=c, embedding_dim=50)
+        self.embedding = nn.Embedding(num_embeddings=c, embedding_dim=36)
         self.conv_1 = ConvSELU(i, 9, kernel_size=9)
         self.conv_2 = ConvSELU(9, 9, kernel_size=9)
         self.conv_3 = ConvSELU(9, 10, kernel_size=11)
