@@ -27,7 +27,7 @@ def loss_function(recon_x, x, mu, logvar):
 
 
 df = pd.read_csv("/vol/ml/aclyde/ZINC/zinc_cleaned.smi", header=None)
-df = df.iloc[0:250000,:]
+df = df.iloc[0:125000,:]
 max_len = 0
 
 
@@ -58,16 +58,16 @@ max_len += 2
 lossf = nn.CrossEntropyLoss()
 train_dataset = MoleLoader(df_train, vocab, max_len)
 test_dataset  = MoleLoader(df_test, vocab, max_len)
-train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=300, shuffle=True, num_workers = 32, pin_memory = True)
-test_loader  = torch.utils.data.DataLoader(test_dataset, batch_size=300, shuffle=True, num_workers =  32, pin_memory = True)
+train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=256, shuffle=True, num_workers = 32, pin_memory = True)
+test_loader  = torch.utils.data.DataLoader(test_dataset, batch_size=256, shuffle=True, num_workers =  32, pin_memory = True)
 torch.manual_seed(42)
 
-epochs = 1000
+epochs = 3000
 
 model = MolecularVAE(i=max_len, c=len(vocab)).cuda()
 #model = nn.DataParallel(model)
-optimizer = optim.Adam(model.parameters(), lr=0.001)
-scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=0.1, patience=10, verbose=True, cooldown=3)
+optimizer = optim.Adam(model.parameters(), lr=0.002)
+scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=0.1, patience=15, verbose=True, cooldown=5)
 log_interval = 100
 
 
@@ -119,6 +119,7 @@ for epoch in range(1, epochs + 1):
     train_loss = train(epoch)
     val_loss = test(epoch)
     scheduler.step(val_loss)
+    lr = 0
     for param_group in optimizer.param_groups:
         lr = param_group['lr']
     torch.save( { 'model_state_dict' : model.state_dict(),
