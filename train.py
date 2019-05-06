@@ -77,7 +77,7 @@ def train(epoch):
     for batch_idx, (_, ohe) in enumerate(train_loader):
         ohe = ohe.cuda()
         optimizer.zero_grad()
-        recon_batch, mu, logvar = model(ohe)
+        recon_batch, mu, logvar = model(data)
 
         loss = loss_function(recon_batch, ohe, mu, logvar)
         loss.backward()
@@ -97,7 +97,7 @@ def test(epoch):
         data = data.cuda()
         ohe = ohe.cuda()
 
-        recon_batch, mu, logvar = model(ohe)
+        recon_batch, mu, logvar = model(data)
         test_loss += loss_function(recon_batch, ohe, mu, logvar).item()
 
         if batch_idx % log_interval == 0:
