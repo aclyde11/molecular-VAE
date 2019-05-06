@@ -72,7 +72,7 @@ epochs = 3000
 model = MolecularVAE(i=max_len, c=len(vocab)).cuda()
 #model = nn.DataParallel(model)
 optimizer = optim.Adam(model.parameters(), lr=0.001 * 2)
-scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=0.8, patience=10, verbose=True, eps=1e-3)
+scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=0.75, patience=10, verbose=True, threshold=1e-3)
 log_interval = 100
 
 experirment = Experiment(project_name='pytorch', auto_metric_logging=False)
@@ -102,6 +102,7 @@ def test(epoch):
     with experirment.test():
         model.eval()
         test_loss = 0
+        n = 0
         for batch_idx, (data, ohe) in enumerate(test_loader):
             data = data.cuda()
             ohe = ohe.cuda()
@@ -109,6 +110,7 @@ def test(epoch):
             recon_batch, mu, logvar = model(data)
             loss =  loss_function(recon_batch, ohe, mu, logvar)
             test_loss += loss.item()
+            n += 1
             experirment.log_metric('loss', loss.item())
             num_right = 0
             _, preds = torch.max(recon_batch, dim=2)
@@ -130,11 +132,12 @@ def test(epoch):
                     ))
 
         print('test', test_loss / len(test_loader))
-        return test_loss
+        return float(test_loss) / float(n)
 
 for epoch in range(1, epochs + 1):
     train_loss = train(epoch)
     val_loss = test(epoch)
+    print(val_loss)
     scheduler.step(val_loss)
     lr = 0
     for param_group in optimizer.param_groups:
