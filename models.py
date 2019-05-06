@@ -153,7 +153,7 @@ class MolDecoder(nn.Module):
         self.latent_input = nn.Sequential(nn.Linear(i, i),
                                           SELU(inplace=True))
         self.repeat_vector = Repeat(o)
-        self.gru = nn.LSTM(i, 425, 4, batch_first=True)
+        self.gru = nn.LSTM(i, 501, 4, batch_first=True)
         self.decoded_mean = TimeDistributed(nn.Sequential(nn.Linear(501, c),
                                                           nn.Softmax())
                                             )
