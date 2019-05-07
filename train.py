@@ -32,19 +32,21 @@ def loss_function(recon_x, x, mu, logvar):
 
 
 df = pd.read_csv("/vol/ml/aclyde/ZINC/zinc_cleaned.smi", header=None)
-df = df.iloc[0:1000000,:]
-max_len = 0
+df = df.iloc[0:2000000,:]
+max_len = 125
 
 
 vocab = set()
 bads = []
 for i in tqdm(df.itertuples(index=True)):
-    try:
-        i = str(Chem.MolToSmiles(Chem.MolFromSmiles(i[1]), True))
-        for c in i:
-            vocab.add(c)
-        max_len = max(max_len, len(i))
-    except:
+    if len(i[1] < max_len ):
+        try:
+            i = str(Chem.MolToSmiles(Chem.MolFromSmiles(i[1]), True))
+            for c in i:
+                vocab.add(c)
+        except:
+            bads.append(i[0])
+    else:
         bads.append(i[0])
 vocab.add(' ')
 
@@ -59,6 +61,9 @@ msk = np.random.rand(len(df)) < 0.8
 df_train = df[~msk]
 df_test = df[~msk]
 
+print(df_train.shape)
+print(df_test.shape)
+
 max_len += 2
 lossf = nn.CrossEntropyLoss()
 train_dataset = MoleLoader(df_train, vocab, max_len)
@@ -69,7 +74,7 @@ torch.manual_seed(42)
 
 epochs = 3000
 
-model = MolecularVAE(i=max_len, c=len(vocab), o=512).cuda()
+model = MolecularVAE(i=max_len, c=len(vocab), o=256).cuda()
 #model = nn.DataParallel(model)
 optimizer = optim.Adam(model.parameters(), lr=0.001 * 1.0)
 scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=0.75, patience=10, verbose=True, threshold=1e-3)
