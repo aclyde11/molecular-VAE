@@ -58,7 +58,7 @@ vocab = {c : i for i, c in enumerate(list(vocab))}
 charset = {i : c for i, c in enumerate(list(vocab))}
 print(vocab)
 msk = np.random.rand(len(df)) < 0.8
-df_train = df[~msk]
+df_train = df[msk]
 df_test = df[~msk]
 
 print(df_train.shape)
@@ -68,13 +68,13 @@ max_len += 2
 lossf = nn.CrossEntropyLoss()
 train_dataset = MoleLoader(df_train, vocab, max_len)
 test_dataset  = MoleLoader(df_test, vocab, max_len)
-train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=128, shuffle=True, num_workers = 32, pin_memory = True)
-test_loader  = torch.utils.data.DataLoader(test_dataset, batch_size=128, shuffle=True, num_workers =  32, pin_memory = True)
+train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=256, shuffle=True, num_workers = 32, pin_memory = True)
+test_loader  = torch.utils.data.DataLoader(test_dataset, batch_size=256, shuffle=True, num_workers =  32, pin_memory = True)
 torch.manual_seed(42)
 
 epochs = 3000
 
-model = MolecularVAE(i=max_len, c=len(vocab), o=256).cuda()
+model = MolecularVAE(i=max_len, c=len(vocab), o=512).cuda()
 #model = nn.DataParallel(model)
 optimizer = optim.Adam(model.parameters(), lr=0.001 * 1.0)
 scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=0.75, patience=10, verbose=True, threshold=1e-3)

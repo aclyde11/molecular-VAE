@@ -115,13 +115,13 @@ class MolEncoder(nn.Module):
         self.embedding = nn.Embedding(num_embeddings=c, embedding_dim=word_embedding_size)
 
         self.gru = nn.LSTM(word_embedding_size, h_size, num_lstm, batch_first=True)
-        self.conv_1 = ConvSELU(i, 15, kernel_size=9)
-        self.conv_2 = ConvSELU(15, 15, kernel_size=9)
-        self.conv_3 = ConvSELU(15, 15, kernel_size=11)
+        self.conv_1 = ConvSELU(i, 120, kernel_size=18)
+        self.conv_2 = ConvSELU(120, 64, kernel_size=18)
+        self.conv_3 = ConvSELU(64, 64, kernel_size=18)
 
-        self.dense_1 = nn.Sequential(nn.Linear((h_size - 29 + 3) * 15, 435),
+        self.dense_1 = nn.Sequential(nn.Linear((h_size - 29 + 3) * 64, 512),
                                      SELU(inplace=True))
-        self.lmbd = Lambda(435, o)
+        self.lmbd = Lambda(512, o)
 
     def forward(self, x):
         x = self.embedding(x)
