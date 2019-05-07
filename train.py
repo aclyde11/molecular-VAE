@@ -42,6 +42,7 @@ for i in tqdm(df.itertuples(index=True)):
     if len(i[1]) < max_len :
         try:
             i = str(Chem.MolToSmiles(Chem.MolFromSmiles(i[1]), True))
+            df.loc[i[0], 0] = i
             for c in i:
                 vocab.add(c)
         except:
