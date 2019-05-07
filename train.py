@@ -39,7 +39,7 @@ max_len = 125
 vocab = set()
 bads = []
 for i in tqdm(df.itertuples(index=True)):
-    if len(i[1] < max_len ):
+    if len(i[1]) < max_len :
         try:
             i = str(Chem.MolToSmiles(Chem.MolFromSmiles(i[1]), True))
             for c in i:
