@@ -31,7 +31,7 @@ def loss_function(recon_x, x, mu, logvar):
 
 
 
-df = pd.read_csv("/vol/ml/aclyde/ZINC/zinc_cleaned.smi", header=None)
+df = pd.read_csv("zinc_cleaned_cannon.smi", header=None)
 df = df.iloc[0:2000000,:]
 max_len = 125
 
@@ -40,13 +40,8 @@ vocab = set()
 bads = []
 for i in tqdm(df.itertuples(index=True)):
     if len(i[1]) < max_len :
-        try:
-            i = str(Chem.MolToSmiles(Chem.MolFromSmiles(i[1]), True))
-            df.loc[i[0], 0] = i
-            for c in i:
-                vocab.add(c)
-        except:
-            bads.append(i[0])
+        for c in i[1]:
+            vocab.add(c)
     else:
         bads.append(i[0])
 vocab.add(' ')
@@ -65,7 +60,6 @@ df_test = df[~msk]
 print(df_train.shape)
 print(df_test.shape)
 
-max_len += 2
 lossf = nn.CrossEntropyLoss()
 train_dataset = MoleLoader(df_train, vocab, max_len)
 test_dataset  = MoleLoader(df_test, vocab, max_len)
@@ -78,7 +72,7 @@ epochs = 3000
 model = MolecularVAE(i=max_len, c=len(vocab), o=512).cuda()
 #model = nn.DataParallel(model)
 optimizer = optim.Adam(model.parameters(), lr=0.001 * 1.0)
-scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=0.75, patience=10, verbose=True, threshold=1e-3)
+scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=0.8, patience=10, verbose=True, threshold=1e-3)
 log_interval = 100
 
 experirment = Experiment(project_name='pytorch', auto_metric_logging=False)
@@ -99,6 +93,13 @@ def train(epoch):
             experirment.log_metric('loss', loss.item())
             train_loss += loss.item()
             optimizer.step()
+
+            if batch_idx % 20 == 0:
+                num_right = 0
+                _, preds = torch.max(recon_batch, dim=2)
+                for i in range(recon_batch.shape[0]):
+                    num_right += int(torch.equal(preds[i, ...], data[i, ...]))
+                experirment.log_metric('accuracy', float(num_right) / float(recon_batch.shape[0]))
             if batch_idx % log_interval == 0:
                 print(f'train: {epoch} / {batch_idx}\t{loss:.4f}')
         print('train', train_loss / len(train_loader.dataset))
@@ -118,12 +119,11 @@ def test(epoch):
             test_loss += loss.item()
             n += 1
             experirment.log_metric('loss', loss.item())
+
             num_right = 0
             _, preds = torch.max(recon_batch, dim=2)
-
             for i in range(recon_batch.shape[0]):
                 num_right += int(torch.equal(preds[i,...], data[i,...]))
-
             experirment.log_metric('accuracy', float(num_right)/float(recon_batch.shape[0]))
 
             if batch_idx % log_interval == 0:
