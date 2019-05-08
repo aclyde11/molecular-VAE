@@ -31,20 +31,18 @@ def loss_function(recon_x, x, mu, logvar):
 
 
 
-df = pd.read_csv("/vol/ml/aclyde/ZINC/zinc_cleaned.smi", header=None)
-df = df.iloc[0:750000,:]
-max_len = 0
+df = pd.read_csv("/vol/ml/aclyde/ZINC/zinc_cleaned_cannon.smi", header=None)
+#df = df.iloc[0:2000000,:]
+max_len = 128
 
 
 vocab = set()
 bads = []
 for i in tqdm(df.itertuples(index=True)):
-    try:
-        i = str(Chem.MolToSmiles(Chem.MolFromSmiles(i[1]), True))
-        for c in i:
+    if len(i[1]) < max_len :
+        for c in i[1]:
             vocab.add(c)
-        max_len = max(max_len, len(i))
-    except:
+    else:
         bads.append(i[0])
 vocab.add(' ')
 
@@ -56,23 +54,25 @@ vocab = {c : i for i, c in enumerate(list(vocab))}
 charset = {i : c for i, c in enumerate(list(vocab))}
 print(vocab)
 msk = np.random.rand(len(df)) < 0.8
-df_train = df[~msk]
+df_train = df[msk]
 df_test = df[~msk]
 
-max_len += 2
+print(df_train.shape)
+print(df_test.shape)
+
 lossf = nn.CrossEntropyLoss()
 train_dataset = MoleLoader(df_train, vocab, max_len)
 test_dataset  = MoleLoader(df_test, vocab, max_len)
-train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=128, shuffle=True, num_workers = 32, pin_memory = True)
-test_loader  = torch.utils.data.DataLoader(test_dataset, batch_size=128, shuffle=True, num_workers =  32, pin_memory = True)
+train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=256, shuffle=True, num_workers = 32, pin_memory = True)
+test_loader  = torch.utils.data.DataLoader(test_dataset, batch_size=256, shuffle=True, num_workers =  32, pin_memory = True)
 torch.manual_seed(42)
 
 epochs = 3000
 
-model = MolecularVAE(i=max_len, c=len(vocab)).cuda()
+model = MolecularVAE(i=max_len, c=len(vocab), o=512).cuda()
 #model = nn.DataParallel(model)
 optimizer = optim.Adam(model.parameters(), lr=0.001 * 1.0)
-scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=0.75, patience=10, verbose=True, threshold=1e-3)
+scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=0.8, patience=10, verbose=True, threshold=1e-3)
 log_interval = 100
 
 experirment = Experiment(project_name='pytorch', auto_metric_logging=False)
@@ -89,10 +89,17 @@ def train(epoch):
 
             loss = loss_function(recon_batch, ohe, mu, logvar)
             loss.backward()
-            torch.nn.utils.clip_grad_norm(model.parameters(), 5.0)
+            torch.nn.utils.clip_grad_norm(model.parameters(), 3.0)
             experirment.log_metric('loss', loss.item())
             train_loss += loss.item()
             optimizer.step()
+
+            if batch_idx % 20 == 0:
+                num_right = 0
+                _, preds = torch.max(recon_batch, dim=2)
+                for i in range(recon_batch.shape[0]):
+                    num_right += int(torch.equal(preds[i, ...], data[i, ...]))
+                experirment.log_metric('accuracy', float(num_right) / float(recon_batch.shape[0]))
             if batch_idx % log_interval == 0:
                 print(f'train: {epoch} / {batch_idx}\t{loss:.4f}')
         print('train', train_loss / len(train_loader.dataset))
@@ -112,12 +119,11 @@ def test(epoch):
             test_loss += loss.item()
             n += 1
             experirment.log_metric('loss', loss.item())
+
             num_right = 0
             _, preds = torch.max(recon_batch, dim=2)
-
             for i in range(recon_batch.shape[0]):
                 num_right += int(torch.equal(preds[i,...], data[i,...]))
-
             experirment.log_metric('accuracy', float(num_right)/float(recon_batch.shape[0]))
 
             if batch_idx % log_interval == 0:
@@ -135,6 +141,7 @@ def test(epoch):
         return float(test_loss) / float(n)
 
 for epoch in range(1, epochs + 1):
+    experirment.log_current_epoch(epoch)
     train_loss = train(epoch)
     val_loss = test(epoch)
     print(val_loss)

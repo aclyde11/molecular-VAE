@@ -108,20 +108,20 @@ class MolecularVAE(nn.Module):
 
 class MolEncoder(nn.Module):
 
-    def __init__(self, i=120, o=292, c=35, word_embedding_size=36):
+    def __init__(self, i=120, o=292, c=35, word_embedding_size=30, h_size=72, num_lstm=3):
         super(MolEncoder, self).__init__()
 
         self.i = i
         self.embedding = nn.Embedding(num_embeddings=c, embedding_dim=word_embedding_size)
 
-        self.gru = nn.LSTM(word_embedding_size, 128, 3, batch_first=True)
-        self.conv_1 = ConvSELU(i, 15, kernel_size=9)
-        self.conv_2 = ConvSELU(15, 15, kernel_size=9)
-        self.conv_3 = ConvSELU(15, 15, kernel_size=11)
+        self.gru = nn.LSTM(word_embedding_size, h_size, num_lstm, batch_first=True)
+        self.conv_1 = ConvSELU(i, 120, kernel_size=18)
+        self.conv_2 = ConvSELU(120, 64, kernel_size=18)
+        self.conv_3 = ConvSELU(64, 64, kernel_size=18)
 
-        self.dense_1 = nn.Sequential(nn.Linear((128 - 29 + 3) * 15, 435),
+        self.dense_1 = nn.Sequential(nn.Linear((h_size - (18 * 3) + 3) * 64, 512),
                                      SELU(inplace=True))
-        self.lmbd = Lambda(435, o)
+        self.lmbd = Lambda(512, o)
 
     def forward(self, x):
         x = self.embedding(x)
@@ -147,14 +147,14 @@ class MolEncoder(nn.Module):
 
 class MolDecoder(nn.Module):
 
-    def __init__(self, i=292, o=120, c=35):
+    def __init__(self, i=292, o=120, c=35, num_gru=4, h_size=501):
         super(MolDecoder, self).__init__()
 
         self.latent_input = nn.Sequential(nn.Linear(i, i),
                                           SELU(inplace=True))
         self.repeat_vector = Repeat(o)
-        self.gru = nn.LSTM(i, 501, 4, batch_first=True)
-        self.decoded_mean = TimeDistributed(nn.Sequential(nn.Linear(501, c),
+        self.gru = nn.LSTM(i, h_size, num_gru, batch_first=True)
+        self.decoded_mean = TimeDistributed(nn.Sequential(nn.Linear(h_size, c),
                                                           nn.Softmax())
                                             )
 
