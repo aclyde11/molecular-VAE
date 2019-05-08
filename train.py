@@ -61,10 +61,7 @@ print(df_test.shape)
 lossf = nn.CrossEntropyLoss()
 train_dataset = MoleLoader(df_train, vocab, max_len)
 test_dataset = MoleLoader(df_test, vocab, max_len)
-train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=1536, shuffle=True, num_workers=8 * 6,
-                                           pin_memory=True)
-test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=1535, shuffle=True, num_workers=8 * 6,
-                                          pin_memory=True)
+
 torch.manual_seed(42)
 
 epochs = 3000
@@ -145,6 +142,10 @@ def test(epoch):
 
 
 for epoch in range(1, epochs + 1):
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size= (epoch / 2) * 256, shuffle=True, num_workers=8 * 6,
+                                               pin_memory=True)
+    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=(epoch / 2) * 256, shuffle=True, num_workers=8 * 6,
+                                              pin_memory=True)
     experirment.log_current_epoch(epoch)
     train_loss = train(epoch)
     val_loss = test(epoch)
