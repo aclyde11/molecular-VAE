@@ -32,8 +32,8 @@ def loss_function(recon_x, x, mu, logvar):
 
 
 df = pd.read_csv("/vol/ml/aclyde/ZINC/zinc_cleaned_cannon.smi", header=None)
-df = df.iloc[0:2000000,:]
-max_len = 125
+#df = df.iloc[0:2000000,:]
+max_len = 128
 
 
 vocab = set()

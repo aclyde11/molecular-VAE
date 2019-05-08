@@ -108,7 +108,7 @@ class MolecularVAE(nn.Module):
 
 class MolEncoder(nn.Module):
 
-    def __init__(self, i=120, o=292, c=35, word_embedding_size=30, h_size=64, num_lstm=2):
+    def __init__(self, i=120, o=292, c=35, word_embedding_size=30, h_size=72, num_lstm=3):
         super(MolEncoder, self).__init__()
 
         self.i = i
