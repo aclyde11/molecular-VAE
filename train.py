@@ -63,16 +63,16 @@ print(df_test.shape)
 lossf = nn.CrossEntropyLoss()
 train_dataset = MoleLoader(df_train, vocab, max_len)
 test_dataset  = MoleLoader(df_test, vocab, max_len)
-train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=256, shuffle=True, num_workers = 32, pin_memory = True)
-test_loader  = torch.utils.data.DataLoader(test_dataset, batch_size=256, shuffle=True, num_workers =  32, pin_memory = True)
+train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=1024, shuffle=True, num_workers = 32, pin_memory = True)
+test_loader  = torch.utils.data.DataLoader(test_dataset, batch_size=1024, shuffle=True, num_workers =  32, pin_memory = True)
 torch.manual_seed(42)
 
 epochs = 3000
 
 model = MolecularVAE(i=max_len, c=len(vocab), o=512).cuda()
-#model = nn.DataParallel(model)
-optimizer = optim.Adam(model.parameters(), lr=0.001 * 1.0)
-scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=0.8, patience=10, verbose=True, threshold=1e-3)
+model = nn.DataParallel(model)
+optimizer = optim.SGD(model.parameters(), lr=3.0e-4)
+scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=0.9, patience=10, verbose=True, threshold=1e-3)
 log_interval = 100
 
 experirment = Experiment(project_name='pytorch', auto_metric_logging=False)
@@ -150,7 +150,7 @@ for epoch in range(1, epochs + 1):
     for param_group in optimizer.param_groups:
         lr = param_group['lr']
     experirment.log_metric('lr', lr)
-    torch.save( { 'model_state_dict' : model.state_dict(),
+    torch.save( { 'model_state_dict' : model.module.state_dict(),
                   'optimizer_state_dict' : optimizer.state_dict(),
                   'epoch' : epoch,
                   'charset' : charset,
