@@ -72,7 +72,7 @@ model = nn.DataParallel(model)
 optimizer = optim.Adam(model.parameters(), lr=3.0e-4 * 2 * 6)
 scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=0.9, patience=10, verbose=True,
                                                  threshold=1e-3)
-log_interval = 100
+log_interval = 500
 
 experirment = Experiment(project_name='pytorch', auto_metric_logging=False)
 
@@ -94,7 +94,7 @@ def train(epoch):
             train_loss += loss.item()
             optimizer.step()
 
-            if batch_idx % 20 == 0:
+            if batch_idx % 100 == 0:
                 num_right = 0
                 _, preds = torch.max(recon_batch, dim=2)
                 for i in range(recon_batch.shape[0]):
