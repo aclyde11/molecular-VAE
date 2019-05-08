@@ -1,8 +1,10 @@
+from comet_ml import Experiment
+
+
 import numpy as np
 import pandas as pd
 import torch
 import torch.utils.data
-from comet_ml import Experiment
 from torch import nn, optim
 from tqdm import tqdm
 
