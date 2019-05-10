@@ -147,7 +147,7 @@ class MolEncoder(nn.Module):
 
 class MolDecoder(nn.Module):
 
-    def __init__(self, i=292, o=120, c=35, num_gru=4, h_size=501):
+    def __init__(self, i=292, o=120, c=35, num_gru=4, h_size=1024):
         super(MolDecoder, self).__init__()
 
         self.latent_input = nn.Sequential(nn.Linear(i, i),
