@@ -68,8 +68,8 @@ epochs = 3000
 
 model = MolecularVAE(i=max_len, c=len(vocab), o=360).cuda()
 model = nn.DataParallel(model)
-optimizer = optim.Adam(model.parameters(), lr=8.0e-4)
-scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=0.9, patience=10, verbose=True,
+optimizer = optim.SGD(model.parameters(), lr=8.0e-4, momentum=0.85)
+scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=0.9, patience=4, verbose=True,
                                                  threshold=1e-3)
 log_interval = 500
 
@@ -143,9 +143,9 @@ def test(epoch):
 
 
 for epoch in range(1, epochs + 1):
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size= 256, shuffle=True, num_workers=8 * 6,
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size= 512, shuffle=True, num_workers=8 * 6,
                                                pin_memory=True)
-    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size= 256, shuffle=True, num_workers=8 * 6,
+    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size= 512, shuffle=True, num_workers=8 * 6,
                                               pin_memory=True)
     experirment.log_current_epoch(epoch)
     train_loss = train(epoch)
