@@ -142,9 +142,9 @@ def test(epoch):
 
 
 for epoch in range(1, epochs + 1):
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size= int(epoch / 2 + 0.5) * 256, shuffle=True, num_workers=8 * 6,
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size= 256, shuffle=True, num_workers=8 * 6,
                                                pin_memory=True)
-    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size= int(epoch / 2 + 0.5) * 256, shuffle=True, num_workers=8 * 6,
+    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size= 256, shuffle=True, num_workers=8 * 6,
                                               pin_memory=True)
     experirment.log_current_epoch(epoch)
     train_loss = train(epoch)
