@@ -89,11 +89,12 @@ def train(epoch):
             loss = loss_function(recon_batch, ohe, mu, logvar)
             loss.backward()
             torch.nn.utils.clip_grad_norm(model.parameters(), 3.0)
-            experirment.log_metric('loss', loss.item())
             train_loss += loss.item()
             optimizer.step()
 
             if batch_idx % 100 == 0:
+                experirment.log_metric('loss', loss.item())
+
                 num_right = 0
                 _, preds = torch.max(recon_batch, dim=2)
                 for i in range(recon_batch.shape[0]):
