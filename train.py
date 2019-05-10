@@ -10,6 +10,13 @@ from tqdm import tqdm
 
 from data_loader import MoleLoader
 from models import MolecularVAE
+import argparse
+
+argparser = argparse.ArgumentParser()
+argparser.add_argument("-b", "--batch_size", default=128, type=int)
+argparser.add_argument("-o", "--optimizer", default="adam", type=str)
+
+args = argparser.parse_args()
 
 
 def onehot_initialization_v2(a):
@@ -67,8 +74,12 @@ torch.manual_seed(42)
 epochs = 3000
 
 model = MolecularVAE(i=max_len, c=len(vocab), o=360).cuda()
-model = nn.DataParallel(model)
-optimizer = optim.SGD(model.parameters(), lr=8.0e-4, momentum=0.85)
+# model = nn.DataParallel(model)
+if args.optimizer == 'adam':
+    optimizer = optim.Adam(model.parameters(), lr=5.0e-4)
+else:
+    optimizer = optim.SGD(model.parameters(), lr=5.0e-4, momentum=0.9)
+
 scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=0.9, patience=4, verbose=True,
                                                  threshold=1e-3)
 log_interval = 500
@@ -143,9 +154,9 @@ def test(epoch):
 
 
 for epoch in range(1, epochs + 1):
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size= 512, shuffle=True, num_workers=8 * 6,
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size= args.batch_size, shuffle=True, num_workers=8 * 6,
                                                pin_memory=True)
-    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size= 512, shuffle=True, num_workers=8 * 6,
+    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size= args.batch_size, shuffle=True, num_workers=8 * 6,
                                               pin_memory=True)
     experirment.log_current_epoch(epoch)
     train_loss = train(epoch)
@@ -156,10 +167,10 @@ for epoch in range(1, epochs + 1):
     for param_group in optimizer.param_groups:
         lr = param_group['lr']
     experirment.log_metric('lr', lr)
-    torch.save({'model_state_dict': model.module.state_dict(),
+    torch.save({'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
                 'epoch': epoch,
                 'charset': charset,
                 'max_len': max_len,
                 'lr': lr
-                }, "save.pt")
+                }, "save_" + str(args.batch_size) + "_" + str(args.optimizer) + ".pt")
