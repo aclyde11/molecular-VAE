@@ -15,7 +15,7 @@ import sys
 
 checkpoint = torch.load(sys.argv[1], map_location='cpu')
 
-model = MolecularVAE(i=checkpoint['max_len'], c=len(checkpoint['charset']), o=360).cuda()
+model = MolecularVAE(i=checkpoint['max_len'], c=len(checkpoint['charset']), o=360)
 model.load_state_dict(checkpoint['model_state_dict'])
 model = model.cuda()
 charset = checkpoint['charset']
