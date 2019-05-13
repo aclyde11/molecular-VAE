@@ -174,4 +174,4 @@ for epoch in range(1, epochs + 1):
                 'max_len': max_len,
                 'lr': lr,
                 'latent_size' : args.latent_size
-                }, "save_" + str(args.batch_size) + "_" + str(args.optimizer) + ".pt")
+                }, "save_" + str(args.batch_size) + "_" + str(args.optimizer) + "_" + str(args.latent_size) + ".pt")
