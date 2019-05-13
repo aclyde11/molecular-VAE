@@ -39,7 +39,7 @@ def loss_function(recon_x, x, mu, logvar):
 
 df = pd.read_csv("/vol/ml/aclyde/ZINC/zinc_cleaned_cannon.smi", header=None)
 # df = df.iloc[0:2000000,:]
-max_len = 148
+max_len = 128
 
 vocab = set()
 bads = []
@@ -73,7 +73,7 @@ torch.manual_seed(42)
 
 epochs = 3000
 
-model = MolecularVAE(i=max_len, c=len(vocab), o=360).cuda()
+model = MolecularVAE(i=max_len, c=len(vocab), o=args.latent_size).cuda()
 # model = nn.DataParallel(model)
 if args.optimizer == 'adam':
     optimizer = optim.Adam(model.parameters(), lr=5.0e-4)
