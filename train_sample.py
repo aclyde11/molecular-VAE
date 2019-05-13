@@ -22,11 +22,12 @@ charset = checkpoint['charset']
 
 model.eval()
 b_size = 1000
-
+times = 10
 with open(sys.argv[2], 'w') as f:
     with torch.no_grad():
-        for batch_idx in range(100):
-            sampler = torch.rand(size=(100, 360))
+        for batch_idx in range(times):
+            print(batch_idx)
+            sampler = torch.rand(size=(100, 360)).cuda()
             recon_batch = model.decoder(sampler)
             _, preds = torch.max(recon_batch, dim=2)
             preds = preds.cpu().numpy()
