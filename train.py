@@ -15,7 +15,7 @@ import argparse
 argparser = argparse.ArgumentParser()
 argparser.add_argument("-b", "--batch_size", default=128, type=int)
 argparser.add_argument("-o", "--optimizer", default="adam", type=str)
-argparser.add_argument("-l", "--latent_size", default=292, type=str)
+argparser.add_argument("-l", "--latent_size", default=292, type=int)
 args = argparser.parse_args()
 
 
