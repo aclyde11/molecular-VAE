@@ -22,7 +22,7 @@ charset = checkpoint['charset']
 
 model.eval()
 b_size = 1000
-times = 10
+times = 1000
 with open(sys.argv[2], 'w') as f:
     with torch.no_grad():
         for batch_idx in range(times):
