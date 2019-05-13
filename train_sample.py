@@ -27,7 +27,7 @@ with open(sys.argv[2], 'w') as f:
     with torch.no_grad():
         for batch_idx in range(times):
             print(batch_idx)
-            sampler = torch.rand(size=(100, 360)).cuda()
+            sampler = torch.rand(size=(b_size, 360)).cuda()
             recon_batch = model.decoder(sampler)
             _, preds = torch.max(recon_batch, dim=2)
             preds = preds.cpu().numpy()
