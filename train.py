@@ -15,7 +15,7 @@ import argparse
 argparser = argparse.ArgumentParser()
 argparser.add_argument("-b", "--batch_size", default=128, type=int)
 argparser.add_argument("-o", "--optimizer", default="adam", type=str)
-
+argparser.add_argument("-l", "--latent_size", default=292, type=str)
 args = argparser.parse_args()
 
 
@@ -172,5 +172,6 @@ for epoch in range(1, epochs + 1):
                 'epoch': epoch,
                 'charset': charset,
                 'max_len': max_len,
-                'lr': lr
+                'lr': lr,
+                'latent_size' : args.latent_size
                 }, "save_" + str(args.batch_size) + "_" + str(args.optimizer) + ".pt")
