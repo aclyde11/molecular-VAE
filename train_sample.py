@@ -35,7 +35,7 @@ with open(sys.argv[2], 'w') as f:
             for i in tqdm(range(b_size)):
                 sample = preds[i, ...]
                 out = "".join([charset[chars] for chars in sample]).rstrip()
-                m = Chem.SmilesToMol(out)
+                m = Chem.MolFromSmiles(out)
                 total += 1
                 if m is not None:
                     counter += 1
