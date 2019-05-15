@@ -15,7 +15,7 @@ import sys
 from rdkit import Chem
 checkpoint = torch.load(sys.argv[1], map_location='cpu')
 
-model = MolecularVAE(i=checkpoint['max_len'], c=len(checkpoint['charset']), o=360)
+model = MolecularVAE(i=checkpoint['max_len'], c=len(checkpoint['charset']), o=256)
 model.load_state_dict(checkpoint['model_state_dict'])
 model = model.cuda()
 charset = checkpoint['charset']
@@ -42,4 +42,5 @@ with open(sys.argv[2], 'w') as f:
                     print("counter = ", counter)
                     f.write(out)
                     f.write("\n")
+                print(float(counter) / float(total))
 

@@ -1,6 +1,6 @@
 from comet_ml import Experiment
 
-
+import queue
 import numpy as np
 import pandas as pd
 import torch
@@ -18,6 +18,7 @@ argparser.add_argument("-o", "--optimizer", default="adam", type=str)
 argparser.add_argument("-l", "--latent_size", default=292, type=int)
 args = argparser.parse_args()
 
+import numpy as np
 
 def onehot_initialization_v2(a):
     ncols = len(vocab)
@@ -71,17 +72,16 @@ test_dataset = MoleLoader(df_test, vocab, max_len)
 
 torch.manual_seed(42)
 
-epochs = 3000
+epochs = 200
 
 model = MolecularVAE(i=max_len, c=len(vocab), o=args.latent_size).cuda()
 # model = nn.DataParallel(model)
-if args.optimizer == 'adam':
-    optimizer = optim.Adam(model.parameters(), lr=5.0e-4)
-else:
-    optimizer = optim.SGD(model.parameters(), lr=5.0e-4, momentum=0.9)
 
-scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=0.9, patience=4, verbose=True,
-                                                 threshold=1e-3)
+
+optimizer = optim.Adam(model.parameters(), lr=0.0008)
+
+scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=0.9, patience=10, verbose=True,
+                                                 threshold=1e-3, cooldown=5)
 log_interval = 500
 
 experirment = Experiment(project_name='pytorch', auto_metric_logging=False)
