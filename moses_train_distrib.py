@@ -136,7 +136,7 @@ n_epochs = 50
 model = mosesvae.VAE(vocab).cuda()
 optimizer = optim.Adam((p for p in model.parameters() if p.requires_grad),
                                lr=3*1e-4)
-model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
+model, optimizer = amp.initialize(model, optimizer, opt_level="O2")
 model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], output_device=args.local_rank)
 
 
@@ -213,7 +213,8 @@ for epoch in range(n_epochs):
                      desc='Training (epoch #{})'.format(epoch))
     postfix = _train_epoch(model, epoch,
                                 tqdm_data, kl_weight, optimizer)
-
+    if args.local_rank == 0:
+        model.save("trained_save.pt")
 
     # Epoch end
     lr_annealer.step()
