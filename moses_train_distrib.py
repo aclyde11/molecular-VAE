@@ -125,9 +125,9 @@ df = df.iloc[:,0].astype(str).tolist()
 vocab = mosesvocab.OneHotVocab.from_data(df)
 train_sampler = torch.utils.data.distributed.DistributedSampler(df)
 
-train_loader = torch.utils.data.DataLoader(df, batch_size=2048,
+train_loader = torch.utils.data.DataLoader(df, batch_size=512,
                           shuffle=False,
-                          num_workers=32, collate_fn=get_collate_fn(),
+                          num_workers=8, collate_fn=get_collate_fn(),
                           worker_init_fn=mosesvocab.set_torch_seed_to_all_gens,
                                            pin_memory=True, sampler=train_sampler)
 
