@@ -106,7 +106,7 @@ df = df.drop(bads, axis=0)
 print(df.head())
 print(df.shape)
 
-vocab = mosesvocab.OneHotVocab.from_data(df.values())
+vocab = mosesvocab.OneHotVocab.from_data(df.values)
 
 train_loader = torch.utils.data.DataLoader(vocab, batch_size=512,
                           shuffle=True,
