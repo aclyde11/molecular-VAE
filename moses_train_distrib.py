@@ -105,10 +105,12 @@ for i in tqdm(df.itertuples(index=True)):
 df = df.drop(bads, axis=0)
 print(df.head())
 print(df.shape)
+df = df.iloc[:,0].astype(str).tolist()
+print(df)
 
 vocab = mosesvocab.OneHotVocab.from_data(df.values)
 
-train_loader = torch.utils.data.DataLoader(vocab, batch_size=512,
+train_loader = torch.utils.data.DataLoader(df, batch_size=512,
                           shuffle=True,
                           num_workers=32, collate_fn=get_collate_fn(),
                           worker_init_fn=mosesvocab.set_torch_seed_to_all_gens)
