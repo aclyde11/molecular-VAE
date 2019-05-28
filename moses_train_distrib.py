@@ -35,7 +35,7 @@ class KLAnnealer:
 
 
 class CosineAnnealingLRWithRestart(_LRScheduler):
-    def __init__(self, optimizer, config):
+    def __init__(self, optimizer):
         self.n_period = 10
         self.n_mult = 1
         self.lr_end = 3 * 1e-4
