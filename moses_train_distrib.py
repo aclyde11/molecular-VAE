@@ -91,7 +91,7 @@ def get_collate_fn():
 
 
 
-df = pd.read_csv("/vol/ml/aclyde/ZINC/zinc_cleaned.smi", nrows=10000, header=None)
+df = pd.read_csv("/vol/ml/aclyde/ZINC/zinc_cleaned.smi", nrows=1000000, header=None)
 max_len = 0
 
 bads = []
@@ -115,8 +115,9 @@ train_loader = torch.utils.data.DataLoader(df, batch_size=512,
                           num_workers=32, collate_fn=get_collate_fn(),
                           worker_init_fn=mosesvocab.set_torch_seed_to_all_gens)
 
-n_epochs = 10
+n_epochs = 50
 model = mosesvae.VAE(vocab).cuda()
+model = torch.nn.DataParallel(model)
 optimizer = optim.Adam((p for p in model.parameters() if p.requires_grad),
                                lr=3*1e-4)
 kl_annealer = KLAnnealer(n_epochs)
