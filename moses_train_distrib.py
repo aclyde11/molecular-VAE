@@ -91,18 +91,8 @@ def get_collate_fn():
 
 
 
-df = pd.read_csv("/vol/ml/aclyde/ZINC/zinc_cleaned.smi", nrows=10000, header=None)
+df = pd.read_csv("/vol/ml/aclyde/ZINC/zinc_cleaned.smi", nrows=5000000, header=None)
 max_len = 0
-
-bads = []
-for i in tqdm(df.itertuples(index=True)):
-    try:
-        i = str(Chem.MolToSmiles(Chem.MolFromSmiles(i[1]), True))
-        max_len = max(max_len, len(i))
-    except:
-        bads.append(i[0])
-
-df = df.drop(bads, axis=0)
 print(df.head())
 print(df.shape)
 df = df.iloc[:,0].astype(str).tolist()
