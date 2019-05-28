@@ -143,8 +143,7 @@ def _train_epoch(model, epoch, tqdm_data, kl_weight, optimizer=None):
 
         loss = kl_weight * kl_loss + recon_loss
         print(loss.shape)
-        loss = loss.sum()
-        print(loss.shape)
+        loss = torch.sum(loss, 0)
 
         # Backward
         if optimizer is not None:
