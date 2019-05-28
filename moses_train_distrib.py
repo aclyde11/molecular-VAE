@@ -132,7 +132,7 @@ train_loader = torch.utils.data.DataLoader(df, batch_size=2048,
 
 n_epochs = 50
 
-model = mosesvae.VAE(vocab)
+model = mosesvae.VAE(vocab).cuda()
 model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], output_device=args.local_rank)
 
 optimizer = optim.Adam((p for p in model.parameters() if p.requires_grad),
