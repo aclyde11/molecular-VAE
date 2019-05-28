@@ -215,7 +215,7 @@ for epoch in range(n_epochs):
                                 tqdm_data, kl_weight, optimizer)
     if args.local_rank == 0:
         torch.save(model.state_dict(), "trained_save.pt")
-        model.module.sample(n_batch
+        model.module.sample(n_batch)
 
     # Epoch end
     lr_annealer.step()
