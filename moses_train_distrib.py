@@ -35,7 +35,6 @@ train_sampler = None
 if args.distributed:
     # FOR DISTRIBUTED:  Set the device according to local_rank.
     torch.cuda.set_device(args.local_rank)
-    train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
 
     # FOR DISTRIBUTED:  Initialize the backend.  torch.distributed.launch will provide
     # environment variables, and requires that you use init_method=`env://`.
@@ -123,6 +122,7 @@ print(df.shape)
 df = df.iloc[:,0].astype(str).tolist()
 
 vocab = mosesvocab.OneHotVocab.from_data(df)
+train_sampler = torch.utils.data.distributed.DistributedSampler(df)
 
 train_loader = torch.utils.data.DataLoader(df, batch_size=2048,
                           shuffle=False,
