@@ -108,7 +108,7 @@ print(df.shape)
 df = df.iloc[:,0].astype(str).tolist()
 print(df)
 
-vocab = mosesvocab.OneHotVocab.from_data(df.values)
+vocab = mosesvocab.OneHotVocab.from_data(df)
 
 train_loader = torch.utils.data.DataLoader(df, batch_size=512,
                           shuffle=True,
