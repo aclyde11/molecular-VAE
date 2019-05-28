@@ -30,7 +30,7 @@ class VAE(nn.Module):
 
         # Encoder
         if q_cell == 'gru':
-            encoder_rnn = nn.GRU(
+            self.encoder_rnn = nn.GRU(
                 d_emb,
                 q_d_h,
                 num_layers=q_n_layers,
@@ -65,21 +65,21 @@ class VAE(nn.Module):
         self.decoder_fc = nn.Linear(d_d_h, n_vocab)
 
         # Grouping the model's parameters
-        self.encoder = nn.ModuleList([
-            self.encoder_rnn,
-            self.q_mu,
-            self.q_logvar
-        ])
-        self.decoder = nn.ModuleList([
-            self.decoder_rnn,
-            self.decoder_lat,
-            self.decoder_fc
-        ])
-        self.vae = nn.ModuleList([
-            self.x_emb,
-            self.encoder,
-            self.decoder
-        ])
+        # self.encoder = nn.ModuleList([
+        #     self.encoder_rnn,
+        #     self.q_mu,
+        #     self.q_logvar
+        # ])
+        # self.decoder = nn.ModuleList([
+        #     self.decoder_rnn,
+        #     self.decoder_lat,
+        #     self.decoder_fc
+        # ])
+        # self.vae = nn.ModuleList([
+        #     self.x_emb,
+        #     self.encoder,
+        #     self.decoder
+        # ])
 
     @property
     def device(self):
