@@ -116,7 +116,7 @@ def get_collate_fn():
 
 
 
-df = pd.read_csv("/vol/ml/aclyde/ZINC/zinc_cleaned.smi", nrows=5000000, header=None)
+df = pd.read_csv("/vol/ml/aclyde/ZINC/zinc_cleaned.smi", nrows=2000000, header=None)
 max_len = 0
 print(df.head())
 print(df.shape)
@@ -125,7 +125,7 @@ df = df.iloc[:,0].astype(str).tolist()
 vocab = mosesvocab.OneHotVocab.from_data(df)
 train_sampler = torch.utils.data.distributed.DistributedSampler(df)
 
-train_loader = torch.utils.data.DataLoader(df, batch_size=256,
+train_loader = torch.utils.data.DataLoader(df, batch_size=128,
                           shuffle=False,
                           num_workers=8, collate_fn=get_collate_fn(),
                           worker_init_fn=mosesvocab.set_torch_seed_to_all_gens,
@@ -215,6 +215,7 @@ for epoch in range(n_epochs):
                                 tqdm_data, kl_weight, optimizer)
     if args.local_rank == 0:
         torch.save(model.state_dict(), "trained_save.pt")
+        model.module.sample(n_batch
 
     # Epoch end
     lr_annealer.step()
