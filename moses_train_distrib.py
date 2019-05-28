@@ -19,6 +19,31 @@ import mosesvocab
 from torch.optim.lr_scheduler import _LRScheduler
 
 import random
+import os
+import argparse
+
+parser = argparse.ArgumentParser()
+# FOR DISTRIBUTED:  Parse for the local_rank argument, which will be supplied
+# automatically by torch.distributed.launch.
+parser.add_argument("--local_rank", default=0, type=int)
+args = parser.parse_args()
+args.distributed = False
+if 'WORLD_SIZE' in os.environ:
+    args.distributed = int(os.environ['WORLD_SIZE']) > 1
+
+train_sampler = None
+if args.distributed:
+    # FOR DISTRIBUTED:  Set the device according to local_rank.
+    torch.cuda.set_device(args.local_rank)
+    train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
+
+    # FOR DISTRIBUTED:  Initialize the backend.  torch.distributed.launch will provide
+    # environment variables, and requires that you use init_method=`env://`.
+    torch.distributed.init_process_group(backend='nccl',
+                                         init_method='env://')
+
+
+
 
 class KLAnnealer:
     def __init__(self, n_epoch):
@@ -100,13 +125,16 @@ df = df.iloc[:,0].astype(str).tolist()
 vocab = mosesvocab.OneHotVocab.from_data(df)
 
 train_loader = torch.utils.data.DataLoader(df, batch_size=2048,
-                          shuffle=True,
+                          shuffle=False,
                           num_workers=32, collate_fn=get_collate_fn(),
-                          worker_init_fn=mosesvocab.set_torch_seed_to_all_gens)
+                          worker_init_fn=mosesvocab.set_torch_seed_to_all_gens,
+                                           pin_memory=True, sampler=train_sampler)
 
 n_epochs = 50
-model = mosesvae.VAE(vocab).cuda()
-model = torch.nn.DataParallel(model)
+
+model = mosesvae.VAE(vocab)
+model = torch.distributed.DistributedDataParallel(model, device_ids=[i], output_device=i)
+
 optimizer = optim.Adam((p for p in model.parameters() if p.requires_grad),
                                lr=3*1e-4)
 kl_annealer = KLAnnealer(n_epochs)
