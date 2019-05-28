@@ -19,6 +19,7 @@ import mosesvocab
 from torch.optim.lr_scheduler import _LRScheduler
 
 import random
+import amp
 import os
 import argparse
 
@@ -133,10 +134,12 @@ train_loader = torch.utils.data.DataLoader(df, batch_size=2048,
 n_epochs = 50
 
 model = mosesvae.VAE(vocab).cuda()
-model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], output_device=args.local_rank)
-
 optimizer = optim.Adam((p for p in model.parameters() if p.requires_grad),
                                lr=3*1e-4)
+model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
+model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], output_device=args.local_rank)
+
+
 kl_annealer = KLAnnealer(n_epochs)
 lr_annealer = CosineAnnealingLRWithRestart(optimizer)
 
@@ -166,7 +169,8 @@ def _train_epoch(model, epoch, tqdm_data, kl_weight, optimizer=None):
         # Backward
         if optimizer is not None:
             optimizer.zero_grad()
-            loss.backward()
+            with amp.scale_loss(loss, optimizer) as scaled_loss:
+                scaled_loss.backward()
             clip_grad_norm_((p for p in model.parameters() if p.requires_grad),
                             50)
             optimizer.step()
