@@ -214,7 +214,7 @@ for epoch in range(n_epochs):
     postfix = _train_epoch(model, epoch,
                                 tqdm_data, kl_weight, optimizer)
     if args.local_rank == 0:
-        model.save("trained_save.pt")
+        torch.save(model.state_dict(), "trained_save.pt")
 
     # Epoch end
     lr_annealer.step()
