@@ -125,7 +125,7 @@ df = df.iloc[:,0].astype(str).tolist()
 vocab = mosesvocab.OneHotVocab.from_data(df)
 train_sampler = torch.utils.data.distributed.DistributedSampler(df)
 
-train_loader = torch.utils.data.DataLoader(df, batch_size=512,
+train_loader = torch.utils.data.DataLoader(df, batch_size=256,
                           shuffle=False,
                           num_workers=8, collate_fn=get_collate_fn(),
                           worker_init_fn=mosesvocab.set_torch_seed_to_all_gens,
@@ -136,7 +136,7 @@ n_epochs = 50
 model = mosesvae.VAE(vocab).cuda()
 optimizer = optim.Adam((p for p in model.parameters() if p.requires_grad),
                                lr=3*1e-4)
-model, optimizer = amp.initialize(model, optimizer, opt_level="O2")
+model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
 model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], output_device=args.local_rank)
 
 
