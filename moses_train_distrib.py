@@ -91,7 +91,7 @@ def get_collate_fn():
 
 
 
-df = pd.read_csv("/vol/ml/aclyde/ZINC/zinc_cleaned.smi", nrows=1000000, header=None)
+df = pd.read_csv("/vol/ml/aclyde/ZINC/zinc_cleaned.smi", nrows=10000, header=None)
 max_len = 0
 
 bads = []
