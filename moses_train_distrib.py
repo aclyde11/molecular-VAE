@@ -96,7 +96,6 @@ max_len = 0
 print(df.head())
 print(df.shape)
 df = df.iloc[:,0].astype(str).tolist()
-print(df)
 
 vocab = mosesvocab.OneHotVocab.from_data(df)
 
