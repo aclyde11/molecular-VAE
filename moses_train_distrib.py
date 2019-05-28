@@ -19,7 +19,7 @@ import mosesvocab
 from torch.optim.lr_scheduler import _LRScheduler
 
 import random
-import amp
+from apex import amp, optimizers
 import os
 import argparse
 
