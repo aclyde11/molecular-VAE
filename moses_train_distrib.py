@@ -1,4 +1,3 @@
-from comet_ml import Experiment
 
 import numpy as np
 import torch
@@ -136,7 +135,7 @@ n_epochs = 50
 model = mosesvae.VAE(vocab).cuda()
 optimizer = optim.Adam((p for p in model.parameters() if p.requires_grad),
                                lr=3*1e-4)
-model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
+# model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
 model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], output_device=args.local_rank)
 
 
@@ -169,8 +168,9 @@ def _train_epoch(model, epoch, tqdm_data, kl_weight, optimizer=None):
         # Backward
         if optimizer is not None:
             optimizer.zero_grad()
-            with amp.scale_loss(loss, optimizer) as scaled_loss:
-                scaled_loss.backward()
+            # with amp.scale_loss(loss, optimizer) as scaled_loss:
+            #     scaled_loss.backward()
+            loss.backward()
             clip_grad_norm_((p for p in model.parameters() if p.requires_grad),
                             50)
             optimizer.step()
