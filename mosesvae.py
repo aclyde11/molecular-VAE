@@ -125,7 +125,7 @@ class VAE(nn.Module):
         """
 
         x = [self.x_emb(i_x) for i_x in x]
-        x = nn.utils.rnn.pack_sequence(x, enforce_sorted=True)
+        x = nn.utils.rnn.pack_sequence(x)
 
         _, h = self.encoder_rnn(x, None)
 
