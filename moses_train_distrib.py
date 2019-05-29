@@ -115,7 +115,7 @@ def get_collate_fn():
 
 
 
-df = pd.read_csv("/vol/ml/aclyde/ZINC/zinc_cleaned.smi", nrows=2000000, header=None)
+df = pd.read_csv("/workspace/zinc_cleaned.smi", nrows=2000000, header=None)
 max_len = 0
 print(df.head())
 print(df.shape)
