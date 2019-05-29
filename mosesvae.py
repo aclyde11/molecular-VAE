@@ -157,7 +157,7 @@ class VAE(nn.Module):
         z_0 = z.unsqueeze(1).repeat(1, x_emb.size(1), 1)
         x_input = torch.cat([x_emb, z_0], dim=-1)
         x_input = nn.utils.rnn.pack_padded_sequence(x_input, lengths,
-                                                    batch_first=True, enforce_sorted=True)
+                                                    batch_first=True)
 
         h_0 = self.decoder_lat(z)
         h_0 = h_0.unsqueeze(0).repeat(self.decoder_rnn.num_layers, 1, 1)
