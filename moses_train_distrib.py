@@ -130,7 +130,7 @@ def get_collate_fn():
 
 
 df = pd.read_csv("/workspace/zinc_subset_docking_scores.smi", header=None)
-bindings = pd.read_table("/workspace/hybrid_scores.txt", skiprows=1, header=None)
+bindings = pd.read_table("/workspace/hybrid_score.txt", skiprows=1, header=None)
 bindings.iloc[:, 0] = list(map(lambda x : int(x.split('_')[1]), list(bindings.iloc[:, 0])))
 bindings = bindings.set_index(bindings.columns[0])
 bindings = bindings[[1]].join(df, how='left', lsuffix='hybrid')
