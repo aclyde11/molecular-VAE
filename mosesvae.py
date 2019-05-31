@@ -11,11 +11,11 @@ class BindingModel(nn.Module):
             nn.BatchNorm1d(z_size),
             nn.ReLU(),
 
-            nn.Linear(z_size / 2, z_size / 2),
-            nn.BatchNorm1d(z_size / 2),
+            nn.Linear(z_size, 64),
+            nn.BatchNorm1d(64),
             nn.ReLU(),
 
-            nn.Linear(z_size / 2, 1)
+            nn.Linear(64, 1)
         )
 
     def forward(self, x):
