@@ -113,6 +113,8 @@ def get_collate_fn_binding():
         data.sort(key=len, reverse=True)
         tensors = [string2tensor(vocab, string)
                    for string in sorted_strs]
+        print(bindings)
+        exit()
 
         return tensors, torch.from_numpy(np.array(bindings)).float()
 
