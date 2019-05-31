@@ -141,12 +141,12 @@ class VAE(nn.Module):
         # Encoder: x -> z, kl_loss
         z, kl_loss = self.forward_encoder(x)
 
-        _ = self.binding_model(z)
+        bind = self.binding_model(z)
         # Decoder: x, z -> recon_loss
         recon_loss = self.forward_decoder(x, z)
-        # binding_loss = nn.MSELoss()(binding_pred, b)
+        binding_loss = nn.MSELoss()(bind, b)
 
-        return kl_loss, recon_loss, torch.tensor(0)
+        return kl_loss, recon_loss, binding_loss
 
     def forward_encoder(self, x):
         """Encoder step, emulating z ~ E(x) = q_E(z|x)
