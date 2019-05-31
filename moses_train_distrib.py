@@ -41,7 +41,7 @@ if args.distributed:
                                          init_method='env://')
 
 
-run_bindings = False
+run_bindings = True
 
 class KLAnnealer:
     def __init__(self, n_epoch):
@@ -104,7 +104,6 @@ def tensor2string(vocab, tensor):
 
 def get_collate_fn_binding():
     def collate(data):
-        print(data)
         strs, bindings = list(zip(*data))
 
         lens = np.array(list(map(lambda x : len(x), strs)))
