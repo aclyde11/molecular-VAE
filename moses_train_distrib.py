@@ -159,7 +159,7 @@ print(df.head())
 print(df.shape)
 df = df.iloc[:,0].astype(str).tolist()
 
-vocab = mosesvocab.OneHotVocab.from_data(df)
+vocab = mosesvocab.OneHotVocab.from_data(bindings.iloc[:,1].astype(str).tolist())
 bdata = BindingDataSet(bindings)
 train_sampler = torch.utils.data.distributed.DistributedSampler(bdata)
 train_loader = torch.utils.data.DataLoader(bdata, batch_size=256,
