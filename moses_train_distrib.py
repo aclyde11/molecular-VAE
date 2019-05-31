@@ -146,6 +146,7 @@ class BindingDataSet(torch.utils.data.Dataset):
         smile = self.df.iloc[idx, 1]
         if biinding is None:
             print("PANIC NONE")
+            exit()
         return smile, biinding
 
 
