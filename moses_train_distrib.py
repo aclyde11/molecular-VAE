@@ -281,7 +281,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
             optimizer.zero_grad()
             # with amp.scale_loss(loss, optimizer) as scaled_loss:
             #     scaled_loss.backward()
-            loss.backward()
+            loss.backward(retain_graph=True)
             clip_grad_norm_((p for p in model.parameters() if p.requires_grad),
                             50)
 
