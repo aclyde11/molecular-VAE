@@ -263,7 +263,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
     binding_loss_values = mosesvocab.CircularBuffer(1000)
     for i, (input_batch, binding) in enumerate(tqdm_data):
         input_batch = tuple(data.cuda() for data in input_batch)
-
+        binding = binding.cuda()
         # Forwardd
         kl_loss, recon_loss, z = model(input_batch)
 
