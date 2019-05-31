@@ -16,7 +16,7 @@ import math
 import mosesvae
 import mosesvocab
 from torch.optim.lr_scheduler import _LRScheduler
-
+from sklearn.preprocessing import MinMaxScaler
 import random
 import os
 import argparse
@@ -157,7 +157,8 @@ class BindingDataSet(torch.utils.data.Dataset):
 df = pd.read_csv("/workspace/zinc_subset_docking_scores.smi", header=None)
 bindings = pd.read_table("/workspace/hybrid_score.txt", skiprows=1, header=None)
 bindings.iloc[:, 0] = list(map(lambda x : int(x.split('_')[1]), list(bindings.iloc[:, 0])))
-bindings.iloc[:, 1] = bindings.iloc[:, 1].astype(np.float32)
+mmss = MinMaxScaler()
+bindings.iloc[:, 1] = mmss.fit_transform((bindings.iloc[:, 1].astype(np.float32)))
 bindings = bindings.set_index(bindings.columns[0])
 bindings = bindings[[1]].join(df, how='left', lsuffix='hybrid')
 
@@ -267,7 +268,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
     binding_loss_values = mosesvocab.CircularBuffer(1000)
     for i, (input_batch, binding) in enumerate(tqdm_data):
         input_batch = tuple(data.cuda() for data in input_batch)
-        binding = binding.cuda().view(256, 1)
+        binding = binding.cuda().view(-1, 1)
         # Forwardd
         kl_loss, recon_loss, binding_loss = model(input_batch, binding)
 
