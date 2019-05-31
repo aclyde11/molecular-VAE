@@ -82,7 +82,7 @@ class VAE(nn.Module):
         self.decoder_lat = nn.Linear(d_z, d_d_h)
         self.decoder_fc = nn.Linear(d_d_h, n_vocab)
 
-        self.binding_model = self.model = nn.Sequential(
+        self.binding_model = nn.Sequential(
             nn.Linear(d_z, d_z),
             nn.BatchNorm1d(d_z),
             nn.ReLU(),
