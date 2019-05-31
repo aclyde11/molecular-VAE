@@ -82,7 +82,7 @@ class VAE(nn.Module):
         self.decoder_lat = nn.Linear(d_z, d_d_h)
         self.decoder_fc = nn.Linear(d_d_h, n_vocab)
 
-        self.binding_model = BindingModel()
+        # self.binding_model = BindingModel()
 
         # Grouping the model's parameters
         # self.encoder = nn.ModuleList([
@@ -131,7 +131,7 @@ class VAE(nn.Module):
         # Encoder: x -> z, kl_loss
         z, kl_loss = self.forward_encoder(x)
 
-        binding_pred = self.binding_model(z)
+        # binding_pred = self.binding_model(z)
         # Decoder: x, z -> recon_loss
         recon_loss = self.forward_decoder(x, z)
         # binding_loss = nn.MSELoss()(binding_pred, b)
