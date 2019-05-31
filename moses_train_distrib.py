@@ -186,7 +186,7 @@ binding_optimizer = None
 optimizer = optim.Adam((p for p in model.parameters() if p.requires_grad),
                                lr=3*1e-4 * 1)
 # model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
-model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], output_device=args.local_rank)
+model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], output_device=args.local_rank, find_unused_parameters=True)
 
 
 kl_annealer = KLAnnealer(n_epochs)
