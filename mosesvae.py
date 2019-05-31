@@ -140,16 +140,14 @@ class VAE(nn.Module):
         """
 
         # Encoder: x -> z, kl_loss
-        z, kl_loss = self.forward_encoder(x)
+        z, kl_loss, binding_loss = self.forward_encoder(x, b)
 
-        bind = self.binding_model(z)
         # Decoder: x, z -> recon_loss
         recon_loss = self.forward_decoder(x, z)
-        binding_loss = F.mse_loss(bind, b)
 
         return kl_loss, recon_loss, binding_loss
 
-    def forward_encoder(self, x):
+    def forward_encoder(self, x, b):
         """Encoder step, emulating z ~ E(x) = q_E(z|x)
 
         :param x: list of tensors of longs, input sentence x
@@ -170,8 +168,9 @@ class VAE(nn.Module):
         z = mu + (logvar / 2).exp() * eps
 
         kl_loss = 0.5 * (logvar.exp() + mu ** 2 - 1 - logvar).sum(1).mean()
-
-        return z, kl_loss
+        bind = self.binding_model(z)
+        binding_loss = F.mse_loss(bind, b)
+        return z, kl_loss, binding_loss
 
     def forward_decoder(self, x, z):
         """Decoder step, emulating x ~ G(z)
