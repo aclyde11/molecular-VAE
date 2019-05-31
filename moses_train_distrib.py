@@ -114,7 +114,6 @@ def get_collate_fn_binding():
         tensors = [string2tensor(vocab, string)
                    for string in sorted_strs]
         print(bindings)
-        exit()
 
         return tensors, torch.from_numpy(np.array(bindings)).float()
 
@@ -145,6 +144,8 @@ class BindingDataSet(torch.utils.data.Dataset):
     def __getitem__(self, idx):
         biinding = self.df.iloc[idx,0]
         smile = self.df.iloc[idx, 1]
+        if biinding is None:
+            print("PANIC NONE")
         return smile, biinding
 
 
