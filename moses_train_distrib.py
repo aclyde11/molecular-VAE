@@ -268,10 +268,6 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
         kl_loss, recon_loss, z = model(input_batch)
 
         binding_recon = model_binding(z)
-        if args.local_rank == 0:
-            print(z)
-            print(recon_loss)
-            print(binding)
 
 
         binding_loss = binding_lossf(binding_recon, binding)
@@ -284,6 +280,8 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
         # Backward
         if optimizer is not None:
             optimizer.zero_grad()
+            binding_optimizer.zero_grad()
+
             # with amp.scale_loss(loss, optimizer) as scaled_loss:
             #     scaled_loss.backward()
             loss.backward(retain_graph=True)
@@ -291,7 +289,6 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
                             50)
 
         if binding_optimizer is not None:
-            binding_optimizer.zero_grad()
             binding_loss.backward()
             clip_grad_norm_(model_binding.parameters(), 50)
             optimizer.step()
