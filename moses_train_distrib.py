@@ -105,8 +105,8 @@ def tensor2string(vocab, tensor):
 def get_collate_fn_binding():
     def collate(data):
         print(data)
-        strs = data[0]
-        bindings = data[1]
+        strs, bindings = list(zip(*data))
+
         lens = np.array(list(map(lambda x : len(x), strs)))
         ordering = np.argsort(lens)[::-1]
         sorted_strs = [strs[i] for i in ordering]
