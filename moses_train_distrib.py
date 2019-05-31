@@ -272,7 +272,6 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
         # Backward
         if optimizer is not None:
             optimizer.zero_grad()
-            binding_optimizer.zero_grad()
 
             # with amp.scale_loss(loss, optimizer) as scaled_loss:
             #     scaled_loss.backward()
