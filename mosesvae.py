@@ -3,6 +3,24 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
+class BindingModel(nn.Module):
+    def __init__(self, z_size=128):
+        super().__init__()
+        self.model = nn.Sequential(
+            nn.Linear(z_size, z_size),
+            nn.BatchNorm1d(z_size),
+            nn.ReLU(),
+
+            nn.Linear(z_size / 2, z_size / 2),
+            nn.BatchNorm1d(z_size / 2),
+            nn.ReLU(),
+
+            nn.Linear(z_size / 2, 1)
+        )
+
+    def forward(self, x):
+        return self.model(x)
+
 class VAE(nn.Module):
     def __init__(self, vocab):
         super().__init__()

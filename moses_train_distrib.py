@@ -41,7 +41,7 @@ if args.distributed:
                                          init_method='env://')
 
 
-
+run_bindings = False
 
 class KLAnnealer:
     def __init__(self, n_epoch):
@@ -130,6 +130,13 @@ def get_collate_fn():
 
 
 df = pd.read_csv("/workspace/zinc_subset_docking_scores.smi", header=None)
+bindings = pd.read_table("/workspace/hybrid_scores.txt", skiprows=1, header=None)
+bindings.iloc[:, 0] = list(map(lambda x : int(x.split('_')[1]), list(bindings.iloc[:, 0])))
+bindings = bindings.set_index(bindings.columns[0])
+bindings = bindings[[1]].join(df, how='left', lsuffix='hybrid')
+
+print(bindings.head())
+
 #df = df.sample(5000000, replace=False)
 max_len = 0
 print(df.head())
@@ -148,6 +155,12 @@ train_loader = torch.utils.data.DataLoader(df, batch_size=256,
 n_epochs = 50
 
 model = mosesvae.VAE(vocab).cuda()
+
+if run_bindings:
+    model_binding =     mosesvae.BindingModel().cuda()
+    binding_lossf = nn.MSELoss(reduce='mean')
+    binding_optimizer = optim.Adam(model_binding.parameters(), lr=1e-4)
+    model_binding = torch.nn.parallel.DistributedDataParallel(model_binding, device_ids=[args.local_rank], output_device=args.local_rank)
 optimizer = optim.Adam((p for p in model.parameters() if p.requires_grad),
                                lr=3*1e-4 * 1)
 # model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
@@ -219,6 +232,79 @@ def _train_epoch(model, epoch, tqdm_data, kl_weight, optimizer=None):
 
     return postfix
 
+def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
+    if optimizer is None:
+        model.eval()
+    else:
+        model.train()
+
+    kl_loss_values = mosesvocab.CircularBuffer(1000)
+    recon_loss_values = mosesvocab.CircularBuffer(1000)
+    loss_values =mosesvocab.CircularBuffer(1000)
+    binding_loss_values = mosesvocab.CircularBuffer(1000)
+    for i, (input_batch, binding) in enumerate(tqdm_data):
+        input_batch = tuple(data.cuda() for data in input_batch)
+
+        # Forwardd
+        kl_loss, recon_loss, z = model(input_batch)
+
+        binding_recon = model_binding(z)
+
+        binding_loss = binding_lossf(binding_recon, binding)
+        kl_loss = torch.sum(kl_loss, 0)
+        recon_loss = torch.sum(recon_loss, 0)
+
+        loss = kl_weight * kl_loss + recon_loss
+
+
+        # Backward
+        if optimizer is not None:
+            optimizer.zero_grad()
+            # with amp.scale_loss(loss, optimizer) as scaled_loss:
+            #     scaled_loss.backward()
+            loss.backward()
+            clip_grad_norm_((p for p in model.parameters() if p.requires_grad),
+                            50)
+            optimizer.step()
+
+        if binding_optimizer is not None:
+            binding_optimizer.zero_grad()
+            binding_loss.backwards()
+            clip_grad_norm_(model_binding.parameters(), 50)
+            binding_optimizer.step()
+
+        # Log
+        kl_loss_values.add(kl_loss.item())
+        recon_loss_values.add(recon_loss.item())
+        loss_values.add(loss.item())
+        binding_loss_values.add(binding_loss.item())
+        lr = (optimizer.param_groups[0]['lr']
+              if optimizer is not None
+              else None)
+
+        # Update tqdm
+        kl_loss_value = kl_loss_values.mean()
+        recon_loss_value = recon_loss_values.mean()
+        loss_value = loss_values.mean()
+        binding_loss_value = binding_loss_values.mean()
+        postfix = [f'loss={loss_value:.5f}',
+                   f'(kl={kl_loss_value:.5f}',
+                   f'recon={recon_loss_value:.5f})',
+                   f'klw={kl_weight:.5f} lr={lr:.5f}'
+                   f'bloss={binding_loss_value:.5f}']
+        tqdm_data.set_postfix_str(' '.join(postfix))
+
+    postfix = {
+        'epoch': epoch,
+        'kl_weight': kl_weight,
+        'lr': lr,
+        'kl_loss': kl_loss_value,
+        'recon_loss': recon_loss_value,
+        'loss': loss_value,
+        'mode': 'Eval' if optimizer is None else 'Train'}
+
+    return postfix
+
 # Epoch start
 for epoch in range(n_epochs):
     # Epoch start
@@ -230,7 +316,7 @@ for epoch in range(n_epochs):
                                 tqdm_data, kl_weight, optimizer)
     if args.local_rank == 0:
         torch.save(model.state_dict(), "trained_save.pt")
-        with open('vocab.pkl', 'w') as f:
+        with open('vocab.pkl', 'wb') as f:
             pickle.dump(vocab, f)
 
         res = model.module.sample(10)
