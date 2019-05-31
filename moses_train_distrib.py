@@ -11,14 +11,13 @@ import pickle
 from tqdm import tqdm
 from rdkit import Chem
 from torch.nn.utils import clip_grad_norm_
-
+import pickle
 import math
 import mosesvae
 import mosesvocab
 from torch.optim.lr_scheduler import _LRScheduler
 
 import random
-from apex import amp, optimizers
 import os
 import argparse
 
@@ -103,6 +102,21 @@ def tensor2string(vocab, tensor):
 
     return string
 
+def get_collate_fn_binding():
+    def collate(data):
+        strs, bindings = data
+        lens = np.array(list(map(lambda x : len(x), strs)))
+        ordering = np.argsort(lens)[::-1]
+        sorted_strs = [strs[i] for i in ordering]
+        bindings = [bindings[i] for i in ordering]
+        data.sort(key=len, reverse=True)
+        tensors = [string2tensor(vocab, string)
+                   for string in sorted_strs]
+
+        return tensors, bindings
+
+    return collate
+
 def get_collate_fn():
     def collate(data):
         data.sort(key=len, reverse=True)
@@ -115,8 +129,8 @@ def get_collate_fn():
 
 
 
-df = pd.read_csv("/workspace/zinc_cleaned.smi", header=None)
-df = df.sample(5000000, replace=False)
+df = pd.read_csv("/workspace/zinc_subset_docking_scores.smi", header=None)
+#df = df.sample(5000000, replace=False)
 max_len = 0
 print(df.head())
 print(df.shape)
@@ -125,7 +139,7 @@ df = df.iloc[:,0].astype(str).tolist()
 vocab = mosesvocab.OneHotVocab.from_data(df)
 train_sampler = torch.utils.data.distributed.DistributedSampler(df)
 
-train_loader = torch.utils.data.DataLoader(df, batch_size=512,
+train_loader = torch.utils.data.DataLoader(df, batch_size=256,
                           shuffle=False,
                           num_workers=8, collate_fn=get_collate_fn(),
                           worker_init_fn=mosesvocab.set_torch_seed_to_all_gens,
@@ -135,7 +149,7 @@ n_epochs = 50
 
 model = mosesvae.VAE(vocab).cuda()
 optimizer = optim.Adam((p for p in model.parameters() if p.requires_grad),
-                               lr=3*1e-4 * 2)
+                               lr=3*1e-4 * 1)
 # model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
 model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], output_device=args.local_rank)
 
@@ -159,7 +173,7 @@ def _train_epoch(model, epoch, tqdm_data, kl_weight, optimizer=None):
         input_batch = tuple(data.cuda() for data in input_batch)
 
         # Forwardd
-        kl_loss, recon_loss = model(input_batch)
+        kl_loss, recon_loss, _ = model(input_batch)
         kl_loss = torch.sum(kl_loss, 0)
         recon_loss = torch.sum(recon_loss, 0)
 
@@ -216,6 +230,9 @@ for epoch in range(n_epochs):
                                 tqdm_data, kl_weight, optimizer)
     if args.local_rank == 0:
         torch.save(model.state_dict(), "trained_save.pt")
+        with open('vocab.pkl', 'w') as f:
+            pickle.dump(vocab, f)
+
         res = model.module.sample(10)
         for i in range(10):
             print(res[i])
