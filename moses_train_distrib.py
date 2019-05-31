@@ -276,7 +276,14 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
         kl_loss = torch.sum(kl_loss, 0)
         recon_loss = torch.sum(recon_loss, 0)
         binding_loss = torch.sum(binding_loss, 0)
-        loss = kl_weight * kl_loss + recon_loss + binding_loss
+
+        loss_weight = 0
+        if epoch < 10:
+            loss_weight = 0
+        else:
+            loss_weight = kl_weight
+
+        loss = kl_weight * kl_loss + recon_loss + kl_weight * binding_loss
 
 
         # Backward
