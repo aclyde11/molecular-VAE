@@ -140,8 +140,8 @@ class BindingDataSet(torch.utils.data.Dataset):
         return self.df.shape[0]
 
     def __getitem__(self, idx):
-        biinding = df.iloc[idx,0]
-        smile = df.iloc[idx, 1]
+        biinding = self.df.iloc[idx,0]
+        smile = self.df.iloc[idx, 1]
         return smile, biinding
 
 
