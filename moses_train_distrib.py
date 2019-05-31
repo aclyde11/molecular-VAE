@@ -114,7 +114,7 @@ def get_collate_fn_binding():
         tensors = [string2tensor(vocab, string)
                    for string in sorted_strs]
 
-        return tensors, bindings
+        return tensors, torch.from_numpy(np.array(bindings)).float()
 
     return collate
 
@@ -196,6 +196,7 @@ def _train_epoch(model, epoch, tqdm_data, kl_weight, optimizer=None):
     else:
         model.train()
 
+
     kl_loss_values = mosesvocab.CircularBuffer(1000)
     recon_loss_values = mosesvocab.CircularBuffer(1000)
     loss_values =mosesvocab.CircularBuffer(1000)
@@ -254,6 +255,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
         model.eval()
     else:
         model.train()
+        model_binding.train()
 
     kl_loss_values = mosesvocab.CircularBuffer(1000)
     recon_loss_values = mosesvocab.CircularBuffer(1000)
