@@ -114,7 +114,7 @@ def get_collate_fn_binding():
         tensors = [string2tensor(vocab, string)
                    for string in sorted_strs]
 
-        for i in range(bindings):
+        for i in bindings:
             if i is None:
                 print("NONE~!")
                 exit()
