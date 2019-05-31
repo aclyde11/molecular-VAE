@@ -129,6 +129,22 @@ def get_collate_fn():
 
 
 
+class BindingDataSet(torch.utils.data.Dataset):
+    """Face Landmarks dataset."""
+
+    def __init__(self, df):
+        self.df = df
+
+
+    def __len__(self):
+        return self.df.shape[0]
+
+    def __getitem__(self, idx):
+        biinding = df.iloc[idx,0]
+        smile = df.iloc[idx, 1]
+        return smile, biinding
+
+
 df = pd.read_csv("/workspace/zinc_subset_docking_scores.smi", header=None)
 bindings = pd.read_table("/workspace/hybrid_score.txt", skiprows=1, header=None)
 bindings.iloc[:, 0] = list(map(lambda x : int(x.split('_')[1]), list(bindings.iloc[:, 0])))
@@ -144,18 +160,18 @@ print(df.shape)
 df = df.iloc[:,0].astype(str).tolist()
 
 vocab = mosesvocab.OneHotVocab.from_data(df)
-train_sampler = torch.utils.data.distributed.DistributedSampler(df)
-
-train_loader = torch.utils.data.DataLoader(df, batch_size=256,
+bdata = BindingDataSet(bindings)
+train_sampler = torch.utils.data.distributed.DistributedSampler(bdata)
+train_loader = torch.utils.data.DataLoader(bdata, batch_size=256,
                           shuffle=False,
-                          num_workers=8, collate_fn=get_collate_fn(),
+                          num_workers=8, collate_fn=get_collate_fn_binding(),
                           worker_init_fn=mosesvocab.set_torch_seed_to_all_gens,
                                            pin_memory=True, sampler=train_sampler)
 
 n_epochs = 50
 
 model = mosesvae.VAE(vocab).cuda()
-
+binding_optimizer = None
 if run_bindings:
     model_binding =     mosesvae.BindingModel().cuda()
     binding_lossf = nn.MSELoss(reduce='mean')
@@ -265,12 +281,12 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
             loss.backward()
             clip_grad_norm_((p for p in model.parameters() if p.requires_grad),
                             50)
-            optimizer.step()
 
         if binding_optimizer is not None:
             binding_optimizer.zero_grad()
             binding_loss.backwards()
             clip_grad_norm_(model_binding.parameters(), 50)
+            optimizer.step()
             binding_optimizer.step()
 
         # Log
@@ -312,7 +328,7 @@ for epoch in range(n_epochs):
 
     tqdm_data = tqdm(train_loader,
                      desc='Training (epoch #{})'.format(epoch))
-    postfix = _train_epoch(model, epoch,
+    postfix = _train_epoch_binding(model, epoch,
                                 tqdm_data, kl_weight, optimizer)
     if args.local_rank == 0:
         torch.save(model.state_dict(), "trained_save.pt")
