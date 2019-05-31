@@ -134,7 +134,7 @@ class VAE(nn.Module):
         binding_pred = self.binding_model(z)
         # Decoder: x, z -> recon_loss
         recon_loss = self.forward_decoder(x, z)
-        binding_loss = nn.MSELoss(reduction='mean')(binding_pred, b)
+        binding_loss = nn.MSELoss()(binding_pred, b)
 
         return kl_loss, recon_loss, binding_loss
 
