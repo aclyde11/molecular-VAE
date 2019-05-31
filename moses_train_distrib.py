@@ -287,7 +287,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
 
         if binding_optimizer is not None:
             binding_optimizer.zero_grad()
-            binding_loss.backwards()
+            binding_loss.backward()
             clip_grad_norm_(model_binding.parameters(), 50)
             optimizer.step()
             binding_optimizer.step()
