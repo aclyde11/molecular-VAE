@@ -82,6 +82,8 @@ class VAE(nn.Module):
         self.decoder_lat = nn.Linear(d_z, d_d_h)
         self.decoder_fc = nn.Linear(d_d_h, n_vocab)
 
+        self.binding_model = BindingModel()
+
         # Grouping the model's parameters
         # self.encoder = nn.ModuleList([
         #     self.encoder_rnn,
@@ -118,7 +120,7 @@ class VAE(nn.Module):
 
         return string
 
-    def forward(self, x):
+    def forward(self, x, b):
         """Do the VAE forward step
 
         :param x: list of tensors of longs, input sentence x
@@ -129,10 +131,12 @@ class VAE(nn.Module):
         # Encoder: x -> z, kl_loss
         z, kl_loss = self.forward_encoder(x)
 
+        binding_pred = self.binding_model(z)
         # Decoder: x, z -> recon_loss
         recon_loss = self.forward_decoder(x, z)
+        binding_loss = nn.MSELoss(binding_pred, b, reduction='mean')
 
-        return kl_loss, recon_loss, z
+        return kl_loss, recon_loss, binding_loss
 
     def forward_encoder(self, x):
         """Encoder step, emulating z ~ E(x) = q_E(z|x)

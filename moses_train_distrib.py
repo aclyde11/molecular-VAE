@@ -173,11 +173,7 @@ n_epochs = 50
 
 model = mosesvae.VAE(vocab).cuda()
 binding_optimizer = None
-if run_bindings:
-    model_binding =     mosesvae.BindingModel().cuda()
-    binding_lossf = nn.MSELoss(reduce='mean')
-    binding_optimizer = optim.Adam(model_binding.parameters(), lr=1e-4)
-    model_binding = torch.nn.parallel.DistributedDataParallel(model_binding, device_ids=[args.local_rank], output_device=args.local_rank)
+
 optimizer = optim.Adam((p for p in model.parameters() if p.requires_grad),
                                lr=3*1e-4 * 1)
 # model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
@@ -255,7 +251,6 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
         model.eval()
     else:
         model.train()
-        model_binding.train()
 
     kl_loss_values = mosesvocab.CircularBuffer(1000)
     recon_loss_values = mosesvocab.CircularBuffer(1000)
@@ -265,12 +260,9 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
         input_batch = tuple(data.cuda() for data in input_batch)
         binding = binding.cuda()
         # Forwardd
-        kl_loss, recon_loss, z = model(input_batch)
-
-        binding_recon = model_binding(z)
+        kl_loss, recon_loss, binding_loss = model(input_batch)
 
 
-        binding_loss = binding_lossf(binding_recon, binding)
         kl_loss = torch.sum(kl_loss, 0)
         recon_loss = torch.sum(recon_loss, 0)
 
@@ -284,15 +276,10 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
 
             # with amp.scale_loss(loss, optimizer) as scaled_loss:
             #     scaled_loss.backward()
-            loss.backward(retain_graph=True)
+            loss.backward()
             clip_grad_norm_((p for p in model.parameters() if p.requires_grad),
                             50)
-
-        if binding_optimizer is not None:
-            binding_loss.backward()
-            clip_grad_norm_(model_binding.parameters(), 50)
             optimizer.step()
-            binding_optimizer.step()
 
         # Log
         kl_loss_values.add(kl_loss.item())
