@@ -167,7 +167,7 @@ for k, v in pt.items():
     name = k[7:] # remove `module.`
     new_state_dict[name] = v
 
-model.load_state_dict(pt)
+model.load_state_dict(new_state_dict)
 model.eval()
 
 def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
