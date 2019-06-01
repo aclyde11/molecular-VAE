@@ -174,7 +174,7 @@ vocab = mosesvocab.OneHotVocab.from_data(bindings.iloc[:,1].astype(str).tolist()
 bdata = BindingDataSet(bindings)
 train_sampler = torch.utils.data.distributed.DistributedSampler(bdata)
 train_loader = torch.utils.data.DataLoader(bdata, batch_size=256,
-                          shuffle=True,
+                          shuffle=False,
                           num_workers=8, collate_fn=get_collate_fn_binding(),
                           worker_init_fn=mosesvocab.set_torch_seed_to_all_gens,
                                            pin_memory=True, sampler=train_sampler)
