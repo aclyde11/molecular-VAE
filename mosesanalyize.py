@@ -264,5 +264,5 @@ for epoch in range(10):
 
     # Epoch end
 
-largedf = totals[0].append(totals[1:])
+largedf = totals[0].append(totals[1:], ignore_index=True)
 print(largedf)
