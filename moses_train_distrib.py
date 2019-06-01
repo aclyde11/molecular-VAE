@@ -61,7 +61,7 @@ class CosineAnnealingLRWithRestart(_LRScheduler):
     def __init__(self, optimizer):
         self.n_period = 10
         self.n_mult = 1
-        self.lr_end = 3 * 1e-4
+        self.lr_end = 1e-4
 
         self.current_epoch = 0
         self.t_end = self.n_period
@@ -185,12 +185,12 @@ model = mosesvae.VAE(vocab).cuda()
 binding_optimizer = None
 
 optimizer = optim.Adam((p for p in model.parameters() if p.requires_grad),
-                               lr=3*1e-4 * 1)
+                               lr=3*1e-4 * 2)
 # model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
 model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], output_device=args.local_rank, find_unused_parameters=True)
 
 
-kl_annealer = KLAnnealer(n_epochs)
+kl_annealer = KLAnnealer(50)
 lr_annealer = CosineAnnealingLRWithRestart(optimizer)
 
 model.zero_grad()
