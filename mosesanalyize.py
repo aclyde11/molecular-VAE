@@ -21,24 +21,6 @@ import random
 import os
 import argparse
 
-parser = argparse.ArgumentParser()
-# FOR DISTRIBUTED:  Parse for the local_rank argument, which will be supplied
-# automatically by torch.distributed.launch.
-parser.add_argument("--local_rank", default=0, type=int)
-args = parser.parse_args()
-args.distributed = False
-if 'WORLD_SIZE' in os.environ:
-    args.distributed = int(os.environ['WORLD_SIZE']) > 1
-
-train_sampler = None
-if args.distributed:
-    # FOR DISTRIBUTED:  Set the device according to local_rank.
-    torch.cuda.set_device(args.local_rank)
-
-    # FOR DISTRIBUTED:  Initialize the backend.  torch.distributed.launch will provide
-    # environment variables, and requires that you use init_method=`env://`.
-    torch.distributed.init_process_group(backend='nccl',
-                                         init_method='env://')
 
 
 run_bindings = True
