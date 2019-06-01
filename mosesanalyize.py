@@ -246,7 +246,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
 # Epoch start
 totals = []
 
-for epoch in range(10):
+for epoch in range(1000):
     # Epoch start
 
 
@@ -266,3 +266,4 @@ for epoch in range(10):
 
 largedf = totals[0].append(totals[1:], ignore_index=True)
 print(largedf)
+largedf.to_csv("checkbindingrange.csv")
