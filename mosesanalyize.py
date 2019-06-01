@@ -161,6 +161,12 @@ n_epochs = 50
 
 model = mosesvae.VAE(vocab)
 pt = torch.load("trained_save.pt", map_location='cpu')
+from collections import OrderedDict
+new_state_dict = OrderedDict()
+for k, v in pt.items():
+    name = k[7:] # remove `module.`
+    new_state_dict[name] = v
+
 model.load_state_dict(pt)
 model.eval()
 
