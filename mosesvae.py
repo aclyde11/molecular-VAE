@@ -85,13 +85,8 @@ class VAE(nn.Module):
         # self.binding_model = nn.Linear(d_z, 1)
         self.binding_model = nn.Sequential(
             nn.Linear(d_z, d_z),
-            nn.ReLU(),
-
-            nn.Linear(d_z, 64),
-            nn.ReLU(),
-
-            nn.Linear(64, 1),
-            nn.ReLU
+            nn.Tanh(),
+            nn.Linear(256, 1),
         )
 
         # Grouping the model's parameters
