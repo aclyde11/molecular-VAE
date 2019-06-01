@@ -174,7 +174,7 @@ vocab = mosesvocab.OneHotVocab.from_data(bindings.iloc[:,1].astype(str).tolist()
 bdata = BindingDataSet(bindings)
 train_sampler = torch.utils.data.distributed.DistributedSampler(bdata)
 train_loader = torch.utils.data.DataLoader(bdata, batch_size=256,
-                          shuffle=False,
+                          shuffle=True,
                           num_workers=8, collate_fn=get_collate_fn_binding(),
                           worker_init_fn=mosesvocab.set_torch_seed_to_all_gens,
                                            pin_memory=True, sampler=train_sampler)
@@ -262,10 +262,10 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
     else:
         model.train()
 
-    kl_loss_values = mosesvocab.CircularBuffer(1000)
-    recon_loss_values = mosesvocab.CircularBuffer(1000)
-    loss_values =mosesvocab.CircularBuffer(1000)
-    binding_loss_values = mosesvocab.CircularBuffer(1000)
+    kl_loss_values = mosesvocab.CircularBuffer(100)
+    recon_loss_values = mosesvocab.CircularBuffer(100)
+    loss_values =mosesvocab.CircularBuffer(100)
+    binding_loss_values = mosesvocab.CircularBuffer(100)
     for i, (input_batch, binding) in enumerate(tqdm_data):
         input_batch = tuple(data.cuda() for data in input_batch)
         binding = binding.cuda().view(-1, 1)
@@ -343,9 +343,11 @@ for epoch in range(n_epochs):
         with open('vocab.pkl', 'wb') as f:
             pickle.dump(vocab, f)
 
-        res = model.module.sample(10)
+        res, binding = model.module.sample(1000)
+        binding = binding.reshape(-1)
+        pd.DataFrame([res, binding]).to_csv("out_tests.csv")
         for i in range(10):
-            print(res[i])
+            print(res[i], binding[i])
 
     # Epoch end
     lr_annealer.step()
