@@ -266,4 +266,4 @@ class VAE(nn.Module):
             for i in range(x.size(0)):
                 new_x.append(x[i, :end_pads[i]])
 
-            return [self.tensor2string(i_x) for i_x in new_x], binding_aff.numpy()
+            return [self.tensor2string(i_x) for i_x in new_x], binding_aff.cpu().numpy()
