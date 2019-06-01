@@ -246,7 +246,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
 # Epoch start
 totals = []
 
-for epoch in range(100):
+for epoch in range(10):
     # Epoch start
 
 
@@ -256,9 +256,13 @@ for epoch in range(100):
     pd.DataFrame([res, binding]).to_csv("out_tests.csv")
     df = pd.DataFrame([res, binding])
     print(df.transpose())
+    totals.append(df)
     for i in range(20):
         print(res[i], binding[i])
         print("Binding stats: ", np.mean(binding), np.std(binding))
 
 
     # Epoch end
+
+largedf = totals[0].append(totals[1:])
+print(largedf)
