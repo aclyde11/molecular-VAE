@@ -158,7 +158,7 @@ df = pd.read_csv("/workspace/zinc_subset_docking_scores.smi", header=None)
 bindings = pd.read_table("/workspace/hybrid_score.txt", skiprows=1, header=None)
 bindings.iloc[:, 0] = list(map(lambda x : int(x.split('_')[1]), list(bindings.iloc[:, 0])))
 mmss = MinMaxScaler()
-bindings.iloc[:, 1] = mmss.fit_transform(np.array((bindings.iloc[:, 1].astype(np.float32))).reshape(-1, 1))
+bindings.iloc[:, 1] = mmss.fit_transform( -1.0 * np.array((bindings.iloc[:, 1].astype(np.float32))).reshape(-1, 1))
 bindings = bindings.set_index(bindings.columns[0])
 bindings = bindings[[1]].join(df, how='left', lsuffix='hybrid')
 
@@ -344,10 +344,12 @@ for epoch in range(100):
             pickle.dump(vocab, f)
 
         res, binding = model.module.sample(1000)
+        binding = mmss.inverse_transform(binding.reshape(-1, 1))
         binding = binding.reshape(-1)
         pd.DataFrame([res, binding]).to_csv("out_tests.csv")
-        for i in range(10):
+        for i in range(20):
             print(res[i], binding[i])
+            print("Binding stats: ", np.mean(binding), np.std(binding))
 
     # Epoch end
     lr_annealer.step()
