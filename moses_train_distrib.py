@@ -330,7 +330,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
     return postfix
 
 # Epoch start
-for epoch in range(n_epochs):
+for epoch in range(100):
     # Epoch start
     kl_weight = kl_annealer(epoch)
 
