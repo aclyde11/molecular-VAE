@@ -173,7 +173,7 @@ df = df.iloc[:,0].astype(str).tolist()
 vocab = mosesvocab.OneHotVocab.from_data(bindings.iloc[:,1].astype(str).tolist())
 bdata = BindingDataSet(bindings)
 train_sampler = torch.utils.data.distributed.DistributedSampler(bdata)
-train_loader = torch.utils.data.DataLoader(bdata, batch_size=256,
+train_loader = torch.utils.data.DataLoader(bdata, batch_size=128,
                           shuffle=False,
                           num_workers=8, collate_fn=get_collate_fn_binding(),
                           worker_init_fn=mosesvocab.set_torch_seed_to_all_gens,
@@ -185,7 +185,7 @@ model = mosesvae.VAE(vocab).cuda()
 binding_optimizer = None
 
 optimizer = optim.Adam((p for p in model.parameters() if p.requires_grad),
-                               lr=3*1e-4 * 2)
+                               lr=3*1e-4 * 1)
 # model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
 model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], output_device=args.local_rank, find_unused_parameters=True)
 
@@ -262,10 +262,10 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
     else:
         model.train()
 
-    kl_loss_values = mosesvocab.CircularBuffer(100)
-    recon_loss_values = mosesvocab.CircularBuffer(100)
-    loss_values =mosesvocab.CircularBuffer(100)
-    binding_loss_values = mosesvocab.CircularBuffer(100)
+    kl_loss_values = mosesvocab.CircularBuffer(10)
+    recon_loss_values = mosesvocab.CircularBuffer(10)
+    loss_values =mosesvocab.CircularBuffer(10)
+    binding_loss_values = mosesvocab.CircularBuffer(10)
     for i, (input_batch, binding) in enumerate(tqdm_data):
         input_batch = tuple(data.cuda() for data in input_batch)
         binding = binding.cuda().view(-1, 1)
@@ -278,7 +278,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
         binding_loss = torch.sum(binding_loss, 0)
 
         loss_weight = 0
-        if epoch < 10:
+        if epoch < 5:
             loss_weight = 0
         else:
             loss_weight = kl_weight
