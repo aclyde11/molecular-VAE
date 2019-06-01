@@ -170,14 +170,11 @@ print(df.head())
 print(df.shape)
 df = df.iloc[:,0].astype(str).tolist()
 
-vocab = mosesvocab.OneHotVocab.from_data(bindings.iloc[:,1].astype(str).tolist())
+with open('vocab.pkl', 'rb') as f:
+    vocab = pickle.load(f)
+
 bdata = BindingDataSet(bindings)
-train_sampler = torch.utils.data.distributed.DistributedSampler(bdata)
-train_loader = torch.utils.data.DataLoader(bdata, batch_size=128,
-                          shuffle=False,
-                          num_workers=8, collate_fn=get_collate_fn_binding(),
-                          worker_init_fn=mosesvocab.set_torch_seed_to_all_gens,
-                                           pin_memory=True, sampler=train_sampler)
+
 
 n_epochs = 50
 
@@ -334,22 +331,15 @@ for epoch in range(100):
     # Epoch start
     kl_weight = kl_annealer(epoch)
 
-    tqdm_data = tqdm(train_loader,
-                     desc='Training (epoch #{})'.format(epoch))
-    postfix = _train_epoch_binding(model, epoch,
-                                tqdm_data, kl_weight, optimizer)
-    if args.local_rank == 0:
-        torch.save(model.state_dict(), "trained_save.pt")
-        with open('vocab.pkl', 'wb') as f:
-            pickle.dump(vocab, f)
 
-        res, binding = model.module.sample(1000)
-        binding = mmss.inverse_transform(binding.reshape(-1, 1))
-        binding = binding.reshape(-1)
-        pd.DataFrame([res, binding]).to_csv("out_tests.csv")
-        for i in range(20):
-            print(res[i], binding[i])
-            print("Binding stats: ", np.mean(binding), np.std(binding))
+
+    res, binding = model.module.sample(1000)
+    binding = mmss.inverse_transform(binding.reshape(-1, 1))
+    binding = binding.reshape(-1)
+    pd.DataFrame([res, binding]).to_csv("out_tests.csv")
+    for i in range(20):
+        print(res[i], binding[i])
+        print("Binding stats: ", np.mean(binding), np.std(binding))
 
     # Epoch end
     lr_annealer.step()
