@@ -250,7 +250,7 @@ for epoch in range(100):
     # Epoch start
 
 
-    res, binding = model.module.sample(1000)
+    res, binding = model.sample(1000)
     binding = mmss.inverse_transform(binding.reshape(-1, 1))
     binding = binding.reshape(-1)
     pd.DataFrame([res, binding]).to_csv("out_tests.csv")
