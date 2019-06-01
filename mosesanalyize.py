@@ -255,7 +255,7 @@ for epoch in range(100):
     binding = binding.reshape(-1)
     pd.DataFrame([res, binding]).to_csv("out_tests.csv")
     df = pd.DataFrame([res, binding])
-    print(df)
+    print(df.transpose())
     for i in range(20):
         print(res[i], binding[i])
         print("Binding stats: ", np.mean(binding), np.std(binding))
