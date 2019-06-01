@@ -85,14 +85,13 @@ class VAE(nn.Module):
         # self.binding_model = nn.Linear(d_z, 1)
         self.binding_model = nn.Sequential(
             nn.Linear(d_z, d_z),
-            nn.BatchNorm1d(d_z),
             nn.ReLU(),
 
             nn.Linear(d_z, 64),
-            nn.BatchNorm1d(64),
             nn.ReLU(),
 
-            nn.Linear(64, 1)
+            nn.Linear(64, 1),
+            nn.ReLU
         )
 
         # Grouping the model's parameters
