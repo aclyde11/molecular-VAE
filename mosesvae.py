@@ -139,7 +139,7 @@ class VAE(nn.Module):
         # Decoder: x, z -> recon_loss
         recon_loss = self.forward_decoder(x, z)
 
-        return kl_loss, recon_loss, binding_loss
+        return kl_loss, recon_loss, binding_loss, z
 
     def forward_encoder(self, x, b):
         """Encoder step, emulating z ~ E(x) = q_E(z|x)

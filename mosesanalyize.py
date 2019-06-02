@@ -256,7 +256,7 @@ for epoch, (x, b) in enumerate(train_loader):
     # Epoch start
     x = tuple(data.cuda() for data in x)
 
-    _, _, x = model(x, b=b.cuda())
+    _, _, _, x = model(x, b=b.cuda())
     print(b)
     res, binding = model.sample(1000, z=x)
     binding = mmss.inverse_transform(binding.reshape(-1, 1))
