@@ -156,6 +156,11 @@ df = df.iloc[:,0].astype(str).tolist()
 with open("vocab.pkl", 'rb') as f:
     vocab = pickle.load(f)
 bdata = BindingDataSet(bindings)
+train_loader = torch.utils.data.DataLoader(bdata, batch_size=128,
+                          shuffle=False,
+                          num_workers=8, collate_fn=get_collate_fn_binding(),
+                          worker_init_fn=mosesvocab.set_torch_seed_to_all_gens,
+                                           pin_memory=True)
 
 n_epochs = 50
 
@@ -246,11 +251,11 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
 # Epoch start
 totals = []
 
-for epoch in range(1000):
+for epoch in range(1):
     # Epoch start
 
-
-    res, binding = model.sample(1000)
+    _, _, x = model(train_loader[0][0].cuda())
+    res, binding = model.sample(1000, z=x)
     binding = mmss.inverse_transform(binding.reshape(-1, 1))
     binding = binding.reshape(-1)
     pd.DataFrame([res, binding]).to_csv("out_tests.csv")
