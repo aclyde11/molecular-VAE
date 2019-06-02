@@ -176,7 +176,7 @@ bdata = BindingDataSet(bindings)
 # train_sampler = torch.utils.data.distributed.DistributedSampler(bdata)
 train_loader = torch.utils.data.DataLoader(bdata, batch_size=128,
                           shuffle=True,
-                          num_workers=8, collate_fn=get_collate_fn_binding(),
+                          num_workers=16, collate_fn=get_collate_fn_binding(),
                           worker_init_fn=mosesvocab.set_torch_seed_to_all_gens,
                                            pin_memory=True,)
 
