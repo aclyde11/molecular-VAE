@@ -160,7 +160,7 @@ class VAE(nn.Module):
 
         weights = torch.zeros(b.shape)
         for i in range(b.shape[0]):
-            if b[i] > 0.5:
+            if b[i] > 0.35:
                 weights[i] = 5.0
             else:
                 weights[i] = 0.5

@@ -350,7 +350,7 @@ for epoch in range(100):
         pd.DataFrame([res, binding]).to_csv("out_tests.csv")
         for i in range(20):
             print(res[i], binding[i])
-            print("Binding stats: ", np.mean(binding), np.std(binding))
+            print("Binding stats: ", np.mean(binding), np.std(binding), np.max(binding), np.min(binding))
 
     # Epoch end
     lr_annealer.step()
