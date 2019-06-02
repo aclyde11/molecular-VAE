@@ -170,7 +170,7 @@ class VAE(nn.Module):
             if b[i] > 0.45:
                 weights[i] = 10.0
             else:
-                weights[i] = 0.01
+                weights[i] = 0.000001
         binding_loss = F.mse_loss(bind, b) * weights.cuda()
         return z, kl_loss, binding_loss
 
