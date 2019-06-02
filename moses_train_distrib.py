@@ -344,7 +344,7 @@ for epoch in range(100):
         with open('vocab.pkl', 'wb') as f:
             pickle.dump(vocab, f)
 
-        res, binding = model.module.sample(1000)
+        res, binding = model.module.sample(1024)
         binding = mmss.inverse_transform(binding.reshape(-1, 1))
         binding = binding.reshape(-1)
         pd.DataFrame([res, binding]).to_csv("out_tests.csv")
