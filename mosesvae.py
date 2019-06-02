@@ -79,8 +79,10 @@ class VAE(nn.Module):
         # self.binding_model = nn.Linear(d_z, 1)
         self.binding_model = nn.Sequential(
             nn.Linear(d_z, 128),
+            nn.SELU(),
+            nn.Linear(128, 64),
             nn.ReLU(),
-            nn.Linear(128, 1),
+            nn.Linear(64, 1),
             nn.Sigmoid()
         )
 
