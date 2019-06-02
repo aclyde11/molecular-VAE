@@ -26,19 +26,20 @@ parser = argparse.ArgumentParser()
 # automatically by torch.distributed.launch.
 parser.add_argument("--local_rank", default=0, type=int)
 args = parser.parse_args()
-args.distributed = False
-if 'WORLD_SIZE' in os.environ:
-    args.distributed = int(os.environ['WORLD_SIZE']) > 1
-
-train_sampler = None
-if args.distributed:
-    # FOR DISTRIBUTED:  Set the device according to local_rank.
-    torch.cuda.set_device(args.local_rank)
-
-    # FOR DISTRIBUTED:  Initialize the backend.  torch.distributed.launch will provide
-    # environment variables, and requires that you use init_method=`env://`.
-    torch.distributed.init_process_group(backend='nccl',
-                                         init_method='env://')
+torch.cuda.set_device(args.local_rank)
+# args.distributed = False
+# if 'WORLD_SIZE' in os.environ:
+#     args.distributed = int(os.environ['WORLD_SIZE']) > 1
+#
+# train_sampler = None
+# if args.distributed:
+#     # FOR DISTRIBUTED:  Set the device according to local_rank.
+#
+#
+#     # FOR DISTRIBUTED:  Initialize the backend.  torch.distributed.launch will provide
+#     # environment variables, and requires that you use init_method=`env://`.
+#     torch.distributed.init_process_group(backend='nccl',
+#                                          init_method='env://')
 
 
 run_bindings = True
@@ -161,7 +162,6 @@ mmss = MinMaxScaler()
 bindings.iloc[:, 1] = mmss.fit_transform( -1.0 * np.array((bindings.iloc[:, 1].astype(np.float32))).reshape(-1, 1))
 bindings = bindings.set_index(bindings.columns[0])
 bindings = bindings[[1]].join(df, how='left', lsuffix='hybrid')
-bindings = bindings.sample(frac=1)
 print(bindings.head())
 print(bindings.describe())
 
@@ -173,22 +173,22 @@ df = df.iloc[:,0].astype(str).tolist()
 
 vocab = mosesvocab.OneHotVocab.from_data(bindings.iloc[:,1].astype(str).tolist())
 bdata = BindingDataSet(bindings)
-train_sampler = torch.utils.data.distributed.DistributedSampler(bdata)
+# train_sampler = torch.utils.data.distributed.DistributedSampler(bdata)
 train_loader = torch.utils.data.DataLoader(bdata, batch_size=128,
-                          shuffle=False,
+                          shuffle=True,
                           num_workers=8, collate_fn=get_collate_fn_binding(),
                           worker_init_fn=mosesvocab.set_torch_seed_to_all_gens,
-                                           pin_memory=True, sampler=train_sampler)
+                                           pin_memory=True,)
 
 n_epochs = 50
 
 model = mosesvae.VAE(vocab).cuda()
 binding_optimizer = None
 
-optimizer = optim.Adam((p for p in model.parameters() if p.requires_grad),
+optimizer = optim.Adam(model.parameters() ,
                                lr=3*1e-4 )
 # model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
-model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], output_device=args.local_rank, find_unused_parameters=True)
+# model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], output_device=args.local_rank, find_unused_parameters=True)
 
 
 kl_annealer = KLAnnealer(50)
@@ -344,7 +344,7 @@ for epoch in range(100):
         with open('vocab.pkl', 'wb') as f:
             pickle.dump(vocab, f)
 
-        res, binding = model.module.sample(1024)
+        res, binding = model.sample(1024)
         binding = mmss.inverse_transform(binding.reshape(-1, 1))
         binding = binding.reshape(-1)
         pd.DataFrame([res, binding]).to_csv("out_tests.csv")
