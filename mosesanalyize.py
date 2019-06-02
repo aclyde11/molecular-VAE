@@ -259,7 +259,7 @@ for epoch, (x, b) in enumerate(train_loader):
     x = tuple(data.cuda() for data in x)
     print(len(x[37]))
     print(b[37])
-    tensor2string(vocab, x[37].cpu())
+    print(tensor2string(vocab, x[37].cpu()))
     exit()
     _, _, _, x = model(x, b=b.cuda())
     print(x)
