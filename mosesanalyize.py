@@ -192,9 +192,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
         # Forwardd
         kl_loss, recon_loss, binding_loss = model(input_batch, binding)
 
-        print(input_batch)
-        print(b)
-        exit()
+
 
 
         kl_loss = torch.sum(kl_loss, 0)
@@ -259,8 +257,13 @@ totals = []
 for epoch, (x, b) in enumerate(train_loader):
     # Epoch start
     x = tuple(data.cuda() for data in x)
-
+    print(x)
+    print(b)
+    exit()
     _, _, _, x = model(x, b=b.cuda())
+    print(x)
+    print(b)
+    exit()
     print(b)
     res, binding = model.sample(x.shape[0], z=x)
     binding = mmss.inverse_transform(binding.reshape(-1, 1))
