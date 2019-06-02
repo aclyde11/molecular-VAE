@@ -254,7 +254,7 @@ totals = []
 for epoch in range(1):
     # Epoch start
 
-    _, _, x = model(train_loader[0][0].cuda())
+    _, _, x = model(next(train_loader)[0].cuda())
     res, binding = model.sample(1000, z=x)
     binding = mmss.inverse_transform(binding.reshape(-1, 1))
     binding = binding.reshape(-1)
