@@ -251,7 +251,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
 # Epoch start
 totals = []
 
-for epoch, (x, _) in train_loader:
+for epoch, (x, _) in enumerate(train_loader):
     # Epoch start
 
     _, _, x = model(x.cuda())
