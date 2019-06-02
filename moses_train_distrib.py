@@ -182,6 +182,8 @@ train_loader = torch.utils.data.DataLoader(bdata, batch_size=128,
 
 n_epochs = 50
 
+binding = mosesvae.BindingModel().cuda()
+optimizer_binding = mose
 model = mosesvae.VAE(vocab).cuda()
 binding_optimizer = None
 

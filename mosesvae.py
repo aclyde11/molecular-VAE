@@ -12,8 +12,13 @@ class BindingModel(nn.Module):
             nn.Linear(256, 1)
         )
 
-    def forward(self, x):
-        return self.binding_model(x)
+    def forward_encode(self, x, b):
+        pred = self.binding_model(x)
+        lossf = F.mse_loss(pred, b)
+        return pred, lossf
+
+    def forward(self, x, b):
+        return self.forward_encode(x, b)
 
 class VAE(nn.Module):
     def __init__(self, vocab):
@@ -77,11 +82,11 @@ class VAE(nn.Module):
         self.decoder_fc = nn.Linear(d_d_h, n_vocab)
 
         # self.binding_model = nn.Linear(d_z, 1)
-        self.binding_model = nn.Sequential(
-            nn.Linear(d_z, 256),
-            nn.Tanh(),
-            nn.Linear(256, 1),
-        )
+        # self.binding_model = nn.Sequential(
+        #     nn.Linear(d_z, 256),
+        #     nn.Tanh(),
+        #     nn.Linear(256, 1),
+        # )
 
         # Grouping the model's parameters
         # self.encoder = nn.ModuleList([
@@ -128,12 +133,12 @@ class VAE(nn.Module):
         """
 
         # Encoder: x -> z, kl_loss
-        z, kl_loss, binding_loss = self.forward_encoder(x, b)
+        z, kl_loss = self.forward_encoder(x, b)
 
         # Decoder: x, z -> recon_loss
         recon_loss = self.forward_decoder(x, z)
 
-        return kl_loss, recon_loss, binding_loss, z
+        return kl_loss, recon_loss, z
 
     def forward_encoder(self, x, b):
         """Encoder step, emulating z ~ E(x) = q_E(z|x)
@@ -156,16 +161,8 @@ class VAE(nn.Module):
         z = mu + (logvar / 2).exp() * eps
 
         kl_loss = 0.5 * (logvar.exp() + mu ** 2 - 1 - logvar).sum(1).mean()
-        bind = self.binding_model(z)
 
-        weights = torch.zeros(b.shape)
-        for i in range(b.shape[0]):
-            if b[i] > 0.35:
-                weights[i] = 5.0
-            else:
-                weights[i] = 0.5
-        binding_loss = F.mse_loss(bind, b) * weights.cuda()
-        return z, kl_loss, binding_loss
+        return z, kl_loss
 
     def forward_decoder(self, x, z):
         """Decoder step, emulating x ~ G(z)
