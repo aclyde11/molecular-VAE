@@ -164,7 +164,7 @@ class VAE(nn.Module):
         kl_loss = 0.5 * (logvar.exp() + mu ** 2 - 1 - logvar).sum(1).mean()
         bind = self.binding_model(z)
 
-        weights = torch.zeros(b.size)
+        weights = torch.zeros(b.shape)
         for i in range(b.shape[0]):
             if b[i] > 0.5:
                 weights[i] = 5.0
