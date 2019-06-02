@@ -271,6 +271,8 @@ for epoch, (x, b) in enumerate(train_loader):
 
 
     # Epoch end
+    if epoch > 200:
+        break
 
 largedf = totals[0].append(totals[1:], ignore_index=True)
 print(largedf)
