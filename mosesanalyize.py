@@ -192,6 +192,10 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
         # Forwardd
         kl_loss, recon_loss, binding_loss = model(input_batch, binding)
 
+        print(input_batch)
+        print(b)
+        exit()
+
 
         kl_loss = torch.sum(kl_loss, 0)
         recon_loss = torch.sum(recon_loss, 0)
