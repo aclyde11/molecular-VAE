@@ -173,6 +173,7 @@ for k, v in pt.items():
     new_state_dict[name] = v
 
 model.load_state_dict(new_state_dict)
+model = model.cuda()
 model.eval()
 
 def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
