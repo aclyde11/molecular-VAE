@@ -76,13 +76,16 @@ class VAE(nn.Module):
         self.decoder_lat = nn.Linear(d_z, d_d_h)
         self.decoder_fc = nn.Linear(d_d_h, n_vocab)
 
-        self.bindingattn = nn.Sequential(nn.Linear(d_z, d_z), nn.Sigmoid())
         # self.binding_model = nn.Linear(d_z, 1)
         self.binding_model = nn.Sequential(
             nn.Linear(d_z, 128),
             nn.SELU(),
             nn.Linear(128, 64),
             nn.ReLU(),
+
+            nn.Linear(64, 64),
+            nn.SELU(),
+
             nn.Linear(64, 1),
             nn.ReLU()
         )
@@ -160,7 +163,7 @@ class VAE(nn.Module):
         z = mu + (logvar / 2).exp() * eps
 
         kl_loss = 0.5 * (logvar.exp() + mu ** 2 - 1 - logvar).sum(1).mean()
-        bind = self.binding_model(z * self.bindingattn(z))
+        bind = self.binding_model(z )
 
         weights = torch.zeros(b.shape)
         for i in range(b.shape[0]):
