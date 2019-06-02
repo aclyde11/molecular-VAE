@@ -163,7 +163,14 @@ class VAE(nn.Module):
 
         kl_loss = 0.5 * (logvar.exp() + mu ** 2 - 1 - logvar).sum(1).mean()
         bind = self.binding_model(z)
-        binding_loss = F.mse_loss(bind, b) * b.view(-1)
+
+        weights = torch.zeros(b.size)
+        for i in range(b.shape[0]):
+            if b[i] > 0.5:
+                weights[i] = 5.0
+            else:
+                weights[i] = 0.5
+        binding_loss = F.mse_loss(bind, b)
         return z, kl_loss, binding_loss
 
     def forward_decoder(self, x, z):
