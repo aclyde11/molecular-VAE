@@ -163,7 +163,7 @@ bindings = bindings.set_index(bindings.columns[0])
 bindings = bindings[[1]].join(df, how='left', lsuffix='hybrid')
 bindings = bindings.sample(frac=1)
 print(bindings.head())
-print(df.describe())
+print(bindings.describe())
 
 #df = df.sample(5000000, replace=False)
 max_len = 0
