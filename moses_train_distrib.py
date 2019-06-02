@@ -163,6 +163,7 @@ bindings = bindings.set_index(bindings.columns[0])
 bindings = bindings[[1]].join(df, how='left', lsuffix='hybrid')
 bindings = bindings.sample(frac=1)
 print(bindings.head())
+print(df.describe())
 
 #df = df.sample(5000000, replace=False)
 max_len = 0
@@ -173,7 +174,7 @@ df = df.iloc[:,0].astype(str).tolist()
 vocab = mosesvocab.OneHotVocab.from_data(bindings.iloc[:,1].astype(str).tolist())
 bdata = BindingDataSet(bindings)
 train_sampler = torch.utils.data.distributed.DistributedSampler(bdata)
-train_loader = torch.utils.data.DataLoader(bdata, batch_size=256,
+train_loader = torch.utils.data.DataLoader(bdata, batch_size=128,
                           shuffle=False,
                           num_workers=8, collate_fn=get_collate_fn_binding(),
                           worker_init_fn=mosesvocab.set_torch_seed_to_all_gens,
@@ -185,7 +186,7 @@ model = mosesvae.VAE(vocab).cuda()
 binding_optimizer = None
 
 optimizer = optim.Adam((p for p in model.parameters() if p.requires_grad),
-                               lr=3*1e-4 * 2)
+                               lr=3*1e-4 )
 # model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
 model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], output_device=args.local_rank, find_unused_parameters=True)
 

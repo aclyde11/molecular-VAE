@@ -6,20 +6,14 @@ import torch.nn.functional as F
 class BindingModel(nn.Module):
     def __init__(self, z_size=128):
         super().__init__()
-        self.model = nn.Sequential(
-            nn.Linear(z_size, z_size),
-            nn.BatchNorm1d(z_size),
-            nn.ReLU(),
-
-            nn.Linear(z_size, 64),
-            nn.BatchNorm1d(64),
-            nn.ReLU(),
-
-            nn.Linear(64, 1)
+        self.binding_model = nn.Sequential(
+            nn.Linear(z_size, 256),
+            nn.Tanh(),
+            nn.Linear(256, 1)
         )
 
     def forward(self, x):
-        return self.model(x)
+        return self.binding_model(x)
 
 class VAE(nn.Module):
     def __init__(self, vocab):
@@ -170,7 +164,7 @@ class VAE(nn.Module):
                 weights[i] = 5.0
             else:
                 weights[i] = 0.5
-        binding_loss = F.mse_loss(bind, b)
+        binding_loss = F.mse_loss(bind, b) * weights
         return z, kl_loss, binding_loss
 
     def forward_decoder(self, x, z):
