@@ -163,7 +163,7 @@ class VAE(nn.Module):
 
         kl_loss = 0.5 * (logvar.exp() + mu ** 2 - 1 - logvar).sum(1).mean()
         bind = self.binding_model(z)
-        binding_loss = F.mse_loss(bind, b)
+        binding_loss = F.mse_loss(bind, b) * b.view(-1)
         return z, kl_loss, binding_loss
 
     def forward_decoder(self, x, z):
