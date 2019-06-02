@@ -251,11 +251,12 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
 # Epoch start
 totals = []
 
-for epoch, (x, _) in enumerate(train_loader):
+for epoch, (x, b) in enumerate(train_loader):
     # Epoch start
     x = tuple(data.cuda() for data in x)
 
-    _, _, x = model(x)
+    _, _, x = model(x, b=b)
+    print(b)
     res, binding = model.sample(1000, z=x)
     binding = mmss.inverse_transform(binding.reshape(-1, 1))
     binding = binding.reshape(-1)
