@@ -80,17 +80,18 @@ class VAE(nn.Module):
         self.binding_model = nn.Sequential(
             nn.Linear(d_z, 128),
             nn.SELU(),
+
             nn.Linear(128, 128),
             nn.ReLU(),
 
             nn.Linear(128, 64),
             nn.SELU(),
+
             nn.Linear(64, 32),
             nn.ReLU(),
-            nn.Linear(32, 32),
-            nn.SELU(),
+
             nn.Linear(32, 1),
-            nn.ReLU()
+            nn.Sigmoid()
         )
 
         # Grouping the model's parameters
@@ -166,7 +167,7 @@ class VAE(nn.Module):
         z = mu + (logvar / 2).exp() * eps
 
         kl_loss = 0.5 * (logvar.exp() + mu ** 2 - 1 - logvar).sum(1).mean()
-        bind = self.binding_model(z )
+        bind = self.binding_model(z)
         #
         # weights = torch.zeros(b.shape)
         # for i in range(b.shape[0]):
