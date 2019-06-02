@@ -284,7 +284,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
         else:
             loss_weight = kl_weight
 
-        loss = min(1.0, kl_weight) * kl_loss + recon_loss + min(kl_weight* 10, 1) * binding_loss
+        loss = min(1.0, kl_weight) * kl_loss + recon_loss + binding_loss
 
 
         # Backward

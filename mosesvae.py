@@ -78,9 +78,10 @@ class VAE(nn.Module):
 
         # self.binding_model = nn.Linear(d_z, 1)
         self.binding_model = nn.Sequential(
-            nn.Linear(d_z, 256),
-            nn.Tanh(),
-            nn.Linear(256, 1),
+            nn.Linear(d_z, 128),
+            nn.ReLU(),
+            nn.Linear(128, 1),
+            nn.Sigmoid()
         )
 
         # Grouping the model's parameters
@@ -163,7 +164,7 @@ class VAE(nn.Module):
             if b[i] > 0.35:
                 weights[i] = 5.0
             else:
-                weights[i] = 0.5
+                weights[i] = 0.25
         binding_loss = F.mse_loss(bind, b) * weights.cuda()
         return z, kl_loss, binding_loss
 

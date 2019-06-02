@@ -157,7 +157,7 @@ with open("vocab.pkl", 'rb') as f:
     vocab = pickle.load(f)
 bdata = BindingDataSet(bindings)
 train_loader = torch.utils.data.DataLoader(bdata, batch_size=128,
-                          shuffle=False,
+                          shuffle=True,
                           num_workers=8, collate_fn=get_collate_fn_binding(),
                           worker_init_fn=mosesvocab.set_torch_seed_to_all_gens,
                                            pin_memory=True)
@@ -174,38 +174,31 @@ for k, v in pt.items():
 
 model.load_state_dict(new_state_dict)
 model = model.cuda()
-model.eval()
+optimizer = optim.Adam(model.binding_model.parameters(), lr=5e-4)
+#model.eval()
 
-def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
+def _train_epoch_binding(model, epoch, tqdm_data, optimizer=None):
     if optimizer is None:
         model.eval()
     else:
         model.train()
 
-    kl_loss_values = mosesvocab.CircularBuffer(10)
-    recon_loss_values = mosesvocab.CircularBuffer(10)
     loss_values =mosesvocab.CircularBuffer(10)
     binding_loss_values = mosesvocab.CircularBuffer(10)
     for i, (input_batch, binding) in enumerate(tqdm_data):
         input_batch = tuple(data.cuda() for data in input_batch)
         binding = binding.cuda().view(-1, 1)
         # Forwardd
-        kl_loss, recon_loss, binding_loss = model(input_batch, binding)
+        _, _, binding_loss, _ = model(input_batch, binding)
 
 
 
 
-        kl_loss = torch.sum(kl_loss, 0)
-        recon_loss = torch.sum(recon_loss, 0)
         binding_loss = torch.sum(binding_loss, 0)
 
-        loss_weight = 0
-        if epoch < 5:
-            loss_weight = 0
-        else:
-            loss_weight = kl_weight
 
-        loss = kl_weight * kl_loss + recon_loss + kl_weight * binding_loss
+
+        loss =  binding_loss
 
 
         # Backward
@@ -220,8 +213,6 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
             optimizer.step()
 
         # Log
-        kl_loss_values.add(kl_loss.item())
-        recon_loss_values.add(recon_loss.item())
         loss_values.add(loss.item())
         binding_loss_values.add(binding_loss.item())
         lr = (optimizer.param_groups[0]['lr']
@@ -229,23 +220,15 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
               else None)
 
         # Update tqdm
-        kl_loss_value = kl_loss_values.mean()
-        recon_loss_value = recon_loss_values.mean()
         loss_value = loss_values.mean()
         binding_loss_value = binding_loss_values.mean()
         postfix = [f'loss={loss_value:.5f}',
-                   f'(kl={kl_loss_value:.5f}',
-                   f'recon={recon_loss_value:.5f})',
-                   f'klw={kl_weight:.5f} lr={lr:.5f}'
                    f'bloss={binding_loss_value:.5f}']
         tqdm_data.set_postfix_str(' '.join(postfix))
 
     postfix = {
         'epoch': epoch,
-        'kl_weight': kl_weight,
         'lr': lr,
-        'kl_loss': kl_loss_value,
-        'recon_loss': recon_loss_value,
         'loss': loss_value,
         'mode': 'Eval' if optimizer is None else 'Train'}
 
@@ -254,34 +237,53 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
 # Epoch start
 totals = []
 
-for epoch, (x, b) in enumerate(train_loader):
+
+for epoch in range(100):
     # Epoch start
-    x = tuple(data.cuda() for data in x)
-    print(len(x[37]))
-    print(b[37])
-    print(tensor2string(vocab, x[37].cpu()))
-    exit()
-    _, _, _, x = model(x, b=b.cuda())
-    print(x)
-    print(b)
-    exit()
-    print(b)
-    res, binding = model.sample(x.shape[0], z=x)
+
+    tqdm_data = tqdm(train_loader,
+                     desc='Training (epoch #{})'.format(epoch))
+    postfix = _train_epoch_binding(model, epoch,
+                                tqdm_data, optimizer)
+
+    res, binding = model.sample(1000)
     binding = mmss.inverse_transform(binding.reshape(-1, 1))
     binding = binding.reshape(-1)
     pd.DataFrame([res, binding]).to_csv("out_tests.csv")
-    df = pd.DataFrame([res, binding])
-    print(df.transpose())
-    totals.append(df.transpose())
     for i in range(20):
         print(res[i], binding[i])
-        print("Binding stats: ", np.mean(binding), np.std(binding))
-
+    print("Binding stats: ", np.mean(binding), np.std(binding), np.max(binding), np.min(binding))
 
     # Epoch end
-    if epoch > 200:
-        break
 
-largedf = totals[0].append(totals[1:], ignore_index=True)
-print(largedf)
-largedf.to_csv("checkbindingrange.csv")
+# for epoch, (x, b) in enumerate(train_loader):
+#     # Epoch start
+#     x = tuple(data.cuda() for data in x)
+#     print(len(x[37]))
+#     print(b[37])
+#     print(tensor2string(vocab, x[37].cpu()))
+#     exit()
+#     _, _, _, x = model(x, b=b.cuda())
+#     print(x)
+#     print(b)
+#     exit()
+#     print(b)
+#     res, binding = model.sample(x.shape[0], z=x)
+#     binding = mmss.inverse_transform(binding.reshape(-1, 1))
+#     binding = binding.reshape(-1)
+#     pd.DataFrame([res, binding]).to_csv("out_tests.csv")
+#     df = pd.DataFrame([res, binding])
+#     print(df.transpose())
+#     totals.append(df.transpose())
+#     for i in range(20):
+#         print(res[i], binding[i])
+#         print("Binding stats: ", np.mean(binding), np.std(binding))
+#
+#
+#     # Epoch end
+#     if epoch > 200:
+#         break
+#
+# largedf = totals[0].append(totals[1:], ignore_index=True)
+# print(largedf)
+# largedf.to_csv("checkbindingrange.csv")
