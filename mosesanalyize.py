@@ -258,7 +258,7 @@ for epoch, (x, b) in enumerate(train_loader):
 
     _, _, _, x = model(x, b=b.cuda())
     print(b)
-    res, binding = model.sample(1000, z=x)
+    res, binding = model.sample(128, z=x)
     binding = mmss.inverse_transform(binding.reshape(-1, 1))
     binding = binding.reshape(-1)
     pd.DataFrame([res, binding]).to_csv("out_tests.csv")
