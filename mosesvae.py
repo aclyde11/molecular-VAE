@@ -172,7 +172,6 @@ class VAE(nn.Module):
             else:
                 weights[i] = 0.0000001
         binding_loss = F.mse_loss(bind, b) * weights.cuda()
-        print(binding_loss.shape)
         return z, kl_loss, binding_loss
 
     def forward_decoder(self, x, z):
