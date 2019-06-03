@@ -157,7 +157,7 @@ max_len = 0
 print(df.head())
 print(df.shape)
 
-vocab = mosesvocab.OneHotVocab.from_data(df)
+vocab = mosesvocab.OneHotVocab.from_data(df.iloc[:,0].tolist())
 bdata = BindingDataSet(df)
 # train_sampler = torch.utils.data.distributed.DistributedSampler(bdata)
 train_loader = torch.utils.data.DataLoader(bdata, batch_size=512,
