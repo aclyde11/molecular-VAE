@@ -158,7 +158,8 @@ df = df.sample(8000000, replace=False)
 max_len = 0
 selfs = []
 for i in tqdm(range(df.shape[0])):
-    selfs.append(selfies.encoder(df.iloc[i,0]))
+    print(str(df.iloc[i,0]))
+    selfs.append(selfies.encoder(str(df.iloc[i,0])))
 df['self'] = selfs
 print(df.head())
 print(df.shape)
