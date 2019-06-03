@@ -162,7 +162,7 @@ for i in tqdm(range(df.shape[0])):
     cannmon = Chem.MolToSmiles(Chem.MolFromSmiles(original))
     selfie = selfies.encoder(cannmon)
     selfs.append(selfie)
-    print("Original\t{}\nCannon\t{}\nSelfie{}\n" % (original, cannmon, selfie))
+    print("Original\t%s\nCannon\t%s\nSelfie%s\n" % (original, cannmon, selfie))
 df['self'] = selfs
 print(df.head())
 print(df.shape)
