@@ -156,7 +156,6 @@ df = df.sample(8000000, replace=False)
 max_len = 0
 print(df.head())
 print(df.shape)
-df = df.iloc[:,0].astype(str).tolist()
 
 vocab = mosesvocab.OneHotVocab.from_data(df)
 bdata = BindingDataSet(df)
