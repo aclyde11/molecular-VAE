@@ -217,13 +217,16 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
         b_pred = bindingmodel(z.detach())
 
         weights = torch.zeros(binding.shape)
+        class_weights = torch.zeros(binding.shape)
         for i in range(binding.shape[0]):
             if binding[i] > 0.35:
-                weights[i] = 2.0 * binding[i]
+                weights[i] = 1.0
+                class_weights[i] = 5.0
             else:
-                weights[i] = 0.5 * binding[i]
+                weights[i] = 0
+                class_weights[i] = 0.5
         weights = weights.cuda()
-        b_pred = F.mse_loss(b_pred, binding) * weights
+        b_pred = F.binary_cross_entropy_with_logits(b_pred, weights, pos_weight=class_weights)
 
         kl_loss = torch.sum(kl_loss, 0)
         recon_loss = torch.sum(recon_loss, 0)
