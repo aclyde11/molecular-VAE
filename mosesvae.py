@@ -23,7 +23,7 @@ class BindingModel(nn.Module):
         )
 
     def forward(self, x):
-        return self.binding_model(x * self.attention_prob(x))
+        return self.binding_model(x )
 
 class VAE(nn.Module):
     def __init__(self, vocab):
