@@ -158,11 +158,13 @@ df = df.sample(8000000, replace=False)
 max_len = 0
 selfs = []
 for i in tqdm(range(df.shape[0])):
-    original = str(df.iloc[i,0])
-    cannmon = Chem.MolToSmiles(Chem.MolFromSmiles(original))
-    selfie = selfies.encoder(cannmon)
-    selfs.append(selfie)
-    print("Original\t%s\nCannon\t%s\nSelfie%s\n" % (original, cannmon, selfie))
+    try:
+        original = str(df.iloc[i,0])
+        cannmon = Chem.MolToSmiles(Chem.MolFromSmiles(original))
+        selfie = selfies.encoder(cannmon)
+        selfs.append(selfie)
+    except:
+        print("Original\t%s\nCannon\t%s\nSelfie%s\n" % (original, cannmon, selfie))
 df['self'] = selfs
 print(df.head())
 print(df.shape)
