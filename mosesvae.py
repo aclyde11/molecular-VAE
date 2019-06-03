@@ -9,7 +9,8 @@ class BindingModel(nn.Module):
         self.binding_model = nn.Sequential(
             nn.Linear(z_size, 256),
             nn.Tanh(),
-            nn.Linear(256, 1)
+            nn.Linear(256, 1),
+            nn.Sigmoid()
         )
 
     def forward(self, x):

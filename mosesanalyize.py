@@ -256,34 +256,25 @@ for epoch in range(100):
 
     # Epoch end
 
-# for epoch, (x, b) in enumerate(train_loader):
-#     # Epoch start
-#     x = tuple(data.cuda() for data in x)
-#     print(len(x[37]))
-#     print(b[37])
-#     print(tensor2string(vocab, x[37].cpu()))
-#     exit()
-#     _, _, _, x = model(x, b=b.cuda())
-#     print(x)
-#     print(b)
-#     exit()
-#     print(b)
-#     res, binding = model.sample(x.shape[0], z=x)
-#     binding = mmss.inverse_transform(binding.reshape(-1, 1))
-#     binding = binding.reshape(-1)
-#     pd.DataFrame([res, binding]).to_csv("out_tests.csv")
-#     df = pd.DataFrame([res, binding])
-#     print(df.transpose())
-#     totals.append(df.transpose())
-#     for i in range(20):
-#         print(res[i], binding[i])
-#         print("Binding stats: ", np.mean(binding), np.std(binding))
-#
-#
-#     # Epoch end
-#     if epoch > 200:
-#         break
-#
-# largedf = totals[0].append(totals[1:], ignore_index=True)
-# print(largedf)
-# largedf.to_csv("checkbindingrange.csv")
+for epoch in range(100):
+    # Epoch start
+
+    res, binding, z = model.sample(1024)
+    binding = mmss.inverse_transform(binding.reshape(-1, 1))
+    binding = binding.reshape(-1)
+    pd.DataFrame([res, binding]).to_csv("out_tests.csv")
+    df = pd.DataFrame([res, binding])
+    print(df.transpose())
+    totals.append(df.transpose())
+    for i in range(20):
+        print(res[i], binding[i])
+        print("Binding stats: ", np.mean(binding), np.std(binding))
+
+
+    # Epoch end
+    if epoch > 200:
+        break
+
+largedf = totals[0].append(totals[1:], ignore_index=True)
+print(largedf)
+largedf.to_csv("checkbindingrange.csv")
