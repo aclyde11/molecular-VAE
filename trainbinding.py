@@ -215,7 +215,16 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
         # Forwardd
         kl_loss, recon_loss, _, z = model(input_batch, binding)
         b_pred = bindingmodel(z.detach())
-        b_pred = F.mse_loss(b_pred, binding)
+
+        weights = torch.zeros(binding.shape)
+        for i in range(binding.shape[0]):
+            if binding[i] > 0.35:
+                weights[i] = 4.0 * binding[i]
+            else:
+                weights[i] = 0.5
+        weights = weights.cuda()
+        b_pred = F.mse_loss(b_pred, binding) * weights
+
         kl_loss = torch.sum(kl_loss, 0)
         recon_loss = torch.sum(recon_loss, 0)
         binding_loss = torch.sum(b_pred, 0)
