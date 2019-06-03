@@ -6,6 +6,7 @@ import torch.nn.functional as F
 class BindingModel(nn.Module):
     def __init__(self, z_size=128):
         super().__init__()
+        self.attention_prob = nn.Sequential(nn.Linear(z_size, z_size), nn.Softmax())
         self.binding_model = nn.Sequential(
             nn.Linear(z_size, 256),
             nn.Tanh(),
@@ -14,7 +15,7 @@ class BindingModel(nn.Module):
         )
 
     def forward(self, x):
-        return self.binding_model(x)
+        return self.binding_model(x * self.attention_prob(x))
 
 class VAE(nn.Module):
     def __init__(self, vocab):
@@ -173,7 +174,7 @@ class VAE(nn.Module):
         weights = torch.zeros(b.shape)
         for i in range(b.shape[0]):
             if b[i] > 0.35:
-                weights[i] = 4.0
+                weights[i] = 2.0
             else:
                 weights[i] = 0.5
         binding_loss = F.mse_loss(bind, b) * weights.cuda()

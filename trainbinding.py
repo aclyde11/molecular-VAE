@@ -219,9 +219,9 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
         weights = torch.zeros(binding.shape)
         for i in range(binding.shape[0]):
             if binding[i] > 0.35:
-                weights[i] = 4.0 * binding[i]
+                weights[i] = 2.0 * binding[i]
             else:
-                weights[i] = 0.5
+                weights[i] = 0.5 * binding[i]
         weights = weights.cuda()
         b_pred = F.mse_loss(b_pred, binding) * weights
 
