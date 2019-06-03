@@ -19,7 +19,6 @@ class BindingModel(nn.Module):
             nn.ReLU(),
 
             nn.Linear(64, 1),
-            nn.Sigmoid()
         )
 
     def forward(self, x):

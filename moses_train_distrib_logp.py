@@ -20,7 +20,9 @@ from torch.optim.lr_scheduler import _LRScheduler
 from sklearn.preprocessing import MinMaxScaler
 import random
 import os
+import selfies
 import argparse
+from tqdm import tqdm
 
 parser = argparse.ArgumentParser()
 # FOR DISTRIBUTED:  Parse for the local_rank argument, which will be supplied
@@ -144,7 +146,7 @@ class BindingDataSet(torch.utils.data.Dataset):
         return self.df.shape[0]
 
     def __getitem__(self, idx):
-        smile = self.df.iloc[idx, 0]
+        smile = self.df.iloc[idx, 1]
         logp = Crippen.MolLogP(Chem.MolFromSmiles(smile))
         return smile, logp
 
@@ -154,10 +156,14 @@ df = pd.read_csv("../zinc_cleaned.smi", header=None)
 
 df = df.sample(8000000, replace=False)
 max_len = 0
+selfs = []
+for i in tqdm(range(df.shape[0])):
+    selfs.append(selfies.encoder(df.iloc[i,0]))
+df['self'] = selfs
 print(df.head())
 print(df.shape)
 
-vocab = mosesvocab.OneHotVocab.from_data(df.iloc[:,0].tolist())
+vocab = mosesvocab.OneHotVocab.from_data(df.iloc[:,1].tolist())
 bdata = BindingDataSet(df)
 # train_sampler = torch.utils.data.distributed.DistributedSampler(bdata)
 train_loader = torch.utils.data.DataLoader(bdata, batch_size=512,
@@ -334,7 +340,7 @@ for epoch in range(100):
         binding = binding.reshape(-1)
         pd.DataFrame([res, binding]).to_csv("out_tests.csv")
         for i in range(20):
-            print(res[i], binding[i])
+            print(selfies.decoder(res[i]), binding[i])
         print("Binding stats: ", np.mean(binding), np.std(binding), np.max(binding), np.min(binding))
 
     # Epoch end
