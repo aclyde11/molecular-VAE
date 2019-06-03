@@ -226,6 +226,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
                 weights[i] = 0
                 class_weights[i] = 0.5
         weights = weights.cuda()
+        class_weights = class_weights.cuda()
         b_pred = F.binary_cross_entropy_with_logits(b_pred, weights, pos_weight=class_weights)
 
         kl_loss = torch.sum(kl_loss, 0)
