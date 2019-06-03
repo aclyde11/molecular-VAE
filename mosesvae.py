@@ -6,11 +6,19 @@ import torch.nn.functional as F
 class BindingModel(nn.Module):
     def __init__(self, z_size=128):
         super().__init__()
-        self.attention_prob = nn.Sequential(nn.Linear(z_size, z_size), nn.Softmax())
         self.binding_model = nn.Sequential(
             nn.Linear(z_size, 256),
+            nn.BatchNorm1d(256),
             nn.Tanh(),
-            nn.Linear(256, 1),
+
+            nn.Linear(256, 256),
+            nn.ReLU(),
+
+            nn.Linear(256, 64),
+            nn.BatchNorm1d(64),
+            nn.ReLU(),
+
+            nn.Linear(64, 1),
             nn.Sigmoid()
         )
 
