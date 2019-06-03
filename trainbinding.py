@@ -214,7 +214,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
         binding = binding.cuda().view(-1, 1)
         # Forwardd
         kl_loss, recon_loss, _, z = model(input_batch, binding)
-        b_pred = bindingmodel(z)
+        b_pred = bindingmodel(z.detach())
         b_pred = F.mse_loss(b_pred, binding)
         kl_loss = torch.sum(kl_loss, 0)
         recon_loss = torch.sum(recon_loss, 0)
