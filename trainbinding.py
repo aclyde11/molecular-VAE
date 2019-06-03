@@ -176,7 +176,7 @@ with open("vocab.pkl", 'rb') as f:
     vocab = pickle.load(f)
 bdata = BindingDataSet(bindings)
 # train_sampler = torch.utils.data.distributed.DistributedSampler(bdata)
-train_loader = torch.utils.data.DataLoader(bdata, batch_size=128,
+train_loader = torch.utils.data.DataLoader(bdata, batch_size=1024,
                           shuffle=True,
                           num_workers=16, collate_fn=get_collate_fn_binding(),
                           worker_init_fn=mosesvocab.set_torch_seed_to_all_gens,
@@ -189,7 +189,7 @@ model.load_state_dict(torch.load("trained_save.pt"))
 
 bindingmodel = mosesvae.BindingModel().cuda()
 optimizer = optim.Adam(bindingmodel.parameters() ,
-                               lr=3*1e-4 )
+                               lr=8e-4 )
 # model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
 # model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], output_device=args.local_rank, find_unused_parameters=True)
 
