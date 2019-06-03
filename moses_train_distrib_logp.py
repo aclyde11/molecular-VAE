@@ -154,7 +154,7 @@ class BindingDataSet(torch.utils.data.Dataset):
 
 df = pd.read_csv("../zinc_cleaned.smi", header=None)
 
-df = df.sample(8000000, replace=False)
+df = df.sample(4000000, replace=False)
 max_len = 0
 selfs = []
 for i in tqdm(range(df.shape[0])):
@@ -163,6 +163,8 @@ for i in tqdm(range(df.shape[0])):
         cannmon = Chem.MolToSmiles(Chem.MolFromSmiles(original))
         selfie = selfies.encoder(cannmon)
         selfs.append(selfie)
+    except KeyboardInterrupt:
+        exit()
     except:
         print("Original\t%s\nCannon\t%s\nSelfie%s\n" % (original, cannmon, selfie))
 df['self'] = selfs
