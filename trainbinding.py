@@ -344,12 +344,12 @@ for epoch in range(100):
     #     with open('vocab.pkl', 'wb') as f:
     #         pickle.dump(vocab, f)
 
-        res, binding = model.sample(1024)
-        binding = mmss.inverse_transform(binding.reshape(-1, 1))
-        binding = binding.reshape(-1)
-        pd.DataFrame([res, binding]).to_csv("out_tests.csv")
-        for i in range(20):
-            print(res[i], binding[i])
-        print("Binding stats: ", np.mean(binding), np.std(binding), np.max(binding), np.min(binding))
+    res, binding = model.sample(1024)
+    binding = mmss.inverse_transform(binding.reshape(-1, 1))
+    binding = binding.reshape(-1)
+    pd.DataFrame([res, binding]).to_csv("out_tests.csv")
+    for i in range(20):
+        print(res[i], binding[i])
+    print("Binding stats: ", np.mean(binding), np.std(binding), np.max(binding), np.min(binding))
 
     # Epoch end
