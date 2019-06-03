@@ -284,8 +284,9 @@ for epoch in range(100):
     #     torch.save(model.state_dict(), "trained_save.pt")
     #     with open('vocab.pkl', 'wb') as f:
     #         pickle.dump(vocab, f)
-
-    res, binding = model.sample(1024)
+    bindingmodel.eval()
+    res, _, z = model.sample(1024)
+    binding = bindingmodel(z)
     binding = mmss.inverse_transform(binding.reshape(-1, 1))
     binding = binding.reshape(-1)
     pd.DataFrame([res, binding]).to_csv("out_tests.csv")
