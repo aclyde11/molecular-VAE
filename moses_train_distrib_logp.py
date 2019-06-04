@@ -153,9 +153,9 @@ class BindingDataSet(torch.utils.data.Dataset):
 
 
 
-df = pd.read_csv("../dataset_v1.csv", header=None)
+df = pd.read_csv("../dataset_v1.csv")
 
-df = df.sample(2000000, replace=False, random_state=42)
+#df = df.sample(2000000, replace=False, random_state=42)
 max_len = 0
 selfs = []
 counter = 51
@@ -166,8 +166,7 @@ tqdm_range = tqdm(range(df.shape[0]))
 for i in tqdm_range:
     try:
         original = str(df.iloc[i,0])
-        if len(original) > 120:
-            continue
+
         m = Chem.MolFromSmiles(original)
         cannmon = Chem.MolToSmiles(m)
         ls = Crippen.MolLogP(m)
