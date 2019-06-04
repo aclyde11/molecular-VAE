@@ -100,7 +100,6 @@ class VAE(nn.Module):
             nn.ReLU(),
 
             nn.Linear(32, 1),
-            nn.Sigmoid()
         )
 
         # Grouping the model's parameters

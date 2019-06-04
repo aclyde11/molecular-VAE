@@ -161,6 +161,7 @@ selfs = []
 counter = 51
 sym_table = {}
 logp = []
+cannon_smiles = []
 tqdm_range = tqdm(range(df.shape[0]))
 for i in tqdm_range:
     try:
@@ -169,7 +170,8 @@ for i in tqdm_range:
             continue
         m = Chem.MolFromSmiles(original)
         cannmon = Chem.MolToSmiles(m)
-        logp.append(Crippen.MolLogP(m))
+        cannon_smiles.append(cannmon)
+        ls = Crippen.MolLogP(m)
         selfie = selfies.encoder(cannmon)
         selfien = []
         re.findall("\[(.*?)\]", selfie)
@@ -181,6 +183,9 @@ for i in tqdm_range:
                 counter += 1
                 selfien.append(sym_table[sym])
         selfs.append(selfien)
+        cannon_smiles.append(cannmon)
+        logp.append(ls)
+
         postfix = [f'len=%s' % (len(sym_table))]
         tqdm_range.set_postfix_str(' '.join(postfix))
     except KeyboardInterrupt:
@@ -190,6 +195,8 @@ for i in tqdm_range:
 
 df = pd.DataFrame(pd.Series(selfs))
 df['logp'] = logp
+df['cannon'] = cannon_smiles
+df.to_hdf("selfies", 'data')
 print(df.head())
 print(df.shape)
 
@@ -300,12 +307,6 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
         kl_loss = torch.sum(kl_loss, 0)
         recon_loss = torch.sum(recon_loss, 0)
         binding_loss = torch.sum(binding_loss, 0)
-
-        loss_weight = 0
-        if epoch < 5:
-            loss_weight = 0
-        else:
-            loss_weight = kl_weight
 
         loss = min(1.0, kl_weight) * kl_loss + recon_loss + binding_loss
 
