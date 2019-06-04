@@ -148,7 +148,7 @@ class BindingDataSet(torch.utils.data.Dataset):
 
     def __getitem__(self, idx):
         smile = self.df.iloc[idx, 0]
-        logp =
+        logp = self.df.iloc[idx, 1]
         return smile, logp
 
 
