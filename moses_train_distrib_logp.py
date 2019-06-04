@@ -148,7 +148,7 @@ class BindingDataSet(torch.utils.data.Dataset):
 
     def __getitem__(self, idx):
         smile = self.df.iloc[idx, 0]
-        logp = Crippen.MolLogP(Chem.MolFromSmiles(smile))
+        logp =
         return smile, logp
 
 
@@ -158,12 +158,15 @@ df = pd.read_csv("../zinc_cleaned.smi", header=None)
 df = df.sample(20000, replace=False)
 max_len = 0
 selfs = []
-counter = 65
+counter = 51
 sym_table = {}
+logp = []
 for i in tqdm(range(df.shape[0])):
     try:
         original = str(df.iloc[i,0])
-        cannmon = Chem.MolToSmiles(Chem.MolFromSmiles(original))
+        m = Chem.MolFromSmiles(original)
+        cannmon = Chem.MolToSmiles(m)
+        logp.append(Crippen.MolLogP(Chem.MolFromSmiles(m)))
         selfie = selfies.encoder(cannmon)
         selfien = []
         re.findall("\[(.*?)\]", selfie)
@@ -181,6 +184,7 @@ for i in tqdm(range(df.shape[0])):
         print("Original\t%s\nCannon\t%s\nSelfie%s\n" % (original, cannmon, selfie))
 
 df = pd.DataFrame(pd.Series(selfs))
+df['logp'] = logp
 print(df.head())
 print(df.shape)
 
