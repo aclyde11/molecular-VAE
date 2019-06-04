@@ -362,7 +362,7 @@ for epoch in range(100):
         with open('vocab.pkl', 'wb') as f:
             pickle.dump(vocab, f)
 
-        res, binding = model.sample(1024)
+        res, binding, _ = model.sample(1024)
         binding = binding.reshape(-1)
         pd.DataFrame([res, binding]).to_csv("out_tests.csv")
         for i in range(20):
