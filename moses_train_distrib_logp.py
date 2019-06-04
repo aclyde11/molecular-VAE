@@ -180,7 +180,7 @@ for i in tqdm(range(df.shape[0])):
     except:
         print("Original\t%s\nCannon\t%s\nSelfie%s\n" % (original, cannmon, selfie))
 
-df = df.DataFrame(pd.Series(selfs))
+df = pd.DataFrame(pd.Series(selfs))
 print(df.head())
 print(df.shape)
 
