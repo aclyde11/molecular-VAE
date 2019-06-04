@@ -155,7 +155,7 @@ class BindingDataSet(torch.utils.data.Dataset):
 
 df = pd.read_csv("../zinc_cleaned.smi", header=None)
 
-df = df.sample(20000, replace=False)
+df = df.sample(20000, replace=False, random_state=42)
 max_len = 0
 selfs = []
 counter = 51
