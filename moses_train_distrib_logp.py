@@ -147,7 +147,7 @@ class BindingDataSet(torch.utils.data.Dataset):
         return self.df.shape[0]
 
     def __getitem__(self, idx):
-        smile = self.df.iloc[idx, 1]
+        smile = self.df.iloc[idx, 0]
         logp = Crippen.MolLogP(Chem.MolFromSmiles(smile))
         return smile, logp
 
