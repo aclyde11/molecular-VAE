@@ -166,7 +166,7 @@ for i in tqdm(range(df.shape[0])):
         original = str(df.iloc[i,0])
         m = Chem.MolFromSmiles(original)
         cannmon = Chem.MolToSmiles(m)
-        logp.append(Crippen.MolLogP(Chem.MolFromSmiles(m)))
+        logp.append(Crippen.MolLogP(m))
         selfie = selfies.encoder(cannmon)
         selfien = []
         re.findall("\[(.*?)\]", selfie)
