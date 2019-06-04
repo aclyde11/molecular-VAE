@@ -155,7 +155,7 @@ class BindingDataSet(torch.utils.data.Dataset):
 
 df = pd.read_csv("../zinc_cleaned.smi", header=None)
 
-df = df.sample(4000000, replace=False, random_state=42)
+df = df.sample(2000000, replace=False, random_state=42)
 max_len = 0
 selfs = []
 counter = 51
@@ -196,7 +196,7 @@ for i in tqdm_range:
 df = pd.DataFrame(pd.Series(selfs))
 df['logp'] = logp
 df['cannon'] = cannon_smiles
-df.to_hdf("selfies", 'data')
+df.to_csv("selfies.csv")
 print(df.head())
 print(df.shape)
 
