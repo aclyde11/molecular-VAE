@@ -366,7 +366,7 @@ for epoch in range(100):
         binding = binding.reshape(-1)
         pd.DataFrame([res, binding]).to_csv("out_tests.csv")
         for i in range(20):
-            print(selfies.decoder([charset[sym] for sym in res[i]]), binding[i])
+            print(selfies.decoder("".join([charset[sym] for sym in res[i]])), binding[i])
         print("Binding stats: ", np.mean(binding), np.std(binding), np.max(binding), np.min(binding))
 
     # Epoch end
