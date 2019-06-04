@@ -21,6 +21,7 @@ from sklearn.preprocessing import MinMaxScaler
 import random
 import os
 import selfies
+import re
 import argparse
 from tqdm import tqdm
 
@@ -154,24 +155,37 @@ class BindingDataSet(torch.utils.data.Dataset):
 
 df = pd.read_csv("../zinc_cleaned.smi", header=None)
 
-df = df.sample(4000000, replace=False)
+df = df.sample(20000, replace=False)
 max_len = 0
 selfs = []
+counter = 65
+sym_table = {}
 for i in tqdm(range(df.shape[0])):
     try:
         original = str(df.iloc[i,0])
         cannmon = Chem.MolToSmiles(Chem.MolFromSmiles(original))
         selfie = selfies.encoder(cannmon)
-        selfs.append(selfie)
+        selfien = []
+        re.findall("\[(.*?)\]", selfie)
+        for sym in re.findall("\[(.*?)\]", selfie):
+            if sym in sym_table:
+                selfien.append(sym_table[sym])
+            else:
+                sym_table[sym] = chr(counter)
+                counter += 1
+                selfien.append(sym_table[sym])
+        selfs.append(selfien)
     except KeyboardInterrupt:
         exit()
     except:
         print("Original\t%s\nCannon\t%s\nSelfie%s\n" % (original, cannmon, selfie))
-df['self'] = selfs
+
+df = df.DataFrame(pd.Series(selfs))
 print(df.head())
 print(df.shape)
 
-vocab = mosesvocab.OneHotVocab.from_data(df.iloc[:,1].tolist())
+charset = {k: v for v, k in sym_table.items()}
+vocab = mosesvocab.OneHotVocab(sym_table.values())
 bdata = BindingDataSet(df)
 # train_sampler = torch.utils.data.distributed.DistributedSampler(bdata)
 train_loader = torch.utils.data.DataLoader(bdata, batch_size=512,
@@ -348,7 +362,7 @@ for epoch in range(100):
         binding = binding.reshape(-1)
         pd.DataFrame([res, binding]).to_csv("out_tests.csv")
         for i in range(20):
-            print(selfies.decoder(res[i]), binding[i])
+            print(selfies.decoder([charset[sym] for sym in res[i]]), binding[i])
         print("Binding stats: ", np.mean(binding), np.std(binding), np.max(binding), np.min(binding))
 
     # Epoch end

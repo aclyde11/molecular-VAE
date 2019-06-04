@@ -38,7 +38,7 @@ class CharVocab:
             raise ValueError('SS in chars')
 
         all_syms = sorted(list(chars)) + [ss.bos, ss.eos, ss.pad, ss.unk]
-
+        print(all_syms)
         self.ss = ss
         self.c2i = {c: i for i, c in enumerate(all_syms)}
         self.i2c = {i: c for i, c in enumerate(all_syms)}
