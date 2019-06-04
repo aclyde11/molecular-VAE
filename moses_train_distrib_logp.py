@@ -161,11 +161,11 @@ selfs = []
 counter = 51
 sym_table = {}
 logp = []
-for i in tqdm(range(df.shape[0])):
+tqdm_range = tqdm(range(df.shape[0]))
+for i in tqdm_range:
     try:
         original = str(df.iloc[i,0])
         if len(original) > 120:
-            print("too long.")
             continue
         m = Chem.MolFromSmiles(original)
         cannmon = Chem.MolToSmiles(m)
@@ -181,6 +181,8 @@ for i in tqdm(range(df.shape[0])):
                 counter += 1
                 selfien.append(sym_table[sym])
         selfs.append(selfien)
+        postfix = [f'len=%s' % (len(sym_table))]
+        tqdm_range.set_postfix_str(' '.join(postfix))
     except KeyboardInterrupt:
         exit()
     except:
