@@ -155,7 +155,7 @@ class BindingDataSet(torch.utils.data.Dataset):
 
 df = pd.read_csv("../zinc_cleaned.smi", header=None)
 
-df = df.sample(20000, replace=False, random_state=42)
+df = df.sample(4000000, replace=False, random_state=42)
 max_len = 0
 selfs = []
 counter = 51
@@ -164,6 +164,9 @@ logp = []
 for i in tqdm(range(df.shape[0])):
     try:
         original = str(df.iloc[i,0])
+        if len(original) > 120:
+            print("too long.")
+            continue
         m = Chem.MolFromSmiles(original)
         cannmon = Chem.MolToSmiles(m)
         logp.append(Crippen.MolLogP(m))
@@ -181,7 +184,7 @@ for i in tqdm(range(df.shape[0])):
     except KeyboardInterrupt:
         exit()
     except:
-        print("Original\t%s\nCannon\t%s\nSelfie%s\n" % (original, cannmon, selfie))
+        print("ERROR...")
 
 df = pd.DataFrame(pd.Series(selfs))
 df['logp'] = logp
