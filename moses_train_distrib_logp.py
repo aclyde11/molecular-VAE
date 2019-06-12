@@ -202,7 +202,7 @@ charset = {k: v for v, k in sym_table.items()}
 vocab = mosesvocab.OneHotVocab(sym_table.values())
 bdata = BindingDataSet(df)
 # train_sampler = torch.utils.data.distributed.DistributedSampler(bdata)
-train_loader = torch.utils.data.DataLoader(bdata, batch_size=512,
+train_loader = torch.utils.data.DataLoader(bdata, batch_size=128,
                           shuffle=True,
                           num_workers=32, collate_fn=get_collate_fn_binding(),
                           worker_init_fn=mosesvocab.set_torch_seed_to_all_gens,
@@ -225,65 +225,6 @@ lr_annealer = CosineAnnealingLRWithRestart(optimizer)
 model.zero_grad()
 
 
-def _train_epoch(model, epoch, tqdm_data, kl_weight, optimizer=None):
-    if optimizer is None:
-        model.eval()
-    else:
-        model.train()
-
-
-    kl_loss_values = mosesvocab.CircularBuffer(1000)
-    recon_loss_values = mosesvocab.CircularBuffer(1000)
-    loss_values =mosesvocab.CircularBuffer(1000)
-    for i, input_batch in enumerate(tqdm_data):
-        input_batch = tuple(data.cuda() for data in input_batch)
-
-        # Forwardd
-        kl_loss, recon_loss, _ = model(input_batch)
-        kl_loss = torch.sum(kl_loss, 0)
-        recon_loss = torch.sum(recon_loss, 0)
-
-        loss = kl_weight * kl_loss + recon_loss
-
-
-        # Backward
-        if optimizer is not None:
-            optimizer.zero_grad()
-            # with amp.scale_loss(loss, optimizer) as scaled_loss:
-            #     scaled_loss.backward()
-            loss.backward()
-            clip_grad_norm_((p for p in model.parameters() if p.requires_grad),
-                            50)
-            optimizer.step()
-
-        # Log
-        kl_loss_values.add(kl_loss.item())
-        recon_loss_values.add(recon_loss.item())
-        loss_values.add(loss.item())
-        lr = (optimizer.param_groups[0]['lr']
-              if optimizer is not None
-              else None)
-
-        # Update tqdm
-        kl_loss_value = kl_loss_values.mean()
-        recon_loss_value = recon_loss_values.mean()
-        loss_value = loss_values.mean()
-        postfix = [f'loss={loss_value:.5f}',
-                   f'(kl={kl_loss_value:.5f}',
-                   f'recon={recon_loss_value:.5f})',
-                   f'klw={kl_weight:.5f} lr={lr:.5f}']
-        tqdm_data.set_postfix_str(' '.join(postfix))
-
-    postfix = {
-        'epoch': epoch,
-        'kl_weight': kl_weight,
-        'lr': lr,
-        'kl_loss': kl_loss_value,
-        'recon_loss': recon_loss_value,
-        'loss': loss_value,
-        'mode': 'Eval' if optimizer is None else 'Train'}
-
-    return postfix
 
 def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
     if optimizer is None:
@@ -306,7 +247,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
         recon_loss = torch.sum(recon_loss, 0)
         binding_loss = torch.sum(binding_loss, 0)
 
-        loss = min(1.0, kl_weight) * kl_loss + recon_loss + binding_loss
+        loss = min(1.0, kl_weight) * kl_loss + recon_loss + min(1.0, kl_weight) * binding_loss
 
 
         # Backward
@@ -369,8 +310,11 @@ for epoch in range(100):
         res, binding, _ = model.sample(1024)
         binding = binding.reshape(-1)
         pd.DataFrame([res, binding]).to_csv("out_tests.csv")
-        for i in range(20):
-            print(selfies.decoder("".join(['[' + charset[sym] + ']' for sym in res[i]])), binding[i])
+        try:
+            for i in range(20):
+                print(selfies.decoder("".join(['[' + charset[sym] + ']' for sym in res[i]])), binding[i])
+        except:
+            print("error...")
         print("Binding stats: ", np.mean(binding), np.std(binding), np.max(binding), np.min(binding))
 
     # Epoch end
