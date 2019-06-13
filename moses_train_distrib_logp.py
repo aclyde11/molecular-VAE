@@ -333,7 +333,7 @@ for i, row in df.iterrows():
         ls = Crippen.MolLogP(m)
         selfie_ = selfies.encoder(cannmon)
         seflie.append(selfie_)
-        smile.append(row[0])
+        smile.append(i)
         print(selfie_)
     except:
         print("ERROR....")
