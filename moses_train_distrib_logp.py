@@ -322,30 +322,30 @@ for i, row in df.iterrows():
 xs = pd.DataFrame(seflie)
 print(xs)
 
-for epoch in range(100):
-    # Epoch start
-
-
-    # kl_weight = kl_annealer(epoch)
-    #
-    # tqdm_data = tqdm(train_loader,
-    #                  desc='Training (epoch #{})'.format(epoch))
-    # postfix = _train_epoch_binding(model, epoch,
-    #                             tqdm_data, kl_weight, optimizer)
-    # if args.local_rank == 0:
-    #     torch.save(model.state_dict(), "trained_save.pt")
-    #     with open('vocab.pkl', 'wb') as f:
-    #         pickle.dump(vocab, f)
-    #
-    #     res, binding, _ = model.sample(1024)
-    #     binding = binding.reshape(-1)
-    #     pd.DataFrame([res, binding]).to_csv("out_tests.csv")
-    #     try:
-    #         for i in range(20):
-    #             print(selfies.decoder("".join(['[' + charset[sym] + ']' for sym in res[i]])), binding[i])
-    #     except:
-    #         print("error...")
-    #     print("Binding stats: ", np.mean(binding), np.std(binding), np.max(binding), np.min(binding))
-    #
-    # # Epoch end
-    # lr_annealer.step()
+# for epoch in range(100):
+#     # Epoch start
+#
+#
+#     # kl_weight = kl_annealer(epoch)
+#     #
+#     # tqdm_data = tqdm(train_loader,
+#     #                  desc='Training (epoch #{})'.format(epoch))
+#     # postfix = _train_epoch_binding(model, epoch,
+#     #                             tqdm_data, kl_weight, optimizer)
+#     # if args.local_rank == 0:
+#     #     torch.save(model.state_dict(), "trained_save.pt")
+#     #     with open('vocab.pkl', 'wb') as f:
+#     #         pickle.dump(vocab, f)
+#     #
+#     #     res, binding, _ = model.sample(1024)
+#     #     binding = binding.reshape(-1)
+#     #     pd.DataFrame([res, binding]).to_csv("out_tests.csv")
+#     #     try:
+#     #         for i in range(20):
+#     #             print(selfies.decoder("".join(['[' + charset[sym] + ']' for sym in res[i]])), binding[i])
+#     #     except:
+#     #         print("error...")
+#     #     print("Binding stats: ", np.mean(binding), np.std(binding), np.max(binding), np.min(binding))
+#     #
+#     # # Epoch end
+#     # lr_annealer.step()
