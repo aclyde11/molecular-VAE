@@ -224,15 +224,15 @@ with open("charset.pkl", 'wb') as f:
     pickle.dump(charset, f)
 with open("vocab.pkl", 'wb') as f:
     pickle.dump(vocab, f)
-bdata = BindingDataSet(df)
-# train_sampler = torch.utils.data.distributed.DistributedSampler(bdata)
-train_loader = torch.utils.data.DataLoader(bdata, batch_size=128,
-                          shuffle=True,
-                          num_workers=32, collate_fn=get_collate_fn_binding(),
-                          worker_init_fn=mosesvocab.set_torch_seed_to_all_gens,
-                                           pin_memory=True,)
-
-n_epochs = 50
+# bdata = BindingDataSet(df)
+# # train_sampler = torch.utils.data.distributed.DistributedSampler(bdata)
+# train_loader = torch.utils.data.DataLoader(bdata, batch_size=128,
+#                           shuffle=True,
+#                           num_workers=32, collate_fn=get_collate_fn_binding(),
+#                           worker_init_fn=mosesvocab.set_torch_seed_to_all_gens,
+#                                            pin_memory=True,)
+#
+# n_epochs = 50
 
 model = mosesvae.VAE(vocab).cuda()
 model.load_state_dict(torch.load("trained_save.pt"))
