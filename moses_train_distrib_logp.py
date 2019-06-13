@@ -323,7 +323,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
 
 
 print("STARTING THING I WANT.....")
-df = pd.read_csv("../pilot1_smiles.csv", header=None)
+df = pd.read_csv("../combined_smiles.csv", header=None)
 seflie = []
 smile = []
 for i, row in df.iterrows():
@@ -333,7 +333,7 @@ for i, row in df.iterrows():
         ls = Crippen.MolLogP(m)
         selfie_ = selfies.encoder(cannmon)
         seflie.append(selfie_)
-        smile.append(i)
+        smile.append(row[1])
         print(selfie_)
     except:
         print("ERROR....")
