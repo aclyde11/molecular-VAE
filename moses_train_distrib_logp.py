@@ -173,33 +173,33 @@ sym_table = {}
 logp = []
 cannon_smiles = []
 tqdm_range = tqdm(range(df.shape[0]))
-for i in tqdm_range:
-    try:
-        original = str(df.iloc[i,0])
-
-        m = Chem.MolFromSmiles(original)
-        cannmon = Chem.MolToSmiles(m)
-        ls = Crippen.MolLogP(m)
-        selfie = selfies.encoder(cannmon)
-        selfien = []
-        re.findall("\[(.*?)\]", selfie)
-        for sym in re.findall("\[(.*?)\]", selfie):
-            if sym in sym_table:
-                selfien.append(sym_table[sym])
-            else:
-                sym_table[sym] = chr(counter)
-                counter += 1
-                selfien.append(sym_table[sym])
-        selfs.append(selfien)
-        cannon_smiles.append(cannmon)
-        logp.append(ls)
-
-        postfix = [f'len=%s' % (len(sym_table))]
-        tqdm_range.set_postfix_str(' '.join(postfix))
-    except KeyboardInterrupt:
-        exit()
-    except:
-        print("ERROR...")
+# for i in tqdm_range:
+#     try:
+#         original = str(df.iloc[i,0])
+#
+#         m = Chem.MolFromSmiles(original)
+#         cannmon = Chem.MolToSmiles(m)
+#         ls = Crippen.MolLogP(m)
+#         selfie = selfies.encoder(cannmon)
+#         selfien = []
+#         re.findall("\[(.*?)\]", selfie)
+#         for sym in re.findall("\[(.*?)\]", selfie):
+#             if sym in sym_table:
+#                 selfien.append(sym_table[sym])
+#             else:
+#                 sym_table[sym] = chr(counter)
+#                 counter += 1
+#                 selfien.append(sym_table[sym])
+#         selfs.append(selfien)
+#         cannon_smiles.append(cannmon)
+#         logp.append(ls)
+#
+#         postfix = [f'len=%s' % (len(sym_table))]
+#         tqdm_range.set_postfix_str(' '.join(postfix))
+#     except KeyboardInterrupt:
+#         exit()
+#     except:
+#         print("ERROR...")
 
 df = pd.DataFrame(pd.Series(selfs))
 df['logp'] = logp
@@ -210,6 +210,14 @@ print(df.shape)
 
 charset = {k: v for v, k in sym_table.items()}
 vocab = mosesvocab.OneHotVocab(sym_table.values())
+
+with open("sym_table.pkl", 'rb') as f:
+    sym_table = pickle.load(f)
+with open("charset.pkl", 'rb') as f:
+    charset = pickle.load(f)
+with open("vocab.pkl", 'rb') as f:
+    vocab = pickle.load(f)
+
 with open("sym_table.pkl", 'wb') as f:
     pickle.dump(sym_table, f)
 with open("charset.pkl", 'wb') as f:
@@ -317,6 +325,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
 print("STARTING THING I WANT.....")
 df = pd.read_csv("../pilot1_smiles.csv", header=None)
 seflie = []
+smile = []
 for i, row in df.iterrows():
     try:
         m = Chem.MolFromSmiles(row[0])
@@ -324,12 +333,14 @@ for i, row in df.iterrows():
         ls = Crippen.MolLogP(m)
         selfie_ = selfies.encoder(cannmon)
         seflie.append(selfie_)
+        smile.append(row[0])
         print(selfie_)
     except:
         print("ERROR....")
 
 
 xs = pd.DataFrame(seflie)
+xs = xs.set_index(smile)
 print(xs)
 
 
