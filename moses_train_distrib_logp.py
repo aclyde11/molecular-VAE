@@ -328,12 +328,12 @@ seflie = []
 smile = []
 for i, row in df.iterrows():
     try:
-        m = Chem.MolFromSmiles(row[0])
+        m = Chem.MolFromSmiles(row[1])
         cannmon = Chem.MolToSmiles(m)
         ls = Crippen.MolLogP(m)
         selfie_ = selfies.encoder(cannmon)
         seflie.append(selfie_)
-        smile.append(row[1])
+        smile.append(row[0])
         print(selfie_)
     except:
         print("ERROR....")
