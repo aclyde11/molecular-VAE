@@ -343,6 +343,22 @@ xs = pd.DataFrame(seflie)
 xs = xs.set_index(smile)
 print(xs)
 
+model.eval()
+bdata = SmilesLoaderSelfies(xs)
+train_loader = torch.utils.data.DataLoader(bdata, batch_size=128,
+                          shuffle=False,
+                          num_workers=32, collate_fn=get_collate_fn_binding(),
+                          worker_init_fn=mosesvocab.set_torch_seed_to_all_gens,
+                                           pin_memory=True,)
+vecs = []
+
+for i, (x, b) in enumerate(train_loader):
+    input_batch = tuple(data.cuda() for data in x)
+    b = b.cuda().float()
+    _,_,_,z = model(input_batch, b)
+    vecs.append(z.detach().cpu().numpy())
+
+np.savez("z_vae_pilot1.npz", np.concatenate(vecs, axis=0))
 
 # for epoch in range(100):
 #     # Epoch start
