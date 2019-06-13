@@ -309,11 +309,11 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
 
 
 print("STARTING THING I WANT.....")
-df = pd.read_csv("../pilot1_smiles.csv")
+df = pd.read_csv("../pilot1_smiles.csv", header=None)
 seflie = []
 for i, row in df.iterrows():
 
-    m = Chem.MolFromSmiles(original)
+    m = Chem.MolFromSmiles(row[0])
     cannmon = Chem.MolToSmiles(m)
     ls = Crippen.MolLogP(m)
     selfie_ = selfies.encoder(cannmon)
