@@ -210,6 +210,12 @@ print(df.shape)
 
 charset = {k: v for v, k in sym_table.items()}
 vocab = mosesvocab.OneHotVocab(sym_table.values())
+with open("sym_table.pkl", 'wb') as f:
+    pickle.dump(sym_table, f)
+with open("charset.pkl", 'wb') as f:
+    pickle.dump(charset, f)
+with open("vocab.pkl", 'wb') as f:
+    pickle.dump(vocab, f)
 bdata = BindingDataSet(df)
 # train_sampler = torch.utils.data.distributed.DistributedSampler(bdata)
 train_loader = torch.utils.data.DataLoader(bdata, batch_size=128,
@@ -312,15 +318,20 @@ print("STARTING THING I WANT.....")
 df = pd.read_csv("../pilot1_smiles.csv", header=None)
 seflie = []
 for i, row in df.iterrows():
+    try:
+        m = Chem.MolFromSmiles(row[0])
+        cannmon = Chem.MolToSmiles(m)
+        ls = Crippen.MolLogP(m)
+        selfie_ = selfies.encoder(cannmon)
+        seflie.append(selfie_)
+        print(selfie_)
+    except:
+        print("ERROR....")
 
-    m = Chem.MolFromSmiles(row[0])
-    cannmon = Chem.MolToSmiles(m)
-    ls = Crippen.MolLogP(m)
-    selfie_ = selfies.encoder(cannmon)
-    seflie.append(selfie_)
 
 xs = pd.DataFrame(seflie)
 print(xs)
+
 
 # for epoch in range(100):
 #     # Epoch start
