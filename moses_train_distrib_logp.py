@@ -358,7 +358,7 @@ for i, (x, b) in enumerate(train_loader):
     b = b.cuda().float()
     _,_,_,z = model(input_batch, b)
     vecs.append(z.detach().cpu().numpy())
-
+xs.to_csv("smiles_computed.csv")
 np.savez("z_vae_pilot1.npz", np.concatenate(vecs, axis=0))
 
 # for epoch in range(100):
