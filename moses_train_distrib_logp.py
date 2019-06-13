@@ -340,7 +340,8 @@ for i, row in df.iterrows():
 
 
 xs = pd.DataFrame(seflie)
-xs = xs.set_index(smile)
+xs['ins'] = smile
+xs = xs.set_index("ins")
 print(xs)
 
 model.eval()
