@@ -151,7 +151,17 @@ class BindingDataSet(torch.utils.data.Dataset):
         logp = self.df.iloc[idx, 1]
         return smile, logp
 
+class SmilesLoaderSelfies(torch.utils.data.Dataset):
+    def __init__(self, df):
+        self.df = df
 
+
+    def __len__(self):
+        return self.df.shape[0]
+
+    def __getitem__(self, idx):
+        selfie = self.df.iloc[idx, 0]
+        return selfie, 0
 
 df = pd.read_csv("../dataset_v1.csv")
 
@@ -211,6 +221,7 @@ train_loader = torch.utils.data.DataLoader(bdata, batch_size=128,
 n_epochs = 50
 
 model = mosesvae.VAE(vocab).cuda()
+model.load_state_dict(torch.load("trained_save.pt"))
 binding_optimizer = None
 
 optimizer = optim.Adam(model.parameters() ,
@@ -293,29 +304,48 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
 
     return postfix
 
+
 # Epoch start
+
+
+print("STARTING THING I WANT.....")
+df = pd.read_csv("../pilot1_smiles.csv")
+seflie = []
+for i, row in df.iterrows():
+
+    m = Chem.MolFromSmiles(original)
+    cannmon = Chem.MolToSmiles(m)
+    ls = Crippen.MolLogP(m)
+    selfie_ = selfies.encoder(cannmon)
+    seflie.append(selfie_)
+
+xs = pd.DataFrame(seflie)
+print(xs)
+
 for epoch in range(100):
     # Epoch start
-    kl_weight = kl_annealer(epoch)
 
-    tqdm_data = tqdm(train_loader,
-                     desc='Training (epoch #{})'.format(epoch))
-    postfix = _train_epoch_binding(model, epoch,
-                                tqdm_data, kl_weight, optimizer)
-    if args.local_rank == 0:
-        torch.save(model.state_dict(), "trained_save.pt")
-        with open('vocab.pkl', 'wb') as f:
-            pickle.dump(vocab, f)
 
-        res, binding, _ = model.sample(1024)
-        binding = binding.reshape(-1)
-        pd.DataFrame([res, binding]).to_csv("out_tests.csv")
-        try:
-            for i in range(20):
-                print(selfies.decoder("".join(['[' + charset[sym] + ']' for sym in res[i]])), binding[i])
-        except:
-            print("error...")
-        print("Binding stats: ", np.mean(binding), np.std(binding), np.max(binding), np.min(binding))
-
-    # Epoch end
-    lr_annealer.step()
+    # kl_weight = kl_annealer(epoch)
+    #
+    # tqdm_data = tqdm(train_loader,
+    #                  desc='Training (epoch #{})'.format(epoch))
+    # postfix = _train_epoch_binding(model, epoch,
+    #                             tqdm_data, kl_weight, optimizer)
+    # if args.local_rank == 0:
+    #     torch.save(model.state_dict(), "trained_save.pt")
+    #     with open('vocab.pkl', 'wb') as f:
+    #         pickle.dump(vocab, f)
+    #
+    #     res, binding, _ = model.sample(1024)
+    #     binding = binding.reshape(-1)
+    #     pd.DataFrame([res, binding]).to_csv("out_tests.csv")
+    #     try:
+    #         for i in range(20):
+    #             print(selfies.decoder("".join(['[' + charset[sym] + ']' for sym in res[i]])), binding[i])
+    #     except:
+    #         print("error...")
+    #     print("Binding stats: ", np.mean(binding), np.std(binding), np.max(binding), np.min(binding))
+    #
+    # # Epoch end
+    # lr_annealer.step()
