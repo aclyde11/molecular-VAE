@@ -354,7 +354,6 @@ train_loader = torch.utils.data.DataLoader(bdata, batch_size=1,
 vecs = []
 
 for i, (x, b) in enumerate(train_loader):
-    print(x.shape)
     input_batch = tuple(data.cuda() for data in x)
     b = b.cuda().float()
     _,_,_,z = model(input_batch, b)
