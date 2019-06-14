@@ -330,7 +330,7 @@ seflie = []
 smile = []
 for i, row in df.iterrows():
     try:
-        m = Chem.MolFromSmiles(row[1])
+        m = Chem.MolFromSmiles(row[0])
         cannmon = Chem.MolToSmiles(m)
         ls = Crippen.MolLogP(m)
         selfie_ = selfies.encoder(cannmon)
