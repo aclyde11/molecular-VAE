@@ -323,7 +323,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
 
 
 print("STARTING THING I WANT.....")
-df = pd.read_csv("../combined_smiles.csv", header=None)
+# df = pd.read_csv("../combined_smiles.csv", header=None)
 seflie = []
 smile = []
 for i, row in df.iterrows():
@@ -358,8 +358,8 @@ for i, (x, b) in enumerate(train_loader):
     b = b.cuda().float()
     _,_,_,z = model(input_batch, b)
     vecs.append(z.detach().cpu().numpy())
-xs.to_csv("smiles_computed.csv")
-np.savez("z_vae_pilot1.npz", np.concatenate(vecs, axis=0))
+# xs.to_csv("smiles_computed.csv")
+np.savez("z_vae_moses.npz", np.concatenate(vecs, axis=0))
 
 # for epoch in range(100):
 #     # Epoch start
