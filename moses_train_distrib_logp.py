@@ -325,7 +325,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
 print("STARTING THING I WANT.....")
 # df = pd.read_csv("../combined_smiles.csv", header=None)
 df = pd.read_csv("../dataset_v1.csv")
-
+df = df.sample(50000, replace=False, random_state=42)
 seflie = []
 smile = []
 for i, row in df.iterrows():
