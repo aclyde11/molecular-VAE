@@ -323,29 +323,30 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
 
 
 print("STARTING THING I WANT.....")
-df = pd.read_csv("../combined_smiles.csv", header=None)
-seflie = []
-smile = []
-for i, row in df.iterrows():
-    try:
-        m = Chem.MolFromSmiles(row[1])
-        cannmon = Chem.MolToSmiles(m)
-        ls = Crippen.MolLogP(m)
-        selfie_ = selfies.encoder(cannmon)
-        seflie.append(selfie_)
-        smile.append(row[0])
-        print(selfie_)
-    except:
-        print("ERROR....")
-
-
-xs = pd.DataFrame(seflie)
-xs['ins'] = smile
-xs = xs.set_index("ins")
-print(xs)
-
+# df = pd.read_csv("../combined_smiles.csv", header=None)
+# seflie = []
+# smile = []
+# for i, row in df.iterrows():
+#     try:
+#         m = Chem.MolFromSmiles(row[1])
+#         cannmon = Chem.MolToSmiles(m)
+#         ls = Crippen.MolLogP(m)
+#         selfie_ = selfies.encoder(cannmon)
+#         seflie.append(selfie_)
+#         smile.append(row[0])
+#         print(selfie_)
+#     except:
+#         print("ERROR....")
+#
+#
+# xs = pd.DataFrame(seflie)
+# xs['ins'] = smile
+# xs = xs.set_index("ins")
+# print(xs)
+xs = pd.read_csv("selfie.csv")
+xs = xs.drop(xs.columns[0], axis=1)
 model.eval()
-bdata = SmilesLoaderSelfies(xs)
+bdata = BindingDataSet(xs)
 train_loader = torch.utils.data.DataLoader(bdata, batch_size=128,
                           shuffle=False,
                           num_workers=32, collate_fn=get_collate_fn_binding(),
@@ -358,8 +359,8 @@ for i, (x, b) in enumerate(train_loader):
     b = b.cuda().float()
     _,_,_,z = model(input_batch, b)
     vecs.append(z.detach().cpu().numpy())
-xs.to_csv("smiles_computed.csv")
-np.savez("z_vae_pilot1.npz", np.concatenate(vecs, axis=0))
+# xs.to_csv("smiles_computed.csv")
+np.savez("z_vae_moses.npz", np.concatenate(vecs, axis=0))
 
 # for epoch in range(100):
 #     # Epoch start
