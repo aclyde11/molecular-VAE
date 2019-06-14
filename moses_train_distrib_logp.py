@@ -343,7 +343,7 @@ print("STARTING THING I WANT.....")
 # xs['ins'] = smile
 # xs = xs.set_index("ins")
 # print(xs)
-xs = pd.read_csv("selfie.csv")
+xs = pd.read_csv("selfies.csv")
 xs = xs.drop(xs.columns[0], axis=1)
 model.eval()
 bdata = BindingDataSet(xs)
