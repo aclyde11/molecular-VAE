@@ -165,7 +165,7 @@ class SmilesLoaderSelfies(torch.utils.data.Dataset):
 
 df = pd.read_csv("../dataset_v1.csv")
 
-df = df.sample(2000000, replace=False, random_state=42)
+#df = df.sample(2000000, replace=False, random_state=42)
 max_len = 0
 selfs = []
 counter = 51
@@ -173,33 +173,33 @@ sym_table = {}
 logp = []
 cannon_smiles = []
 tqdm_range = tqdm(range(df.shape[0]))
-for i in tqdm_range:
-    try:
-        original = str(df.iloc[i,0])
-
-        m = Chem.MolFromSmiles(original)
-        cannmon = Chem.MolToSmiles(m)
-        ls = Crippen.MolLogP(m)
-        selfie = selfies.encoder(cannmon)
-        selfien = []
-        re.findall("\[(.*?)\]", selfie)
-        for sym in re.findall("\[(.*?)\]", selfie):
-            if sym in sym_table:
-                selfien.append(sym_table[sym])
-            else:
-                sym_table[sym] = chr(counter)
-                counter += 1
-                selfien.append(sym_table[sym])
-        selfs.append(selfien)
-        cannon_smiles.append(cannmon)
-        logp.append(ls)
-
-        postfix = [f'len=%s' % (len(sym_table))]
-        tqdm_range.set_postfix_str(' '.join(postfix))
-    except KeyboardInterrupt:
-        exit()
-    except:
-        print("ERROR...")
+# for i in tqdm_range:
+#     try:
+#         original = str(df.iloc[i,0])
+#
+#         m = Chem.MolFromSmiles(original)
+#         cannmon = Chem.MolToSmiles(m)
+#         ls = Crippen.MolLogP(m)
+#         selfie = selfies.encoder(cannmon)
+#         selfien = []
+#         re.findall("\[(.*?)\]", selfie)
+#         for sym in re.findall("\[(.*?)\]", selfie):
+#             if sym in sym_table:
+#                 selfien.append(sym_table[sym])
+#             else:
+#                 sym_table[sym] = chr(counter)
+#                 counter += 1
+#                 selfien.append(sym_table[sym])
+#         selfs.append(selfien)
+#         cannon_smiles.append(cannmon)
+#         logp.append(ls)
+#
+#         postfix = [f'len=%s' % (len(sym_table))]
+#         tqdm_range.set_postfix_str(' '.join(postfix))
+#     except KeyboardInterrupt:
+#         exit()
+#     except:
+#         print("ERROR...")
 
 df = pd.DataFrame(pd.Series(selfs))
 df['logp'] = logp
@@ -224,9 +224,6 @@ with open("charset.pkl", 'wb') as f:
     pickle.dump(charset, f)
 with open("vocab.pkl", 'wb') as f:
     pickle.dump(vocab, f)
-
-
-
 # bdata = BindingDataSet(df)
 # # train_sampler = torch.utils.data.distributed.DistributedSampler(bdata)
 # train_loader = torch.utils.data.DataLoader(bdata, batch_size=128,
@@ -346,9 +343,11 @@ print("STARTING THING I WANT.....")
 # xs['ins'] = smile
 # xs = xs.set_index("ins")
 # print(xs)
-df = pd.read_csv("../dataset_v1.csv")
+xs = pd.read_csv("../dataset_v1.csv")
+# xs = xs.drop(xs.columns[0], axis=1)
+print(xs.head())
 model.eval()
-bdata = SmilesLoaderSelfies(df)
+bdata = BindingDataSet(xs)
 train_loader = torch.utils.data.DataLoader(bdata, batch_size=128,
                           shuffle=False,
                           num_workers=32, collate_fn=get_collate_fn_binding(),
