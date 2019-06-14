@@ -345,6 +345,7 @@ print("STARTING THING I WANT.....")
 # print(xs)
 xs = pd.read_csv("selfies.csv")
 xs = xs.drop(xs.columns[0], axis=1)
+print(xs.head())
 model.eval()
 bdata = BindingDataSet(xs)
 train_loader = torch.utils.data.DataLoader(bdata, batch_size=128,
