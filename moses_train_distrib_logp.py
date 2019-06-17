@@ -354,15 +354,15 @@ print("STARTING THING I WANT.....")
 model.eval()
 
 vecs = []
-dfs = []
+smis = []
 for i in tqdm(range(100)):
-    res, binding, _ = model.sample(1024)
-    binding = binding.reshape(-1)
-    dfx = pd.DataFrame([res, binding])
-    dfs.append(dfx)
+    res, _, _ = model.sample(2096)
+    for i in range(2096):
+        smis.append(selfies.decoder("".join(['[' + charset[sym] + ']' for sym in res[i]])))
+    # dfx = pd.DataFrame([res, binding])
 
 
-pd.concat(dfs, axis=0).to_csv("test_large.csv")
+pd.DataFrame(smis).to_csv("test_large.csv")
 # for i, (x, b) in enumerate(train_loader):
 #     input_batch = tuple(data.cuda() for data in x)
 #     b = b.cuda().float()
