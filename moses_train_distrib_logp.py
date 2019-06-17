@@ -355,7 +355,7 @@ model.eval()
 
 vecs = []
 smis = []
-for i in tqdm(range(100)):
+for i in tqdm(range(5000)):
     res, _, _ = model.sample(2096)
     for i in range(2096):
         smis.append(selfies.decoder("".join(['[' + charset[sym] + ']' for sym in res[i]])))
