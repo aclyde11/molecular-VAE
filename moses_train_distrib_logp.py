@@ -324,35 +324,35 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
 
 print("STARTING THING I WANT.....")
 # df = pd.read_csv("../combined_smiles.csv", header=None)
-df = pd.read_csv("../dataset_v1.csv")
-df = df.sample(50000, replace=False, random_state=42)
-seflie = []
-smile = []
-for i, row in df.iterrows():
-    try:
-        m = Chem.MolFromSmiles(row[0])
-        cannmon = Chem.MolToSmiles(m)
-        ls = Crippen.MolLogP(m)
-        selfie_ = selfies.encoder(cannmon)
-        seflie.append(selfie_)
-        smile.append(row[0])
-        print(selfie_)
-    except:
-        print("ERROR....")
-
-
-xs = pd.DataFrame(seflie)
-xs['ins'] = smile
-xs = xs.set_index("ins")
-print(xs)
-
+# df = pd.read_csv("../dataset_v1.csv")
+# df = df.sample(50000, replace=False, random_state=42)
+# seflie = []
+# smile = []
+# for i, row in df.iterrows():
+#     try:
+#         m = Chem.MolFromSmiles(row[0])
+#         cannmon = Chem.MolToSmiles(m)
+#         ls = Crippen.MolLogP(m)
+#         selfie_ = selfies.encoder(cannmon)
+#         seflie.append(selfie_)
+#         smile.append(row[0])
+#         print(selfie_)
+#     except:
+#         print("ERROR....")
+#
+#
+# xs = pd.DataFrame(seflie)
+# xs['ins'] = smile
+# xs = xs.set_index("ins")
+# print(xs)
+# bdata = SmilesLoaderSelfies(xs)
+# train_loader = torch.utils.data.DataLoader(bdata, batch_size=1,
+#                           shuffle=False,
+#                           num_workers=32, collate_fn=get_collate_fn_binding(),
+#                           worker_init_fn=mosesvocab.set_torch_seed_to_all_gens,
+#                                            pin_memory=True,)
 model.eval()
-bdata = SmilesLoaderSelfies(xs)
-train_loader = torch.utils.data.DataLoader(bdata, batch_size=1,
-                          shuffle=False,
-                          num_workers=32, collate_fn=get_collate_fn_binding(),
-                          worker_init_fn=mosesvocab.set_torch_seed_to_all_gens,
-                                           pin_memory=True,)
+
 vecs = []
 dfs = []
 for i in tqdm(range(100)):
