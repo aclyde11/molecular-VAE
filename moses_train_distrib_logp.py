@@ -354,14 +354,26 @@ train_loader = torch.utils.data.DataLoader(bdata, batch_size=1,
                           worker_init_fn=mosesvocab.set_torch_seed_to_all_gens,
                                            pin_memory=True,)
 vecs = []
+dfs = []
+for i in range(1000):
+    res, binding, _ = model.sample(1024)
+    binding = binding.reshape(-1)
+    dfx = pd.DataFrame([res, binding])
+    dfs.append(dfx)
+    try:
+        for i in range(1024):
+            print(selfies.decoder("".join(['[' + charset[sym] + ']' for sym in res[i]])), binding[i])
+    except:
+        print("error...")
 
-for i, (x, b) in enumerate(train_loader):
-    input_batch = tuple(data.cuda() for data in x)
-    b = b.cuda().float()
-    _,_,_,z = model(input_batch, b)
-    vecs.append(z.detach().cpu().numpy())
-# xs.to_csv("smiles_computed.csv")
-np.savez("z_vae_moses.npz", np.concatenate(vecs, axis=0))
+pd.concat(dfs, axis=0).to_csv("test_large.csv")
+# for i, (x, b) in enumerate(train_loader):
+#     input_batch = tuple(data.cuda() for data in x)
+#     b = b.cuda().float()
+#     _,_,_,z = model(input_batch, b)
+#     vecs.append(z.detach().cpu().numpy())
+# # xs.to_csv("smiles_computed.csv")
+# np.savez("z_vae_moses.npz", np.concatenate(vecs, axis=0))
 
 # for epoch in range(100):
 #     # Epoch start
