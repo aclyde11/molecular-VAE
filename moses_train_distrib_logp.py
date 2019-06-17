@@ -355,16 +355,12 @@ train_loader = torch.utils.data.DataLoader(bdata, batch_size=1,
                                            pin_memory=True,)
 vecs = []
 dfs = []
-for i in range(1000):
+for i in tqdm(range(100)):
     res, binding, _ = model.sample(1024)
     binding = binding.reshape(-1)
     dfx = pd.DataFrame([res, binding])
     dfs.append(dfx)
-    try:
-        for i in range(1024):
-            print(selfies.decoder("".join(['[' + charset[sym] + ']' for sym in res[i]])), binding[i])
-    except:
-        print("error...")
+
 
 pd.concat(dfs, axis=0).to_csv("test_large.csv")
 # for i, (x, b) in enumerate(train_loader):
