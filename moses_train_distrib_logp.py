@@ -392,7 +392,7 @@ z_ = torch.randn(1, 128)
 z = z_.repeat([121, 1])
 x_ax = 23
 y_ax = 56
-step = 1e-5
+step = 1e-6
 for i in range(121):
     x = i / 11 - 5
     y = i % 11 - 5
