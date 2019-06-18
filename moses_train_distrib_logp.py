@@ -149,7 +149,7 @@ class BindingDataSet(torch.utils.data.Dataset):
     def __getitem__(self, idx):
         smile = self.df.iloc[idx, 0]
         logp = self.df.iloc[idx, 1]
-        return smile, logp
+        return smile, 0
 
 class SmilesLoaderSelfies(torch.utils.data.Dataset):
     def __init__(self, df):
@@ -173,33 +173,33 @@ sym_table = {}
 logp = []
 cannon_smiles = []
 tqdm_range = tqdm(range(df.shape[0]))
-# for i in tqdm_range:
-#     try:
-#         original = str(df.iloc[i,0])
-#
-#         m = Chem.MolFromSmiles(original)
-#         cannmon = Chem.MolToSmiles(m)
-#         ls = Crippen.MolLogP(m)
-#         selfie = selfies.encoder(cannmon)
-#         selfien = []
-#         re.findall("\[(.*?)\]", selfie)
-#         for sym in re.findall("\[(.*?)\]", selfie):
-#             if sym in sym_table:
-#                 selfien.append(sym_table[sym])
-#             else:
-#                 sym_table[sym] = chr(counter)
-#                 counter += 1
-#                 selfien.append(sym_table[sym])
-#         selfs.append(selfien)
-#         cannon_smiles.append(cannmon)
-#         logp.append(ls)
-#
-#         postfix = [f'len=%s' % (len(sym_table))]
-#         tqdm_range.set_postfix_str(' '.join(postfix))
-#     except KeyboardInterrupt:
-#         exit()
-#     except:
-#         print("ERROR...")
+for i in tqdm_range:
+    try:
+        original = str(df.iloc[i,0])
+
+        m = Chem.MolFromSmiles(original)
+        cannmon = Chem.MolToSmiles(m)
+        ls = Crippen.MolLogP(m)
+        selfie = selfies.encoder(cannmon)
+        selfien = []
+        re.findall("\[(.*?)\]", selfie)
+        for sym in re.findall("\[(.*?)\]", selfie):
+            if sym in sym_table:
+                selfien.append(sym_table[sym])
+            else:
+                sym_table[sym] = chr(counter)
+                counter += 1
+                selfien.append(sym_table[sym])
+        selfs.append(selfien)
+        cannon_smiles.append(cannmon)
+        logp.append(ls)
+
+        postfix = [f'len=%s' % (len(sym_table))]
+        tqdm_range.set_postfix_str(' '.join(postfix))
+    except KeyboardInterrupt:
+        exit()
+    except:
+        print("ERROR...")
 
 df = pd.DataFrame(pd.Series(selfs))
 df['logp'] = logp
@@ -211,12 +211,12 @@ print(df.shape)
 charset = {k: v for v, k in sym_table.items()}
 vocab = mosesvocab.OneHotVocab(sym_table.values())
 
-with open("sym_table.pkl", 'rb') as f:
-    sym_table = pickle.load(f)
-with open("charset.pkl", 'rb') as f:
-    charset = pickle.load(f)
-with open("vocab.pkl", 'rb') as f:
-    vocab = pickle.load(f)
+# with open("sym_table.pkl", 'rb') as f:
+#     sym_table = pickle.load(f)
+# with open("charset.pkl", 'rb') as f:
+#     charset = pickle.load(f)
+# with open("vocab.pkl", 'rb') as f:
+#     vocab = pickle.load(f)
 
 with open("sym_table.pkl", 'wb') as f:
     pickle.dump(sym_table, f)
@@ -224,15 +224,15 @@ with open("charset.pkl", 'wb') as f:
     pickle.dump(charset, f)
 with open("vocab.pkl", 'wb') as f:
     pickle.dump(vocab, f)
-# bdata = BindingDataSet(df)
-# # train_sampler = torch.utils.data.distributed.DistributedSampler(bdata)
-# train_loader = torch.utils.data.DataLoader(bdata, batch_size=128,
-#                           shuffle=True,
-#                           num_workers=32, collate_fn=get_collate_fn_binding(),
-#                           worker_init_fn=mosesvocab.set_torch_seed_to_all_gens,
-#                                            pin_memory=True,)
-#
-# n_epochs = 50
+bdata = BindingDataSet(df)
+# train_sampler = torch.utils.data.distributed.DistributedSampler(bdata)
+train_loader = torch.utils.data.DataLoader(bdata, batch_size=128,
+                          shuffle=True,
+                          num_workers=32, collate_fn=get_collate_fn_binding(),
+                          worker_init_fn=mosesvocab.set_torch_seed_to_all_gens,
+                                           pin_memory=True,)
+
+n_epochs = 100
 
 model = mosesvae.VAE(vocab).cuda()
 model.load_state_dict(torch.load("trained_save.pt"))
@@ -272,7 +272,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
         recon_loss = torch.sum(recon_loss, 0)
         binding_loss = torch.sum(binding_loss, 0)
 
-        loss = min(1.0, kl_weight) * kl_loss + recon_loss + min(1.0, kl_weight) * binding_loss
+        loss = min(1.0, kl_weight) * kl_loss + recon_loss
 
 
         # Backward
@@ -351,7 +351,7 @@ print("STARTING THING I WANT.....")
 #                           num_workers=32, collate_fn=get_collate_fn_binding(),
 #                           worker_init_fn=mosesvocab.set_torch_seed_to_all_gens,
 #                                            pin_memory=True,)
-model.eval()
+# model.eval()
 
 # hasher = {}
 # zs = []
@@ -383,51 +383,51 @@ model.eval()
 # np.savez("zs.npz", np.stack(zs, axis=0))
 # np.savez("ts.npz", np.array(smiles))
 
-hasher = {}
-zs = []
-smiles = []
-count = 0
-
-z_ = torch.randn(1, 128)
-z = z_.repeat([121, 1])
-x_ax = 23
-y_ax = 56
-step = 1e-6
-for i in range(121):
-    x = i / 11 - 5
-    y = i % 11 - 5
-    z[i,x_ax] = x * step + z[i,x_ax]
-    z[i,12] = -1 * x * step + z[i,12]
-
-    z[i,y_ax] = x * step + z[i,y_ax]
-    z[i,42] = -1 * x * step + z[i,42]
-
-
-for i in tqdm(range(1)):
-    res, _, z = model.sample(121, z=z)
-    z = z.detach().cpu().numpy()
-
-    smis = []
-    for i in range(2096):
-        count += 1
-        try:
-            s = selfies.decoder("".join(['[' + charset[sym] + ']' for sym in res[i]]))
-            m = Chem.MolFromSmiles(s)
-            s = Chem.MolToSmiles(m)
-            if s is not None:
-                if s in hasher:
-                    hasher[s] += 1
-                else:
-                    hasher[s] = 1
-                smiles.append(s)
-                zs.append(z[i,...])
-        except:
-            print("ERROR!!!")
-
-    # dfx = pd.DataFrame([res, binding])
-    print("LEN ", len(hasher), "TOAL VALID: ", float(len(hasher))/float(count))
-np.savez("zs.npz", np.stack(zs, axis=0))
-np.savez("ts.npz", np.array(smiles))
+# hasher = {}
+# zs = []
+# smiles = []
+# count = 0
+#
+# z_ = torch.randn(1, 128)
+# z = z_.repeat([121, 1])
+# x_ax = 23
+# y_ax = 56
+# step = 1e-6
+# for i in range(121):
+#     x = i / 11 - 5
+#     y = i % 11 - 5
+#     z[i,x_ax] = x * step + z[i,x_ax]
+#     z[i,12] = -1 * x * step + z[i,12]
+#
+#     z[i,y_ax] = x * step + z[i,y_ax]
+#     z[i,42] = -1 * x * step + z[i,42]
+#
+#
+# for i in tqdm(range(1)):
+#     res, _, z = model.sample(121, z=z)
+#     z = z.detach().cpu().numpy()
+#
+#     smis = []
+#     for i in range(2096):
+#         count += 1
+#         try:
+#             s = selfies.decoder("".join(['[' + charset[sym] + ']' for sym in res[i]]))
+#             m = Chem.MolFromSmiles(s)
+#             s = Chem.MolToSmiles(m)
+#             if s is not None:
+#                 if s in hasher:
+#                     hasher[s] += 1
+#                 else:
+#                     hasher[s] = 1
+#                 smiles.append(s)
+#                 zs.append(z[i,...])
+#         except:
+#             print("ERROR!!!")
+#
+#     # dfx = pd.DataFrame([res, binding])
+#     print("LEN ", len(hasher), "TOAL VALID: ", float(len(hasher))/float(count))
+# np.savez("zs.npz", np.stack(zs, axis=0))
+# np.savez("ts.npz", np.array(smiles))
 
 # for i in tqdm(range(100)):
 #     res, _, z = model.sample(2096)
@@ -463,30 +463,29 @@ np.savez("ts.npz", np.array(smiles))
 # # xs.to_csv("smiles_computed.csv")
 # np.savez("z_vae_moses.npz", np.concatenate(vecs, axis=0))
 
-# for epoch in range(100):
-#     # Epoch start
-#
-#
-#     # kl_weight = kl_annealer(epoch)
-#     #
-#     # tqdm_data = tqdm(train_loader,
-#     #                  desc='Training (epoch #{})'.format(epoch))
-#     # postfix = _train_epoch_binding(model, epoch,
-#     #                             tqdm_data, kl_weight, optimizer)
-#     # if args.local_rank == 0:
-#     #     torch.save(model.state_dict(), "trained_save.pt")
-#     #     with open('vocab.pkl', 'wb') as f:
-#     #         pickle.dump(vocab, f)
-#     #
-#     #     res, binding, _ = model.sample(1024)
-#     #     binding = binding.reshape(-1)
-#     #     pd.DataFrame([res, binding]).to_csv("out_tests.csv")
-#     #     try:
-#     #         for i in range(20):
-#     #             print(selfies.decoder("".join(['[' + charset[sym] + ']' for sym in res[i]])), binding[i])
-#     #     except:
-#     #         print("error...")
-#     #     print("Binding stats: ", np.mean(binding), np.std(binding), np.max(binding), np.min(binding))
-#     #
-#     # # Epoch end
-#     # lr_annealer.step()
+for epoch in range(100):
+
+
+    kl_weight = kl_annealer(epoch)
+
+    tqdm_data = tqdm(train_loader,
+                     desc='Training (epoch #{})'.format(epoch))
+    postfix = _train_epoch_binding(model, epoch,
+                                tqdm_data, kl_weight, optimizer)
+    if args.local_rank == 0:
+        torch.save(model.state_dict(), "trained_save.pt")
+        with open('vocab.pkl', 'wb') as f:
+            pickle.dump(vocab, f)
+
+        res, binding, _ = model.sample(1024)
+        binding = binding.reshape(-1)
+        pd.DataFrame([res, binding]).to_csv("out_tests.csv")
+        try:
+            for i in range(20):
+                print(selfies.decoder("".join(['[' + charset[sym] + ']' for sym in res[i]])), binding[i])
+        except:
+            print("error...")
+        print("Binding stats: ", np.mean(binding), np.std(binding), np.max(binding), np.min(binding))
+
+    # Epoch end
+    lr_annealer.step()
