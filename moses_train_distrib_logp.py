@@ -353,12 +353,55 @@ print("STARTING THING I WANT.....")
 #                                            pin_memory=True,)
 model.eval()
 
+# hasher = {}
+# zs = []
+# smiles = []
+# count = 0
+# for i in tqdm(range(100)):
+#     res, _, z = model.sample(2096)
+#     z = z.detach().cpu().numpy()
+#
+#     smis = []
+#     for i in range(2096):
+#         count += 1
+#         try:
+#             s = selfies.decoder("".join(['[' + charset[sym] + ']' for sym in res[i]]))
+#             m = Chem.MolFromSmiles(s)
+#             s = Chem.MolToSmiles(m)
+#             if s is not None:
+#                 if s in hasher:
+#                     hasher[s] += 1
+#                 else:
+#                     hasher[s] = 1
+#                 smiles.append(s)
+#                 zs.append(z[i,...])
+#         except:
+#             print("ERROR!!!")
+#
+#     # dfx = pd.DataFrame([res, binding])
+#     print("LEN ", len(hasher), "TOAL VALID: ", float(len(hasher))/float(count))
+# np.savez("zs.npz", np.stack(zs, axis=0))
+# np.savez("ts.npz", np.array(smiles))
+
 hasher = {}
 zs = []
 smiles = []
 count = 0
-for i in tqdm(range(100)):
-    res, _, z = model.sample(2096)
+
+z_ = torch.randn(1, 128)
+z = z_.repeat([121, 1])
+x_ax = 23
+y_ax = 56
+step = 1e-4
+for i in range(121):
+    x = i / 11 - 5
+    y = i % 11 - 5
+    z[i,x_ax] = x * step + z[i,x_ax]
+    z[i,y_ax] = x * step + z[i,y_ax]
+
+
+for i in tqdm(range(1)):
+    res, _, z = model.sample(121, z=z)
     z = z.detach().cpu().numpy()
 
     smis = []
@@ -382,6 +425,32 @@ for i in tqdm(range(100)):
     print("LEN ", len(hasher), "TOAL VALID: ", float(len(hasher))/float(count))
 np.savez("zs.npz", np.stack(zs, axis=0))
 np.savez("ts.npz", np.array(smiles))
+
+# for i in tqdm(range(100)):
+#     res, _, z = model.sample(2096)
+#     z = z.detach().cpu().numpy()
+#
+#     smis = []
+#     for i in range(2096):
+#         count += 1
+#         try:
+#             s = selfies.decoder("".join(['[' + charset[sym] + ']' for sym in res[i]]))
+#             m = Chem.MolFromSmiles(s)
+#             s = Chem.MolToSmiles(m)
+#             if s is not None:
+#                 if s in hasher:
+#                     hasher[s] += 1
+#                 else:
+#                     hasher[s] = 1
+#                 smiles.append(s)
+#                 zs.append(z[i,...])
+#         except:
+#             print("ERROR!!!")
+#
+#     # dfx = pd.DataFrame([res, binding])
+#     print("LEN ", len(hasher), "TOAL VALID: ", float(len(hasher))/float(count))
+# np.savez("zs.npz", np.stack(zs, axis=0))
+# np.savez("ts.npz", np.array(smiles))
 
 # for i, (x, b) in enumerate(train_loader):
 #     input_batch = tuple(data.cuda() for data in x)
