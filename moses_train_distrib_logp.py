@@ -148,7 +148,6 @@ class BindingDataSet(torch.utils.data.Dataset):
 
     def __getitem__(self, idx):
         smile = self.df.iloc[idx, 0]
-        logp = self.df.iloc[idx, 1]
         return smile, 0
 
 class SmilesLoaderSelfies(torch.utils.data.Dataset):
@@ -170,7 +169,6 @@ max_len = 0
 selfs = []
 counter = 51
 sym_table = {}
-logp = []
 cannon_smiles = []
 tqdm_range = tqdm(range(df.shape[0]))
 for i in tqdm_range:
@@ -179,7 +177,6 @@ for i in tqdm_range:
 
         m = Chem.MolFromSmiles(original)
         cannmon = Chem.MolToSmiles(m)
-        ls = Crippen.MolLogP(m)
         selfie = selfies.encoder(cannmon)
         selfien = []
         re.findall("\[(.*?)\]", selfie)
@@ -192,7 +189,6 @@ for i in tqdm_range:
                 selfien.append(sym_table[sym])
         selfs.append(selfien)
         cannon_smiles.append(cannmon)
-        logp.append(ls)
 
         postfix = [f'len=%s' % (len(sym_table))]
         tqdm_range.set_postfix_str(' '.join(postfix))
@@ -202,7 +198,6 @@ for i in tqdm_range:
         print("ERROR...")
 
 df = pd.DataFrame(pd.Series(selfs))
-df['logp'] = logp
 df['cannon'] = cannon_smiles
 df.to_csv("selfies.csv")
 print(df.head())
