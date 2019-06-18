@@ -225,7 +225,7 @@ class VAE(nn.Module):
         return torch.randn(n_batch, self.q_mu.out_features,
                            device=self.x_emb.weight.device)
 
-    def sample(self, n_batch, max_len=150, z=None, temp=0.6):
+    def sample(self, n_batch, max_len=100, z=None, temp=0.5):
         """Generating n_batch samples in eval mode (`z` could be
         not on same device)
 
