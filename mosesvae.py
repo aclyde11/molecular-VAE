@@ -150,9 +150,9 @@ class VAE(nn.Module):
         z, kl_loss, binding_loss = self.forward_encoder(x, b)
 
         # Decoder: x, z -> recon_loss
-        recon_loss, acc = self.forward_decoder(x, z)
+        recon_loss = self.forward_decoder(x, z)
 
-        return kl_loss, recon_loss, binding_loss, z, acc
+        return kl_loss, recon_loss, binding_loss, z
 
     def forward_encoder(self, x, b):
         """Encoder step, emulating z ~ E(x) = q_E(z|x)
@@ -213,9 +213,7 @@ class VAE(nn.Module):
             ignore_index=self.pad
         )
 
-        acc = (y[:, :-1].contiguous().view(-1, y.size(-1))) == (x[:, 1:].contiguous().view(-1)).sum()
-
-        return recon_loss, acc
+        return recon_loss
 
     def sample_z_prior(self, n_batch):
         """Sampling z ~ p(z) = N(0, I)
@@ -227,7 +225,7 @@ class VAE(nn.Module):
         return torch.randn(n_batch, self.q_mu.out_features,
                            device=self.x_emb.weight.device)
 
-    def sample(self, n_batch, max_len=100, z=None, temp=0.4):
+    def sample(self, n_batch, max_len=100, z=None, temp=1):
         """Generating n_batch samples in eval mode (`z` could be
         not on same device)
 

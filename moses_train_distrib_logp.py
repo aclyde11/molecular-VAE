@@ -265,8 +265,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
         input_batch = tuple(data.cuda() for data in input_batch)
         binding = binding.cuda().view(-1, 1)
         # Forwardd
-        kl_loss, recon_loss, binding_loss, _, acc = model(input_batch, binding)
-        acc = acc.item()
+        kl_loss, recon_loss, binding_loss, _ = model(input_batch, binding)
 
         kl_loss = torch.sum(kl_loss, 0)
         recon_loss = torch.sum(recon_loss, 0)
@@ -304,8 +303,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
                    f'(kl={kl_loss_value:.5f}',
                    f'recon={recon_loss_value:.5f})',
                    f'klw={kl_weight:.5f} lr={lr:.5f}'
-                   f'bloss={binding_loss_value:.5f}'
-                   f'acc={acc:.5f}']
+                   f'bloss={binding_loss_value:.5f}']
         tqdm_data.set_postfix_str(' '.join(postfix))
 
     postfix = {
