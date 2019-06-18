@@ -355,7 +355,7 @@ model.eval()
 
 hasher = {}
 count = 0
-for i in tqdm(range(5000)):
+for i in tqdm(range(50000)):
     res, _, _ = model.sample(2096)
     smis = []
     for i in range(2096):
