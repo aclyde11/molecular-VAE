@@ -354,9 +354,13 @@ print("STARTING THING I WANT.....")
 model.eval()
 
 hasher = {}
+zs = []
+smiles = []
 count = 0
-for i in tqdm(range(50000)):
-    res, _, _ = model.sample(2096)
+for i in tqdm(range(100)):
+    res, _, z = model.sample(2096)
+    z = z.detach().cpu().numpy()
+
     smis = []
     for i in range(2096):
         count += 1
@@ -369,11 +373,15 @@ for i in tqdm(range(50000)):
                     hasher[s] += 1
                 else:
                     hasher[s] = 1
+                smiles.append(s)
+                zs.append(z[i,...])
         except:
             print("ERROR!!!")
 
     # dfx = pd.DataFrame([res, binding])
     print("LEN ", len(hasher), "TOAL VALID: ", float(len(hasher))/float(count))
+np.savez("zs.npz", np.stack(zs, axis=0))
+np.savez("ts.npz", np.array(smiles))
 
 # for i, (x, b) in enumerate(train_loader):
 #     input_batch = tuple(data.cuda() for data in x)
