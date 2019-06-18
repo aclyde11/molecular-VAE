@@ -392,12 +392,15 @@ z_ = torch.randn(1, 128)
 z = z_.repeat([121, 1])
 x_ax = 23
 y_ax = 56
-step = 1e-6
+step = 1e-4
 for i in range(121):
     x = i / 11 - 5
     y = i % 11 - 5
     z[i,x_ax] = x * step + z[i,x_ax]
+    z[i,12] = -1 * x * step + z[i,12]
+
     z[i,y_ax] = x * step + z[i,y_ax]
+    z[i,42] = -1 * x * step + z[i,42]
 
 
 for i in tqdm(range(1)):
