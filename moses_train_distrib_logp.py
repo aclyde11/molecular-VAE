@@ -353,19 +353,28 @@ print("STARTING THING I WANT.....")
 #                                            pin_memory=True,)
 model.eval()
 
-vecs = []
-smis = []
+hasher = {}
+count = 0
 for i in tqdm(range(5000)):
     res, _, _ = model.sample(2096)
+    smis = []
     for i in range(2096):
+        count += 1
         try:
-            smis.append(selfies.decoder("".join(['[' + charset[sym] + ']' for sym in res[i]])))
+            s = selfies.decoder("".join(['[' + charset[sym] + ']' for sym in res[i]]))
+            m = Chem.MolFromSmiles(s)
+            s = Chem.MolToSmiles(m)
+            if s is not None:
+                if s in hasher:
+                    hasher[s] += 1
+                else:
+                    hasher[s] = 1
         except:
             print("ERROR!!!")
+
     # dfx = pd.DataFrame([res, binding])
+    print("LEN ", len(hasher), "TOAL VALID: ", float(len(hasher))/float(count))
 
-
-pd.DataFrame(smis).to_csv("test_large.csv")
 # for i, (x, b) in enumerate(train_loader):
 #     input_batch = tuple(data.cuda() for data in x)
 #     b = b.cuda().float()
