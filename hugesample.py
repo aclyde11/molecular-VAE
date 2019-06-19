@@ -1,32 +1,15 @@
-import pickle
-
-
-import numpy as np
 import torch
 import torch.utils.data
-from torch import nn, optim
-import torch.nn.functional as F
-from data_loader import MoleLoader
-from models import MolecularVAE
-import pandas as pd
-import pickle
-from tqdm import tqdm
+
 from rdkit import Chem
-from rdkit.Chem import Crippen
-from torch.nn.utils import clip_grad_norm_
+
 import pickle
-import math
 import mosesvae
-import mosesvocab
-from torch.optim.lr_scheduler import _LRScheduler
-from sklearn.preprocessing import MinMaxScaler
-import random
-import os
+
 import selfies
-import re
-import argparse
+import time
 from tqdm import tqdm
-from multiprocessing import Process, Pipe
+from multiprocessing import Process, Pipe, Queue, Manager, Value
 
 def gen_proc(comm, iters=10000, i=0, batch_size=4096):
     with open("sym_table.pkl", 'rb') as f:
@@ -52,14 +35,47 @@ def gen_proc(comm, iters=10000, i=0, batch_size=4096):
                 smis.append(s)
             except:
                 print("ERROR!!!")
-        comm.send((smis, count))
-    comm.close()
+        comm.put((smis, count))
+
+
+def hasher(q, hasher, valid, i):
+    print("Hasher Thread on", i)
+
+    while True:
+        if not q.empty():
+            smi = q.get(block=True)
+            m = Chem.MolFromSmiles(smi)
+            s = Chem.MolToSmiles(m)
+            if s is not None:
+                valid.value += 1
+                if s in hasher:
+                    hasher[s] += 1
+                else:
+                    hasher[s] = 1
+
+def reporter(q, d, valid):
+    while True:
+        time.sleep(2)
+        print("Reporting! ")
+        print("Queue length: ",     q.qsize())
+        print("Valid: ", len(d))
+        print("Valid: ", valid.value)
+
 
 if __name__ == '__main__':
-    parent_conn, child_conn = Pipe()
-    p = Process(target=gen_proc, args=(child_conn,))
+    manager = Manager()
+    valid = Value('valid', 0.0)
+    d = manager.dict()
+    q = Queue()
+    p = Process(target=gen_proc, args=(q,10000,0,4096)) ##workers
+    h = Process(target=hasher, args=(q, d, valid, 0)) ## hasher
+    r = Process(target=reporter, args=(q, d, valid))
+
     p.start()
-    print(parent_conn.recv())  # prints "[42, None, 'hello']"
-    p.kill()
+    h.start()
+    r.start()
+    p.join()
+    h.join()
+    r.join()
 
 
