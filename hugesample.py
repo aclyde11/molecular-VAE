@@ -38,20 +38,24 @@ def gen_proc(comm, iters=10000, i=0, batch_size=4096):
         comm.put((smis, count))
 
 
-def hasher(q, hasher, valid, i):
+def hasher(q, hasher, valid, total, i):
     print("Hasher Thread on", i)
 
     while True:
         if not q.empty():
             smi = q.get(block=True)
-            m = Chem.MolFromSmiles(smi)
-            s = Chem.MolToSmiles(m)
-            if s is not None:
-                valid.value += 1
-                if s in hasher:
-                    hasher[s] += 1
-                else:
-                    hasher[s] = 1
+            total.value += 1
+            try:
+                m = Chem.MolFromSmiles(smi)
+                s = Chem.MolToSmiles(m)
+                if s is not None:
+                    valid.value += 1
+                    if s in hasher:
+                        hasher[s] += 1
+                    else:
+                        hasher[s] = 1
+            except:
+                print("error...")
 
 def reporter(q, d, valid):
     while True:
@@ -64,11 +68,12 @@ def reporter(q, d, valid):
 
 if __name__ == '__main__':
     manager = Manager()
-    valid = Value('d', 0.0)
+    valid = Value('i', 0)
+    total = Value('i', 0)
     d = manager.dict()
     q = Queue()
     p = Process(target=gen_proc, args=(q,10000,0,4096)) ##workers
-    h = Process(target=hasher, args=(q, d, valid, 0)) ## hasher
+    h = Process(target=hasher, args=(q, d, valid, total, 0)) ## hasher
     r = Process(target=reporter, args=(q, d, valid))
 
     p.start()
