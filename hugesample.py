@@ -18,8 +18,8 @@ def gen_proc(comm, iters=10000, i=0, batch_size=4096):
             charset = pickle.load(f)
         with open("vocab.pkl", 'rb') as f:
             vocab = pickle.load(f)
-        model = mosesvae.VAE(vocab).cuda()
-        model.load_state_dict(torch.load("trained_save.pt"))
+        model = mosesvae.VAE(vocab)
+        model.load_state_dict(torch.load("trained_save.pt", map_location='cpu'))
         model = model.cuda(i)
 
         for _ in range(iters):
@@ -97,7 +97,7 @@ if __name__ == '__main__':
     q = Queue()
     ps = []
     for i in range(4):
-        ps.append(Process(target=gen_proc, args=(q,10000,i,4096))) ##workers
+        ps.append(Process(target=gen_proc, args=(q,10000,i,4096 * 2))) ##workers
     hs = []
     for i in range(4 * 4):
         hs.append(Process(target=hasher, args=(q, d, valid, total, i))) ## hasher
