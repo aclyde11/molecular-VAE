@@ -28,7 +28,7 @@ import argparse
 from tqdm import tqdm
 from multiprocessing import Process, Pipe
 
-def gen_proc(comm, iters=10000, i=0, batch_size=2096):
+def gen_proc(comm, iters=10000, i=0, batch_size=4096):
     with open("sym_table.pkl", 'rb') as f:
         sym_table = pickle.load(f)
     with open("charset.pkl", 'rb') as f:
@@ -40,7 +40,6 @@ def gen_proc(comm, iters=10000, i=0, batch_size=2096):
     model = model.cuda(i)
 
     for _ in tqdm(range(iters)):
-        smiles = []
         count = 0
 
         res, _, _ = model.sample(batch_size)
@@ -50,7 +49,7 @@ def gen_proc(comm, iters=10000, i=0, batch_size=2096):
             count += 1
             try:
                 s = selfies.decoder("".join(['[' + charset[sym] + ']' for sym in res[i]]))
-                smiles.append(s)
+                smis.append(s)
             except:
                 print("ERROR!!!")
         comm.send((smis, count))
