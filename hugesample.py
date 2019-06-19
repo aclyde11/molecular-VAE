@@ -82,6 +82,8 @@ def reporter(q, d, valid, total):
     except KeyboardInterrupt:
         print("Exiting")
         exit()
+    except ZeroDivisionError:
+        "eh zero error."
 
 
 if __name__ == '__main__':
