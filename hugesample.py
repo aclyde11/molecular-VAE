@@ -12,6 +12,7 @@ from tqdm import tqdm
 from multiprocessing import Process, Pipe, Queue, Manager, Value
 
 def gen_proc(comm, iters=10000, i=0, batch_size=4096):
+    print("Generator on", i)
     try:
         with open("charset.pkl", 'rb') as f:
             charset = pickle.load(f)
@@ -70,20 +71,22 @@ def reporter(q, d, valid, total):
     start_time = time.time()
     try:
         while True:
-            time.sleep(5)
-            print("Reporting! ")
-            print("Queue length: ",     q.qsize())
-            print("Unique: ", len(d), float(len(d))/ total.value)
-            print("Valid: ", valid.value, float(valid.value)  / total.value)
-            print("Sampled: ", total.value)
-            print("Samples per second: ", float(total.value) / float(start_time - time.time()) )
-            print("Unique per second: ", float(len(d)) / float(start_time - time.time()) )
+            try:
+                time.sleep(5)
+                print("Reporting! ")
+                print("Queue length: ",     q.qsize())
+                print("Unique: ", len(d), float(len(d))/ total.value)
+                print("Valid: ", valid.value, float(valid.value)  / total.value)
+                print("Sampled: ", total.value)
+                print("Samples per second: ", float(total.value) / float(start_time - time.time()) )
+                print("Unique per second: ", float(len(d)) / float(start_time - time.time()) )
+            except ZeroDivisionError:
+                print("eh zero error.")
 
     except KeyboardInterrupt:
         print("Exiting")
         exit()
-    except ZeroDivisionError:
-        "eh zero error."
+
 
 
 if __name__ == '__main__':
