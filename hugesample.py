@@ -54,6 +54,9 @@ def hasher(q, hasher, valid, total, i):
                         hasher[s] += 1
                     else:
                         hasher[s] = 1
+            except KeyboardInterrupt:
+                print("Bye")
+                exit()
             except:
                 print("error...")
 
