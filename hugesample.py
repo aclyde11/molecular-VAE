@@ -79,7 +79,7 @@ def reporter(q, d, valid, total):
                 print("Valid: ", valid.value, float(valid.value)  / total.value)
                 print("Sampled: ", total.value)
                 print("Samples per second: ", float(total.value) / float(start_time - time.time()) )
-                print("Unique per second: ", float(len(d)) / float(start_time - time.time()) )
+                print("Unique per second: ", float(len(d)) / float(time.time() - start_time) )
             except ZeroDivisionError:
                 print("eh zero error.")
 
