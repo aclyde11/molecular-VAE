@@ -13,8 +13,6 @@ from multiprocessing import Process, Pipe, Queue, Manager, Value
 
 def gen_proc(comm, iters=10000, i=0, batch_size=4096):
     try:
-        with open("sym_table.pkl", 'rb') as f:
-            sym_table = pickle.load(f)
         with open("charset.pkl", 'rb') as f:
             charset = pickle.load(f)
         with open("vocab.pkl", 'rb') as f:
@@ -23,7 +21,7 @@ def gen_proc(comm, iters=10000, i=0, batch_size=4096):
         model.load_state_dict(torch.load("trained_save.pt"))
         model = model.cuda(i)
 
-        for _ in tqdm(range(iters)):
+        for _ in range(iters):
             count = 0
 
             res, _, _ = model.sample(batch_size)
@@ -67,14 +65,20 @@ def hasher(q, hasher, valid, total, i):
                 except:
                     None
 
-def reporter(q, d, valid):
+def reporter(q, d, valid, total):
+    print("Starting up reporter.")
+    start_time = time.time()
     try:
         while True:
-            time.sleep(2)
+            time.sleep(5)
             print("Reporting! ")
             print("Queue length: ",     q.qsize())
-            print("Valid: ", len(d))
-            print("Valid: ", valid.value)
+            print("Unique: ", len(d), float(len(d))/ total.value)
+            print("Valid: ", valid.value, float(valid.value)  / total.value)
+            print("Sampled: ", total.value)
+            print("Samples per second: ", float(total.value) / float(start_time - time.time()) )
+            print("Unique per second: ", float(len(d)) / float(start_time - time.time()) )
+
     except KeyboardInterrupt:
         print("Exiting")
         exit()
@@ -86,20 +90,31 @@ if __name__ == '__main__':
     total = Value('i', 0)
     d = manager.dict()
     q = Queue()
-    p = Process(target=gen_proc, args=(q,10000,0,4096)) ##workers
-    h = Process(target=hasher, args=(q, d, valid, total, 0)) ## hasher
-    r = Process(target=reporter, args=(q, d, valid))
+    ps = []
+    for i in range(4):
+        ps.append(Process(target=gen_proc, args=(q,10000,0,4096))) ##workers
+    hs = []
+    for i in range(4 * 4):
+        hs.append(Process(target=hasher, args=(q, d, valid, total, 0))) ## hasher
 
-    p.start()
-    h.start()
+    r = Process(target=reporter, args=(q, d, valid, total))
+
+    for  p in ps:
+        p.start()
+    for h in hs:
+        h.start()
     r.start()
     try:
-        p.join()
-        h.join()
+        for p in ps:
+            p.join()
+        for s in hs:
+            h.join()
         r.join()
     except KeyboardInterrupt:
-        p.kill()
-        h.kill()
+        for p in ps:
+            p.kill()
+        for h in hs:
+            h.kill()
         r.kill()
 
 
