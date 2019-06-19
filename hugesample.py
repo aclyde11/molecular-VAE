@@ -65,7 +65,7 @@ def hasher(q, hasher, valid, total, i):
                     print("Bye")
                     exit()
                 except:
-                    print("error...")
+                    None
 
 def reporter(q, d, valid):
     try:
