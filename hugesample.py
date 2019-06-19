@@ -43,6 +43,8 @@ def gen_proc(comm, iters=10000, i=0, batch_size=4096):
 
 
 def hasher(q, hasher, valid, total, i):
+    from rdkit import rdBase
+    rdBase.DisableLog('rdApp.error')
     print("Hasher Thread on", i)
 
     while True:
