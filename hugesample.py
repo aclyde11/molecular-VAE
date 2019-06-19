@@ -64,7 +64,7 @@ def reporter(q, d, valid):
 
 if __name__ == '__main__':
     manager = Manager()
-    valid = Value('valid', 0.0)
+    valid = Value('d', 0.0)
     d = manager.dict()
     q = Queue()
     p = Process(target=gen_proc, args=(q,10000,0,4096)) ##workers
