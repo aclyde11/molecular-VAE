@@ -206,12 +206,12 @@ print(df.shape)
 charset = {k: v for v, k in sym_table.items()}
 vocab = mosesvocab.OneHotVocab(sym_table.values())
 
-# with open("sym_table.pkl", 'rb') as f:
-#     sym_table = pickle.load(f)
-# with open("charset.pkl", 'rb') as f:
-#     charset = pickle.load(f)
-# with open("vocab.pkl", 'rb') as f:
-#     vocab = pickle.load(f)
+with open("sym_table.pkl", 'rb') as f:
+    sym_table = pickle.load(f)
+with open("charset.pkl", 'rb') as f:
+    charset = pickle.load(f)
+with open("vocab.pkl", 'rb') as f:
+    vocab = pickle.load(f)
 
 with open("sym_table.pkl", 'wb') as f:
     pickle.dump(sym_table, f)
