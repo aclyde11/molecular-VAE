@@ -43,22 +43,23 @@ def hasher(q, hasher, valid, total, i):
 
     while True:
         if not q.empty():
-            smi = q.get(block=True)
-            total.value += 1
-            try:
-                m = Chem.MolFromSmiles(smi)
-                s = Chem.MolToSmiles(m)
-                if s is not None:
-                    valid.value += 1
-                    if s in hasher:
-                        hasher[s] += 1
-                    else:
-                        hasher[s] = 1
-            except KeyboardInterrupt:
-                print("Bye")
-                exit()
-            except:
-                print("error...")
+            smis, count = q.get(block=True)
+            total.value += count
+            for smi in smis:
+                try:
+                    m = Chem.MolFromSmiles(smi)
+                    s = Chem.MolToSmiles(m)
+                    if s is not None:
+                        valid.value += 1
+                        if s in hasher:
+                            hasher[s] += 1
+                        else:
+                            hasher[s] = 1
+                except KeyboardInterrupt:
+                    print("Bye")
+                    exit()
+                except:
+                    print("error...")
 
 def reporter(q, d, valid):
     while True:
