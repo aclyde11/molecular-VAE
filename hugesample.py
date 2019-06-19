@@ -92,10 +92,10 @@ if __name__ == '__main__':
     q = Queue()
     ps = []
     for i in range(4):
-        ps.append(Process(target=gen_proc, args=(q,10000,0,4096))) ##workers
+        ps.append(Process(target=gen_proc, args=(q,10000,i,4096))) ##workers
     hs = []
     for i in range(4 * 4):
-        hs.append(Process(target=hasher, args=(q, d, valid, total, 0))) ## hasher
+        hs.append(Process(target=hasher, args=(q, d, valid, total, i))) ## hasher
 
     r = Process(target=reporter, args=(q, d, valid, total))
 
