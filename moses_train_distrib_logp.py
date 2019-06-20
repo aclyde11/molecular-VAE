@@ -170,33 +170,33 @@ counter = 51
 sym_table = {}
 cannon_smiles = []
 tqdm_range = tqdm(range(df.shape[0]))
-# for i in tqdm_range:
-#     try:
-#         original = str(df.iloc[i,0])
-#         if len(original) > 150:
-#             continue
-#         m = Chem.MolFromSmiles(original)
-#         cannmon = Chem.MolToSmiles(m)
-#         selfie = cannmon
-#         # selfie = selfies.encoder(cannmon)
-#         selfien = []
-#         # for sym in re.findall("\[(.*?)\]", selfie):
-#         for sym in selfie:
-#             if sym in sym_table:
-#                 selfien.append(sym_table[sym])
-#             else:
-#                 sym_table[sym] = chr(counter)
-#                 counter += 1
-#                 selfien.append(sym_table[sym])
-#         selfs.append(selfien)
-#         cannon_smiles.append(cannmon)
-#
-#         postfix = [f'len=%s' % (len(sym_table))]
-#         tqdm_range.set_postfix_str(' '.join(postfix))
-#     except KeyboardInterrupt:
-#         exit()
-#     except:
-#         print("ERROR...")
+for i in tqdm_range:
+    try:
+        original = str(df.iloc[i,0])
+        if len(original) > 150:
+            continue
+        m = Chem.MolFromSmiles(original)
+        cannmon = Chem.MolToSmiles(m)
+        selfie = cannmon
+        # selfie = selfies.encoder(cannmon)
+        selfien = []
+        # for sym in re.findall("\[(.*?)\]", selfie):
+        for sym in selfie:
+            if sym in sym_table:
+                selfien.append(sym_table[sym])
+            else:
+                sym_table[sym] = chr(counter)
+                counter += 1
+                selfien.append(sym_table[sym])
+        selfs.append(selfien)
+        cannon_smiles.append(cannmon)
+
+        postfix = [f'len=%s' % (len(sym_table))]
+        tqdm_range.set_postfix_str(' '.join(postfix))
+    except KeyboardInterrupt:
+        exit()
+    except:
+        print("ERROR...")
 
 df = pd.DataFrame(pd.Series(selfs))
 df['cannon'] = cannon_smiles
@@ -206,20 +206,22 @@ print(df.shape)
 
 charset = {k: v for v, k in sym_table.items()}
 vocab = mosesvocab.OneHotVocab(sym_table.values())
+#
+# with open("sym_table.pkl", 'rb') as f:
+#     sym_table = pickle.load(f)
+# with open("charset.pkl", 'rb') as f:
+#     charset = pickle.load(f)
+# with open("vocab.pkl", 'rb') as f:
+#     vocab = pickle.load(f)
 
-with open("sym_table.pkl", 'rb') as f:
-    sym_table = pickle.load(f)
-with open("charset.pkl", 'rb') as f:
-    charset = pickle.load(f)
-with open("vocab.pkl", 'rb') as f:
-    vocab = pickle.load(f)
-
-# with open("sym_table.pkl", 'wb') as f:
-#     pickle.dump(sym_table, f)
-# with open("charset.pkl", 'wb') as f:
-#     pickle.dump(charset, f)
-# with open("vocab.pkl", 'wb') as f:
-#     pickle.dump(vocab, f)
+with open("sym_table.pkl", 'wb') as f:
+    pickle.dump(sym_table, f)
+with open("charset.pkl", 'wb') as f:
+    pickle.dump(charset, f)
+with open("vocab.pkl", 'wb') as f:
+    pickle.dump(vocab, f)
+with open("df.pkl", 'wb') as f:
+    pickle.dump(vocab, f)
 bdata = BindingDataSet(df)
 # train_sampler = torch.utils.data.distributed.DistributedSampler(bdata)
 train_loader = torch.utils.data.DataLoader(bdata, batch_size=256,
