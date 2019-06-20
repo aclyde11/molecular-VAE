@@ -36,6 +36,8 @@ def gen_proc(comm, iters=10000, i=0, batch_size=4096):
                 except:
                     print("ERROR!!!")
             comm.put((smis, count))
+            if comm.qsize() > 100:
+                time.sleep(20)
     except KeyboardInterrupt:
         print("exiting")
         exit()
