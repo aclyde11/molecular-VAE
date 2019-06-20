@@ -105,7 +105,7 @@ if __name__ == '__main__':
     q = Queue()
     ps = []
     for i in range(6):
-        ps.append(Process(target=gen_proc, args=(q,10000,i,4096 * 4))) ##workers
+        ps.append(Process(target=gen_proc, args=(q,10000,i,4096 * 2))) ##workers
     hs = []
     for i in range(6 * 8):
         hs.append(Process(target=hasher, args=(q, d, valid, total, i))) ## hasher
