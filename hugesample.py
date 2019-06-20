@@ -45,7 +45,8 @@ def hasher(q, hasher, valid, total, i):
     from rdkit import rdBase
     rdBase.DisableLog('rdApp.error')
     print("Hasher Thread on", i)
-
+    torch.manual_seed(i)
+    torch.cuda.manual_seed(i)
     while True:
         if not q.empty():
             smis, count = q.get(block=True)
