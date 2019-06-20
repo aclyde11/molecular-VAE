@@ -30,13 +30,13 @@ class VAE(nn.Module):
 
         q_cell = "gru"
         q_bidir = True
-        q_d_h = 256
+        q_d_h = 512
         q_n_layers = 1
-        q_dropout=0.35
+        q_dropout=0.2
         d_cell = 'gru'
         d_n_layers = 3
         d_dropout = 0.2
-        d_z = 128
+        d_z = 256
         d_d_h=512
 
         self.vocabulary = vocab
@@ -85,22 +85,6 @@ class VAE(nn.Module):
         self.decoder_lat = nn.Linear(d_z, d_d_h)
         self.decoder_fc = nn.Linear(d_d_h, n_vocab)
 
-        # self.binding_model = nn.Linear(d_z, 1)
-        self.binding_model = nn.Sequential(
-            nn.Linear(d_z, 128),
-            nn.SELU(),
-
-            nn.Linear(128, 128),
-            nn.ReLU(),
-
-            nn.Linear(128, 64),
-            nn.SELU(),
-
-            nn.Linear(64, 32),
-            nn.ReLU(),
-
-            nn.Linear(32, 1),
-        )
 
         # Grouping the model's parameters
         # self.encoder = nn.ModuleList([
@@ -147,12 +131,12 @@ class VAE(nn.Module):
         """
 
         # Encoder: x -> z, kl_loss
-        z, kl_loss, binding_loss, logvar = self.forward_encoder(x, b)
+        z, kl_loss, logvar = self.forward_encoder(x, b)
 
         # Decoder: x, z -> recon_loss
         recon_loss = self.forward_decoder(x, z)
 
-        return kl_loss, recon_loss, binding_loss, z, logvar
+        return kl_loss, recon_loss, z, logvar
 
     def forward_encoder(self, x, b):
         """Encoder step, emulating z ~ E(x) = q_E(z|x)
@@ -175,10 +159,8 @@ class VAE(nn.Module):
         z = mu + (logvar / 2).exp() * eps
 
         kl_loss = 0.5 * (logvar.exp() + mu ** 2 - 1 - logvar).sum(1).mean()
-        bind = self.binding_model(z)
 
-        binding_loss = F.mse_loss(bind, b)
-        return z, kl_loss, binding_loss, logvar
+        return z, kl_loss, logvar
 
     def forward_decoder(self, x, z):
         """Decoder step, emulating x ~ G(z)
@@ -242,7 +224,6 @@ class VAE(nn.Module):
             if z is None:
                 z = self.sample_z_prior(n_batch)
             z = z.to(self.device)
-            binding_aff = self.binding_model(z)
             z_0 = z.unsqueeze(1)
 
             # Initial values
@@ -277,4 +258,4 @@ class VAE(nn.Module):
             for i in range(x.size(0)):
                 new_x.append(x[i, :end_pads[i]])
 
-            return [self.tensor2string(i_x) for i_x in new_x], binding_aff.cpu().numpy(), z
+            return [self.tensor2string(i_x) for i_x in new_x], z

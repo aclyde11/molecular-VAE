@@ -25,7 +25,7 @@ def gen_proc(comm, iters=10000, i=0, batch_size=4096):
         for _ in range(iters):
             count = 0
 
-            res, _, _ = model.sample(batch_size)
+            res, _ = model.sample(batch_size)
 
             smis = []
             for i in range(batch_size):

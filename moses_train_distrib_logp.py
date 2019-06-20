@@ -170,39 +170,39 @@ counter = 51
 sym_table = {}
 cannon_smiles = []
 tqdm_range = tqdm(range(df.shape[0]))
-# for i in tqdm_range:
-#     try:
-#         original = str(df.iloc[i,0])
-#         if len(original) > 150:
-#             continue
-#         m = Chem.MolFromSmiles(original)
-#         cannmon = Chem.MolToSmiles(m)
-#         # selfie = selfies.encoder(cannmon)
-#         selfie = cannmon
-#         selfien = []
-#         # for sym in re.findall("\[(.*?)\]", selfie):
-#         for sym in selfie:
-#             if sym in sym_table:
-#                 selfien.append(sym_table[sym])
-#             else:
-#                 sym_table[sym] = chr(counter)
-#                 counter += 1
-#                 selfien.append(sym_table[sym])
-#         selfs.append(selfien)
-#         cannon_smiles.append(cannmon)
-#
-#         postfix = [f'len=%s' % (len(sym_table))]
-#         tqdm_range.set_postfix_str(' '.join(postfix))
-#     except KeyboardInterrupt:
-#         exit()
-#     except:
-#         print("ERROR...")
-#
-# df = pd.DataFrame(pd.Series(selfs))
-# df['cannon'] = cannon_smiles
-# df.to_csv("selfies.csv")
-# print(df.head())
-# print(df.shape)
+for i in tqdm_range:
+    try:
+        original = str(df.iloc[i,0])
+        if len(original) > 150:
+            continue
+        m = Chem.MolFromSmiles(original)
+        cannmon = Chem.MolToSmiles(m)
+        # selfie = selfies.encoder(cannmon)
+        selfie = cannmon
+        selfien = []
+        # for sym in re.findall("\[(.*?)\]", selfie):
+        for sym in selfie:
+            if sym in sym_table:
+                selfien.append(sym_table[sym])
+            else:
+                sym_table[sym] = chr(counter)
+                counter += 1
+                selfien.append(sym_table[sym])
+        selfs.append(selfien)
+        cannon_smiles.append(cannmon)
+
+        postfix = [f'len=%s' % (len(sym_table))]
+        tqdm_range.set_postfix_str(' '.join(postfix))
+    except KeyboardInterrupt:
+        exit()
+    except:
+        print("ERROR...")
+
+df = pd.DataFrame(pd.Series(selfs))
+df['cannon'] = cannon_smiles
+df.to_csv("selfies.csv")
+print(df.head())
+print(df.shape)
 
 charset = {k: v for v, k in sym_table.items()}
 vocab = mosesvocab.OneHotVocab(sym_table.values())
@@ -231,7 +231,6 @@ train_loader = torch.utils.data.DataLoader(bdata, batch_size=256,
 n_epochs = 100
 
 model = mosesvae.VAE(vocab).cuda()
-model.load_state_dict(torch.load("trained_save_small.pt"))
 binding_optimizer = None
 
 optimizer = optim.Adam(model.parameters() ,
@@ -261,13 +260,12 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
         input_batch = tuple(data.cuda() for data in input_batch)
         binding = binding.cuda().view(-1, 1)
         # Forwardd
-        kl_loss, recon_loss, binding_loss, _, logvar = model(input_batch, binding)
+        kl_loss, recon_loss, _, logvar = model(input_batch, binding)
 
         # print(torch.mean(torch.mean(logvar, dim=-1), dim=0).item())
 
         kl_loss = torch.sum(kl_loss, 0)
         recon_loss = torch.sum(recon_loss, 0)
-        binding_loss = torch.sum(binding_loss, 0)
 
         loss = min(1.0, kl_weight) * kl_loss + recon_loss
 
@@ -287,7 +285,6 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
         kl_loss_values.add(kl_loss.item())
         recon_loss_values.add(recon_loss.item())
         loss_values.add(loss.item())
-        binding_loss_values.add(binding_loss.item())
         lr = (optimizer.param_groups[0]['lr']
               if optimizer is not None
               else None)
@@ -300,8 +297,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
         postfix = [f'loss={loss_value:.5f}',
                    f'(kl={kl_loss_value:.5f}',
                    f'recon={recon_loss_value:.5f})',
-                   f'klw={kl_weight:.5f} lr={lr:.5f}'
-                   f'bloss={binding_loss_value:.5f}']
+                   f'klw={kl_weight:.5f} lr={lr:.5f}']
         tqdm_data.set_postfix_str(' '.join(postfix))
 
     postfix = {
@@ -469,20 +465,18 @@ for epoch in range(50):
                      desc='Training (epoch #{})'.format(epoch))
     postfix = _train_epoch_binding(model, epoch,
                                 tqdm_data, kl_weight, optimizer)
-    if args.local_rank == 0:
-        torch.save(model.state_dict(), "trained_save_small.pt")
-        with open('vocab.pkl', 'wb') as f:
-            pickle.dump(vocab, f)
+    # torch.save(model.state_dict(), "trained_save_small.pt")
+    # with open('vocab.pkl', 'wb') as f:
+    #     pickle.dump(vocab, f)
 
-        res, binding, _ = model.sample(1024)
-        binding = binding.reshape(-1)
-        pd.DataFrame([res, binding]).to_csv("out_tests.csv")
-        try:
-            for i in range(50):
-                print("".join(['[' + charset[sym] + ']' for sym in res[i]])), binding[i]
-        except:
-            print("error...")
-        print("Binding stats: ", np.mean(binding), np.std(binding), np.max(binding), np.min(binding))
+    res, _ = model.sample(1024)
+    pd.DataFrame([res]).to_csv("out_tests.csv")
+    try:
+        for i in range(50):
+            print("".join(['[' + charset[sym] + ']' for sym in res[i]]))
+    except:
+        print("error...")
+        print("Not sure why nothing printed..")
 
     # Epoch end
     lr_annealer.step()
