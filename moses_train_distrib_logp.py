@@ -228,14 +228,14 @@ with open("vocab.pkl", 'rb') as f:
 #     pickle.dump(vocab, f)
 bdata = BindingDataSet(df)
 # train_sampler = torch.utils.data.distributed.DistributedSampler(bdata)
-train_loader = torch.utils.data.DataLoader(bdata, batch_size=256,
+train_loader = torch.utils.data.DataLoader(bdata, batch_size=128,
                           shuffle=True,
                           num_workers=32, collate_fn=get_collate_fn_binding(),
                           worker_init_fn=mosesvocab.set_torch_seed_to_all_gens,
                                            pin_memory=True,)
-train_loader_agg = torch.utils.data.DataLoader(bdata, batch_size=256,
+train_loader_agg = torch.utils.data.DataLoader(bdata, batch_size=128,
                           shuffle=False,
-                          sampler=torch.utils.data.RandomSampler(bdata, replacement=True, num_samples=1000),
+                          sampler=torch.utils.data.RandomSampler(bdata, replacement=True, num_samples=10000),
                           num_workers=32, collate_fn=get_collate_fn_binding(),
                           worker_init_fn=mosesvocab.set_torch_seed_to_all_gens,
                                            pin_memory=True,)
@@ -270,21 +270,22 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
     for i, (input_batch, binding) in enumerate(tqdm_data):
         encoder_optimizer.zero_grad()
         decoder_optimizer.zero_grad()
-        if i % 100 == 0:
-            for (input_batch, binding) in train_loader_agg:
-                encoder_optimizer.zero_grad()
-                input_batch = tuple(data.cuda() for data in input_batch)
-                binding = binding.cuda().view(-1, 1)
-                # Forwardd
-                kl_loss, recon_loss, _, logvar = model(input_batch, binding)
-                kl_loss = torch.sum(kl_loss, 0)
-                recon_loss = torch.sum(recon_loss, 0)
+        if epoch < 10:
+            if i % 50 == 0:
+                for (input_batch, binding) in train_loader_agg:
+                    encoder_optimizer.zero_grad()
+                    input_batch = tuple(data.cuda() for data in input_batch)
+                    binding = binding.cuda().view(-1, 1)
+                    # Forwardd
+                    kl_loss, recon_loss, _, logvar = model(input_batch, binding)
+                    kl_loss = torch.sum(kl_loss, 0)
+                    recon_loss = torch.sum(recon_loss, 0)
 
-                loss = min(kl_weight * 1e-2 + 1e-5, 1) * kl_loss + recon_loss
-                loss.backward()
-                clip_grad_norm_((p for p in model.parameters() if p.requires_grad),
-                                50)
-                encoder_optimizer.step()
+                    loss = min(kl_weight * 1e-2 + 1e-4, 1) * kl_loss + recon_loss
+                    loss.backward()
+                    clip_grad_norm_((p for p in model.parameters() if p.requires_grad),
+                                    50)
+                    encoder_optimizer.step()
 
 
         input_batch = tuple(data.cuda() for data in input_batch)
