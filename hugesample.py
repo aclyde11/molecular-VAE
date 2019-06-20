@@ -75,18 +75,18 @@ def reporter(q, d, valid, total):
             while True:
                 try:
                     time.sleep(5)
-                    time = time.time()
+                    curr_time = time.time()
                     u = len(d)
                     v = valid.value
                     t = total.value
-                    f.write("{0},{1},{2},{3}\n".format(time, u, v, t))
+                    f.write("{0},{1},{2},{3}\n".format(curr_time, u, v, t))
                     print("Reporting! ")
                     print("Queue length: ",     q.qsize())
                     print("Unique: ", u, float(u)/ t)
                     print("Valid: ", v, float(v)  / t)
                     print("Sampled: ", t)
-                    print("Samples per second: ", float(t) / float(time.time() - start_time) )
-                    print("Unique per second: ", float(u) / float(time.time() - start_time) )
+                    print("Samples per second: ", float(t) / float(curr_time - start_time) )
+                    print("Unique per second: ", float(u) / float(curr_time - start_time) )
                 except ZeroDivisionError:
                     print("eh zero error.")
 
