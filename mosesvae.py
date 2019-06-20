@@ -30,13 +30,13 @@ class VAE(nn.Module):
 
         q_cell = "gru"
         q_bidir = True
-        q_d_h = 512
-        q_n_layers = 3
+        q_d_h = 256
+        q_n_layers = 2
         q_dropout=0.15
         d_cell = 'gru'
         d_n_layers = 4
         d_dropout = 0.15
-        d_z = 256
+        d_z = 128
         d_d_h=512
 
         self.vocabulary = vocab
@@ -212,7 +212,7 @@ class VAE(nn.Module):
         # return torch.zeros((n_batch, self.q_mu.out_features), device=self.x_emb.weight.device)
 
 
-    def sample(self, n_batch, max_len=100, z=None, temp=1.0):
+    def sample(self, n_batch, max_len=120, z=None, temp=1.0):
         """Generating n_batch samples in eval mode (`z` could be
         not on same device)
 
