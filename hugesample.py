@@ -73,7 +73,7 @@ def reporter(q, d, valid, total):
     print("Starting up reporter.")
     start_time = time.time()
     with open("log_small.csv", 'w', buffering=1) as f:
-        f.write("time,unique,valid,total")
+        f.write("time,unique,valid,total\n")
         try:
             while True:
                 try:
