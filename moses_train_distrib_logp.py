@@ -163,8 +163,7 @@ class SmilesLoaderSelfies(torch.utils.data.Dataset):
         return selfie, 0
 
 df = pd.read_csv("../dataset_v1.csv")
-
-#df = df.sample(2000000, replace=False, random_state=42)
+df = df.sample(1000000, replace=False, random_state=42)
 max_len = 0
 selfs = []
 counter = 51
@@ -469,7 +468,7 @@ for epoch in range(100):
     postfix = _train_epoch_binding(model, epoch,
                                 tqdm_data, kl_weight, optimizer)
     if args.local_rank == 0:
-        torch.save(model.state_dict(), "trained_save.pt")
+        torch.save(model.state_dict(), "trained_save_small.pt")
         with open('vocab.pkl', 'wb') as f:
             pickle.dump(vocab, f)
 
