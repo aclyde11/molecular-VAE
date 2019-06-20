@@ -177,10 +177,11 @@ for i in tqdm_range:
             continue
         m = Chem.MolFromSmiles(original)
         cannmon = Chem.MolToSmiles(m)
-        selfie = selfies.encoder(cannmon)
+        # selfie = selfies.encoder(cannmon)
+        selfie = cannmon
         selfien = []
-        re.findall("\[(.*?)\]", selfie)
-        for sym in re.findall("\[(.*?)\]", selfie):
+        # for sym in re.findall("\[(.*?)\]", selfie):
+        for sym in selfie:
             if sym in sym_table:
                 selfien.append(sym_table[sym])
             else:
@@ -477,7 +478,7 @@ for epoch in range(50):
         pd.DataFrame([res, binding]).to_csv("out_tests.csv")
         try:
             for i in range(20):
-                print(selfies.decoder("".join(['[' + charset[sym] + ']' for sym in res[i]])), binding[i])
+                print("".join(['[' + charset[sym] + ']' for sym in res[i]])), binding[i]
         except:
             print("error...")
         print("Binding stats: ", np.mean(binding), np.std(binding), np.max(binding), np.min(binding))
