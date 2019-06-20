@@ -69,23 +69,30 @@ def hasher(q, hasher, valid, total, i):
 def reporter(q, d, valid, total):
     print("Starting up reporter.")
     start_time = time.time()
-    try:
-        while True:
-            try:
-                time.sleep(5)
-                print("Reporting! ")
-                print("Queue length: ",     q.qsize())
-                print("Unique: ", len(d), float(len(d))/ total.value)
-                print("Valid: ", valid.value, float(valid.value)  / total.value)
-                print("Sampled: ", total.value)
-                print("Samples per second: ", float(total.value) / float(time.time() - start_time) )
-                print("Unique per second: ", float(len(d)) / float(time.time() - start_time) )
-            except ZeroDivisionError:
-                print("eh zero error.")
+    with open("log.csv", 'w') as f:
+        f.write("time,unique,valid,total")
+        try:
+            while True:
+                try:
+                    time.sleep(5)
+                    time = time.time()
+                    u = len(d)
+                    v = valid.value
+                    t = total.value
+                    f.write("{0},{1},{2},{3}\n".format(time, u, v, t))
+                    print("Reporting! ")
+                    print("Queue length: ",     q.qsize())
+                    print("Unique: ", u, float(u)/ t)
+                    print("Valid: ", v, float(v)  / t)
+                    print("Sampled: ", t)
+                    print("Samples per second: ", float(t) / float(time.time() - start_time) )
+                    print("Unique per second: ", float(u) / float(time.time() - start_time) )
+                except ZeroDivisionError:
+                    print("eh zero error.")
 
-    except KeyboardInterrupt:
-        print("Exiting")
-        exit()
+        except KeyboardInterrupt:
+            print("Exiting")
+            exit()
 
 
 
@@ -112,7 +119,7 @@ if __name__ == '__main__':
     try:
         for p in ps:
             p.join()
-        for s in hs:
+        for h in hs:
             h.join()
         r.join()
     except KeyboardInterrupt:
