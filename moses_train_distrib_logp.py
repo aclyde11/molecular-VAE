@@ -298,7 +298,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
         kl_loss = torch.sum(kl_loss, 0)
         recon_loss = torch.sum(recon_loss, 0)
 
-        loss = min(kl_weight * 1e-2 + 1e-5, 1) * kl_loss + recon_loss
+        loss = min(kl_weight * 1e-2 + 1e-4, 1) * kl_loss + recon_loss
 
         # Backward
 
