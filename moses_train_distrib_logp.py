@@ -207,19 +207,19 @@ print(df.shape)
 charset = {k: v for v, k in sym_table.items()}
 vocab = mosesvocab.OneHotVocab(sym_table.values())
 
-with open("sym_table.pkl", 'rb') as f:
-    sym_table = pickle.load(f)
-with open("charset.pkl", 'rb') as f:
-    charset = pickle.load(f)
-with open("vocab.pkl", 'rb') as f:
-    vocab = pickle.load(f)
-
-with open("sym_table.pkl", 'wb') as f:
-    pickle.dump(sym_table, f)
-with open("charset.pkl", 'wb') as f:
-    pickle.dump(charset, f)
-with open("vocab.pkl", 'wb') as f:
-    pickle.dump(vocab, f)
+# with open("sym_table.pkl", 'rb') as f:
+#     sym_table = pickle.load(f)
+# with open("charset.pkl", 'rb') as f:
+#     charset = pickle.load(f)
+# with open("vocab.pkl", 'rb') as f:
+#     vocab = pickle.load(f)
+#
+# with open("sym_table.pkl", 'wb') as f:
+#     pickle.dump(sym_table, f)
+# with open("charset.pkl", 'wb') as f:
+#     pickle.dump(charset, f)
+# with open("vocab.pkl", 'wb') as f:
+#     pickle.dump(vocab, f)
 bdata = BindingDataSet(df)
 # train_sampler = torch.utils.data.distributed.DistributedSampler(bdata)
 train_loader = torch.utils.data.DataLoader(bdata, batch_size=256,
