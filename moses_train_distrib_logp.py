@@ -163,7 +163,7 @@ class SmilesLoaderSelfies(torch.utils.data.Dataset):
         return selfie, 0
 
 df = pd.read_csv("../dataset_v1.csv")
-df = df.sample(1000000, replace=False, random_state=42)
+df = df.sample(50000, replace=False, random_state=42)
 max_len = 0
 selfs = []
 counter = 51
@@ -177,10 +177,11 @@ for i in tqdm_range:
             continue
         m = Chem.MolFromSmiles(original)
         cannmon = Chem.MolToSmiles(m)
-        selfie = selfies.encoder(cannmon)
+        selfie = cannmon
+        # selfie = selfies.encoder(cannmon)
         selfien = []
-        for sym in re.findall("\[(.*?)\]", selfie):
-        # for sym in selfie:
+        # for sym in re.findall("\[(.*?)\]", selfie):
+        for sym in selfie:
             if sym in sym_table:
                 selfien.append(sym_table[sym])
             else:
