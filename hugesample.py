@@ -70,7 +70,7 @@ def hasher(q, hasher, valid, total, i):
 def reporter(q, d, valid, total):
     print("Starting up reporter.")
     start_time = time.time()
-    with open("log.csv", 'w') as f:
+    with open("log.csv", 'w', buffering=1) as f:
         f.write("time,unique,valid,total")
         try:
             while True:
