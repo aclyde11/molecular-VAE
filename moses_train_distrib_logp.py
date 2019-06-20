@@ -170,58 +170,62 @@ counter = 51
 sym_table = {}
 cannon_smiles = []
 tqdm_range = tqdm(range(df.shape[0]))
-for i in tqdm_range:
-    try:
-        original = str(df.iloc[i,0])
-        if len(original) > 150:
-            continue
-        m = Chem.MolFromSmiles(original)
-        cannmon = Chem.MolToSmiles(m)
-        selfie = cannmon
-        # selfie = selfies.encoder(cannmon)
-        selfien = []
-        # for sym in re.findall("\[(.*?)\]", selfie):
-        for sym in selfie:
-            if sym in sym_table:
-                selfien.append(sym_table[sym])
-            else:
-                sym_table[sym] = chr(counter)
-                counter += 1
-                selfien.append(sym_table[sym])
-        selfs.append(selfien)
-        cannon_smiles.append(cannmon)
+# for i in tqdm_range:
+#     try:
+#         original = str(df.iloc[i,0])
+#         if len(original) > 150:
+#             continue
+#         m = Chem.MolFromSmiles(original)
+#         cannmon = Chem.MolToSmiles(m)
+#         selfie = cannmon
+#         # selfie = selfies.encoder(cannmon)
+#         selfien = []
+#         # for sym in re.findall("\[(.*?)\]", selfie):
+#         for sym in selfie:
+#             if sym in sym_table:
+#                 selfien.append(sym_table[sym])
+#             else:
+#                 sym_table[sym] = chr(counter)
+#                 counter += 1
+#                 selfien.append(sym_table[sym])
+#         selfs.append(selfien)
+#         cannon_smiles.append(cannmon)
+#
+#         postfix = [f'len=%s' % (len(sym_table))]
+#         tqdm_range.set_postfix_str(' '.join(postfix))
+#     except KeyboardInterrupt:
+#         exit()
+#     except:
+#         print("ERROR...")
+#
+# df = pd.DataFrame(pd.Series(selfs))
+# df['cannon'] = cannon_smiles
+# df.to_csv("selfies.csv")
+# print(df.head())
+# print(df.shape)
 
-        postfix = [f'len=%s' % (len(sym_table))]
-        tqdm_range.set_postfix_str(' '.join(postfix))
-    except KeyboardInterrupt:
-        exit()
-    except:
-        print("ERROR...")
-
-df = pd.DataFrame(pd.Series(selfs))
-df['cannon'] = cannon_smiles
-df.to_csv("selfies.csv")
-print(df.head())
-print(df.shape)
+df = pd.read_csv("selfies.csv")
+df = df[df.columns[1:]]
 
 charset = {k: v for v, k in sym_table.items()}
 vocab = mosesvocab.OneHotVocab(sym_table.values())
 #
-# with open("sym_table.pkl", 'rb') as f:
-#     sym_table = pickle.load(f)
-# with open("charset.pkl", 'rb') as f:
-#     charset = pickle.load(f)
-# with open("vocab.pkl", 'rb') as f:
-#     vocab = pickle.load(f)
+with open("sym_table.pkl", 'rb') as f:
+    sym_table = pickle.load(f)
+with open("charset.pkl", 'rb') as f:
+    charset = pickle.load(f)
+with open("vocab.pkl", 'rb') as f:
+    vocab = pickle.load(f)
 
-with open("sym_table.pkl", 'wb') as f:
-    pickle.dump(sym_table, f)
-with open("charset.pkl", 'wb') as f:
-    pickle.dump(charset, f)
-with open("vocab.pkl", 'wb') as f:
-    pickle.dump(vocab, f)
-with open("df.pkl", 'wb') as f:
-    pickle.dump(vocab, f)
+
+# with open("sym_table.pkl", 'wb') as f:
+#     pickle.dump(sym_table, f)
+# with open("charset.pkl", 'wb') as f:
+#     pickle.dump(charset, f)
+# with open("vocab.pkl", 'wb') as f:
+#     pickle.dump(vocab, f)
+# with open("df.pkl", 'wb') as f:
+#     pickle.dump(vocab, f)
 bdata = BindingDataSet(df)
 # train_sampler = torch.utils.data.distributed.DistributedSampler(bdata)
 train_loader = torch.utils.data.DataLoader(bdata, batch_size=256,
@@ -229,36 +233,60 @@ train_loader = torch.utils.data.DataLoader(bdata, batch_size=256,
                           num_workers=32, collate_fn=get_collate_fn_binding(),
                           worker_init_fn=mosesvocab.set_torch_seed_to_all_gens,
                                            pin_memory=True,)
-
+train_loader_agg = torch.utils.data.DataLoader(bdata, batch_size=256,
+                          shuffle=False,
+                          sampler=torch.utils.data.RandomSampler(bdata, False, 1000),
+                          num_workers=32, collate_fn=get_collate_fn_binding(),
+                          worker_init_fn=mosesvocab.set_torch_seed_to_all_gens,
+                                           pin_memory=True,)
 n_epochs = 100
 
 model = mosesvae.VAE(vocab).cuda()
 binding_optimizer = None
 
-optimizer = optim.Adam(model.parameters() ,
-                               lr=3*1e-3 )
+# optimizer = optim.Adam(model.parameters() ,
+#                                lr=3*1e-3 )
+encoder_optimizer = optim.Adam(model.encoder.parameters(), lr=1e-3)
+decoder_optimizer = optim.Adam(model.decoder.parameters(), lr=1e-4)
 # model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
 # model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], output_device=args.local_rank, find_unused_parameters=True)
 
 
 kl_annealer = KLAnnealer(50)
-lr_annealer = CosineAnnealingLRWithRestart(optimizer)
+lr_annealer_d = CosineAnnealingLRWithRestart(encoder_optimizer)
+lr_annealer_e = CosineAnnealingLRWithRestart(decoder_optimizer)
 
 model.zero_grad()
 
 
 
-def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
-    if optimizer is None:
-        model.eval()
-    else:
-        model.train()
+def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, decoder_optim):
+    model.train()
 
     kl_loss_values = mosesvocab.CircularBuffer(10)
     recon_loss_values = mosesvocab.CircularBuffer(10)
     loss_values =mosesvocab.CircularBuffer(10)
     binding_loss_values = mosesvocab.CircularBuffer(10)
     for i, (input_batch, binding) in enumerate(tqdm_data):
+        encoder_optimizer.zero_grad()
+        decoder_optimizer.zero_grad()
+        if i % 100 == 0:
+            for (input_batch, binding) in train_loader_agg:
+                encoder_optimizer.zero_grad()
+                input_batch = tuple(data.cuda() for data in input_batch)
+                binding = binding.cuda().view(-1, 1)
+                # Forwardd
+                kl_loss, recon_loss, _, logvar = model(input_batch, binding)
+                kl_loss = torch.sum(kl_loss, 0)
+                recon_loss = torch.sum(recon_loss, 0)
+
+                loss = min(kl_weight * 1e-2 + 1e-5, 1) * kl_loss + recon_loss
+                loss.backward()
+                clip_grad_norm_((p for p in model.parameters() if p.requires_grad),
+                                50)
+                encoder_optimizer.step()
+
+
         input_batch = tuple(data.cuda() for data in input_batch)
         binding = binding.cuda().view(-1, 1)
         # Forwardd
@@ -269,26 +297,24 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
         kl_loss = torch.sum(kl_loss, 0)
         recon_loss = torch.sum(recon_loss, 0)
 
-        loss = kl_loss + recon_loss
-
+        loss = min(kl_weight * 1e-2 + 1e-5, 1) * kl_loss + recon_loss
 
         # Backward
-        if optimizer is not None:
-            optimizer.zero_grad()
 
-            # with amp.scale_loss(loss, optimizer) as scaled_loss:
-            #     scaled_loss.backward()
-            loss.backward()
-            clip_grad_norm_((p for p in model.parameters() if p.requires_grad),
-                            50)
-            optimizer.step()
+        # with amp.scale_loss(loss, optimizer) as scaled_loss:
+        #     scaled_loss.backward()
+        loss.backward()
+        clip_grad_norm_((p for p in model.parameters() if p.requires_grad),
+                        50)
+        encoder_optimizer.step()
+        decoder_optimizer.step()
 
         # Log
         kl_loss_values.add(kl_loss.item())
         recon_loss_values.add(recon_loss.item())
         loss_values.add(loss.item())
-        lr = (optimizer.param_groups[0]['lr']
-              if optimizer is not None
+        lr = (encoder_optim.param_groups[0]['lr']
+              if encoder_optim is not None
               else None)
 
         # Update tqdm
@@ -308,8 +334,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
         'lr': lr,
         'kl_loss': kl_loss_value,
         'recon_loss': recon_loss_value,
-        'loss': loss_value,
-        'mode': 'Eval' if optimizer is None else 'Train'}
+        'loss': loss_value}
 
     return postfix
 
@@ -463,10 +488,11 @@ for epoch in range(50):
 
     kl_weight = kl_annealer(epoch)
 
+
     tqdm_data = tqdm(train_loader,
                      desc='Training (epoch #{})'.format(epoch))
     postfix = _train_epoch_binding(model, epoch,
-                                tqdm_data, kl_weight, optimizer)
+                                tqdm_data, kl_weight, encoder_optim=encoder_optimizer, decoder_optim=decoder_optimizer)
     # torch.save(model.state_dict(), "trained_save_small.pt")
     # with open('vocab.pkl', 'wb') as f:
     #     pickle.dump(vocab, f)
@@ -482,4 +508,5 @@ for epoch in range(50):
         print("Not sure why nothing printed..")
 
     # Epoch end
-    lr_annealer.step()
+    lr_annealer_e.step()
+    lr_annealer_d.step()

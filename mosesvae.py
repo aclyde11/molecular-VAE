@@ -30,13 +30,13 @@ class VAE(nn.Module):
 
         q_cell = "gru"
         q_bidir = True
-        q_d_h = 256
+        q_d_h = 512
         q_n_layers = 2
-        q_dropout=0.15
+        q_dropout=0.2
         d_cell = 'gru'
-        d_n_layers = 4
-        d_dropout = 0.15
-        d_z = 128
+        d_n_layers = 3
+        d_dropout = 0.2
+        d_z = 256
         d_d_h=512
 
         self.vocabulary = vocab
@@ -71,8 +71,7 @@ class VAE(nn.Module):
         # Decoder
         if d_cell == 'gru':
             self.decoder_rnn = nn.GRU(
-                # d_emb + d_z,
-                d_z,
+                d_emb + d_z,
                 d_d_h,
                 num_layers=d_n_layers,
                 batch_first=True,
@@ -88,21 +87,22 @@ class VAE(nn.Module):
 
 
         # Grouping the model's parameters
-        # self.encoder = nn.ModuleList([
-        #     self.encoder_rnn,
-        #     self.q_mu,
-        #     self.q_logvar
-        # ])
-        # self.decoder = nn.ModuleList([
-        #     self.decoder_rnn,
-        #     self.decoder_lat,
-        #     self.decoder_fc
-        # ])
-        # self.vae = nn.ModuleList([
-        #     self.x_emb,
-        #     self.encoder,
-        #     self.decoder
-        # ])
+        self.encoder = nn.ModuleList([
+            self.x_emb,
+            self.encoder_rnn,
+            self.q_mu,
+            self.q_logvar
+        ])
+        self.decoder = nn.ModuleList([
+            self.decoder_rnn,
+            self.decoder_lat,
+            self.decoder_fc
+        ])
+        self.vae = nn.ModuleList([
+            self.x_emb,
+            self.encoder,
+            self.decoder
+        ])
 
     @property
     def device(self):
@@ -178,8 +178,7 @@ class VAE(nn.Module):
         x_emb = self.x_emb(x)
 
         z_0 = z.unsqueeze(1).repeat(1, x_emb.size(1), 1)
-        # x_input = torch.cat([x_emb, z_0], dim=-1)
-        x_input = z_0
+        x_input = torch.cat([x_emb, z_0], dim=-1)
         x_input = nn.utils.rnn.pack_padded_sequence(x_input, lengths,
                                                     batch_first=True)
 
@@ -212,7 +211,7 @@ class VAE(nn.Module):
         # return torch.zeros((n_batch, self.q_mu.out_features), device=self.x_emb.weight.device)
 
 
-    def sample(self, n_batch, max_len=120, z=None, temp=1.0):
+    def sample(self, n_batch, max_len=100, z=None, temp=1.0):
         """Generating n_batch samples in eval mode (`z` could be
         not on same device)
 
@@ -243,8 +242,8 @@ class VAE(nn.Module):
             # Generating cycle
             for i in range(1, max_len):
                 x_emb = self.x_emb(w).unsqueeze(1)
-                # x_input = torch.cat([x_emb, z_0], dim=-1)
-                x_input = z_0
+                x_input = torch.cat([x_emb, z_0], dim=-1)
+
                 o, h = self.decoder_rnn(x_input, h)
                 y = self.decoder_fc(o.squeeze(1))
                 y = F.softmax(y / temp, dim=-1)
