@@ -31,7 +31,7 @@ def gen_proc(comm, iters=10000, i=0, batch_size=4096):
             for i in range(batch_size):
                 count += 1
                 try:
-                    s = selfies.decoder("".join(['[' + charset[sym] + ']' for sym in res[i]]))
+                    s = "".join(['[' + charset[sym] + ']' for sym in res[i]])
                     smis.append(s)
                 except:
                     print("ERROR!!!")
