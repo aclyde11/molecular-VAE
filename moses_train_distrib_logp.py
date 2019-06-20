@@ -232,6 +232,7 @@ train_loader = torch.utils.data.DataLoader(bdata, batch_size=256,
 n_epochs = 100
 
 model = mosesvae.VAE(vocab).cuda()
+model.load_state_dict(torch.load("trained_save_small.pt"))
 binding_optimizer = None
 
 optimizer = optim.Adam(model.parameters() ,
@@ -263,7 +264,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
         # Forwardd
         kl_loss, recon_loss, binding_loss, _, logvar = model(input_batch, binding)
 
-        print(torch.mean(torch.mean(logvar, dim=-1), dim=0).item())
+        # print(torch.mean(torch.mean(logvar, dim=-1), dim=0).item())
 
         kl_loss = torch.sum(kl_loss, 0)
         recon_loss = torch.sum(recon_loss, 0)
@@ -478,7 +479,7 @@ for epoch in range(50):
         binding = binding.reshape(-1)
         pd.DataFrame([res, binding]).to_csv("out_tests.csv")
         try:
-            for i in range(20):
+            for i in range(50):
                 print("".join(['[' + charset[sym] + ']' for sym in res[i]])), binding[i]
         except:
             print("error...")
