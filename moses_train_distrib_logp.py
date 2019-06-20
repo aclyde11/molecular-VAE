@@ -235,7 +235,7 @@ train_loader = torch.utils.data.DataLoader(bdata, batch_size=256,
                                            pin_memory=True,)
 train_loader_agg = torch.utils.data.DataLoader(bdata, batch_size=256,
                           shuffle=False,
-                          sampler=torch.utils.data.RandomSampler(bdata, False, 1000),
+                          sampler=torch.utils.data.RandomSampler(bdata, False, num_samples=1000),
                           num_workers=32, collate_fn=get_collate_fn_binding(),
                           worker_init_fn=mosesvocab.set_torch_seed_to_all_gens,
                                            pin_memory=True,)
