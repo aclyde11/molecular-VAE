@@ -31,11 +31,11 @@ class VAE(nn.Module):
         q_cell = "gru"
         q_bidir = True
         q_d_h = 512
-        q_n_layers = 1
-        q_dropout=0.2
+        q_n_layers = 3
+        q_dropout=0.15
         d_cell = 'gru'
-        d_n_layers = 3
-        d_dropout = 0.2
+        d_n_layers = 4
+        d_dropout = 0.15
         d_z = 256
         d_d_h=512
 
@@ -71,7 +71,8 @@ class VAE(nn.Module):
         # Decoder
         if d_cell == 'gru':
             self.decoder_rnn = nn.GRU(
-                d_emb + d_z,
+                # d_emb + d_z,
+                d_z,
                 d_d_h,
                 num_layers=d_n_layers,
                 batch_first=True,
@@ -177,7 +178,8 @@ class VAE(nn.Module):
         x_emb = self.x_emb(x)
 
         z_0 = z.unsqueeze(1).repeat(1, x_emb.size(1), 1)
-        x_input = torch.cat([x_emb, z_0], dim=-1)
+        # x_input = torch.cat([x_emb, z_0], dim=-1)
+        x_input = z_0
         x_input = nn.utils.rnn.pack_padded_sequence(x_input, lengths,
                                                     batch_first=True)
 
