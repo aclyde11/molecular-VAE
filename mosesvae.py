@@ -242,6 +242,7 @@ class VAE(nn.Module):
             if z is None:
                 z = self.sample_z_prior(n_batch)
             z = z.to(self.device)
+            print(z.mean())
             binding_aff = self.binding_model(z)
             z_0 = z.unsqueeze(1)
 
