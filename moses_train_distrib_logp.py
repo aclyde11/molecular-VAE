@@ -260,7 +260,9 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, optimizer=None):
         input_batch = tuple(data.cuda() for data in input_batch)
         binding = binding.cuda().view(-1, 1)
         # Forwardd
-        kl_loss, recon_loss, binding_loss, _ = model(input_batch, binding)
+        kl_loss, recon_loss, binding_loss, _, logvar = model(input_batch, binding)
+
+        print(torch.mean(torch.mean(logvar, dim=-1), dim=0).item)
 
         kl_loss = torch.sum(kl_loss, 0)
         recon_loss = torch.sum(recon_loss, 0)
