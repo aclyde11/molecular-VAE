@@ -173,7 +173,8 @@ tqdm_range = tqdm(range(df.shape[0]))
 for i in tqdm_range:
     try:
         original = str(df.iloc[i,0])
-
+        if len(original) > 150:
+            continue
         m = Chem.MolFromSmiles(original)
         cannmon = Chem.MolToSmiles(m)
         selfie = selfies.encoder(cannmon)
@@ -220,7 +221,7 @@ with open("vocab.pkl", 'wb') as f:
     pickle.dump(vocab, f)
 bdata = BindingDataSet(df)
 # train_sampler = torch.utils.data.distributed.DistributedSampler(bdata)
-train_loader = torch.utils.data.DataLoader(bdata, batch_size=128,
+train_loader = torch.utils.data.DataLoader(bdata, batch_size=256,
                           shuffle=True,
                           num_workers=32, collate_fn=get_collate_fn_binding(),
                           worker_init_fn=mosesvocab.set_torch_seed_to_all_gens,
@@ -229,7 +230,6 @@ train_loader = torch.utils.data.DataLoader(bdata, batch_size=128,
 n_epochs = 100
 
 model = mosesvae.VAE(vocab).cuda()
-model.load_state_dict(torch.load("trained_save.pt"))
 binding_optimizer = None
 
 optimizer = optim.Adam(model.parameters() ,
@@ -458,7 +458,7 @@ print("STARTING THING I WANT.....")
 # # xs.to_csv("smiles_computed.csv")
 # np.savez("z_vae_moses.npz", np.concatenate(vecs, axis=0))
 
-for epoch in range(100):
+for epoch in range(50):
 
 
     kl_weight = kl_annealer(epoch)
