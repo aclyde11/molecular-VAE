@@ -284,7 +284,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
 
         if epoch < 5:
             if i % 150 == 0:
-                train_loader_agg_tqdm = tqdm(get_train_loader_agg,
+                train_loader_agg_tqdm = tqdm(get_train_loader_agg(),
                      desc='Training encoder (epoch #{})'.format(epoch))
                 for (input_batch, binding) in train_loader_agg_tqdm:
                     encoder_optimizer.zero_grad()
