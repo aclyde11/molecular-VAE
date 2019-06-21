@@ -135,9 +135,9 @@ class VAE(nn.Module):
         z, kl_loss, logvar = self.forward_encoder(x, b)
 
         # Decoder: x, z -> recon_loss
-        recon_loss = self.forward_decoder(x, z)
+        recon_loss, x, y = self.forward_decoder(x, z)
 
-        return kl_loss, recon_loss, z, logvar
+        return kl_loss, recon_loss, z, logvar, x, y
 
     def forward_encoder(self, x, b):
         """Encoder step, emulating z ~ E(x) = q_E(z|x)
@@ -196,7 +196,7 @@ class VAE(nn.Module):
             ignore_index=self.pad
         )
 
-        return recon_loss
+        return recon_loss, x, y
 
     def sample_z_prior(self, n_batch):
         """Sampling z ~ p(z) = N(0, I)
