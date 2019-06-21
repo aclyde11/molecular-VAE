@@ -240,7 +240,7 @@ train_loader = torch.utils.data.DataLoader(bdata, batch_size=128,
                                            pin_memory=True,)
 train_loader_agg = torch.utils.data.DataLoader(bdata, batch_size=128,
                           shuffle=False,
-                          sampler=torch.utils.data.RandomSampler(bdata, replacement=True, num_samples=20000),
+                          sampler=torch.utils.data.RandomSampler(bdata, replacement=True, num_samples=200000),
                           num_workers=32, collate_fn=get_collate_fn_binding(),
                           worker_init_fn=mosesvocab.set_torch_seed_to_all_gens,
                                            pin_memory=True,)
@@ -257,7 +257,7 @@ decoder_optimizer = optim.Adam(model.decoder.parameters(), lr=1e-4)
 # model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], output_device=args.local_rank, find_unused_parameters=True)
 
 
-kl_annealer = KLAnnealer(50)
+kl_annealer = KLAnnealer(5)
 lr_annealer_d = CosineAnnealingLRWithRestart(encoder_optimizer)
 lr_annealer_e = CosineAnnealingLRWithRestart(decoder_optimizer)
 
@@ -275,7 +275,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
     for i, (input_batch, binding) in enumerate(tqdm_data):
 
         if epoch < 5:
-            if i % 50 == 0:
+            if i % 200 == 0:
                 for (input_batch, binding) in train_loader_agg:
                     encoder_optimizer.zero_grad()
                     decoder_optimizer.zero_grad()
@@ -312,8 +312,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
         clip_grad_norm_((p for p in model.parameters() if p.requires_grad),
                         50)
 
-        if epoch >= 5:
-            encoder_optimizer.step()
+        encoder_optimizer.step()
         decoder_optimizer.step()
 
         # Log
