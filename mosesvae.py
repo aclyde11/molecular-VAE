@@ -31,7 +31,7 @@ class VAE(nn.Module):
         q_cell = "gru"
         q_bidir = True
         q_d_h = 256
-        q_n_layers = 2
+        q_n_layers = 1
         q_dropout=0.1
         d_cell = 'gru'
         d_n_layers = 3
@@ -65,8 +65,8 @@ class VAE(nn.Module):
             )
 
         q_d_last = q_d_h * (2 if q_bidir else 1)
-        self.q_mu = nn.Linear(q_d_last, d_z)
-        self.q_logvar = nn.Linear(q_d_last, d_z)
+        self.q_mu = nn.Linear(nn.Linear(q_d_last, 256), nn.ReLU(), nn.Linear(256, d_z))
+        self.q_logvar = nn.Linear(nn.Linear(q_d_last, 256), nn.ReLU(), nn.Linear(256, d_z))
 
         # Decoder
         if d_cell == 'gru':

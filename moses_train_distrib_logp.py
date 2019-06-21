@@ -162,66 +162,66 @@ class SmilesLoaderSelfies(torch.utils.data.Dataset):
         selfie = self.df.iloc[idx, 0]
         return selfie, 0
 
-df = pd.read_csv("../dataset_v1.csv")
-df = df.sample(1000000, replace=False, random_state=42)
-max_len = 0
-selfs = []
-counter = 51
-sym_table = {}
-cannon_smiles = []
-tqdm_range = tqdm(range(df.shape[0]))
-for i in tqdm_range:
-    try:
-        original = str(df.iloc[i,0])
-        if len(original) > 150:
-            continue
-        m = Chem.MolFromSmiles(original)
-        cannmon = Chem.MolToSmiles(m)
-        # selfie = cannmon
-        selfie = selfies.encoder(cannmon)
-        selfien = []
-        for sym in re.findall("\[(.*?)\]", selfie):
-        # for sym in selfie:
-            if sym in sym_table:
-                selfien.append(sym_table[sym])
-            else:
-                sym_table[sym] = chr(counter)
-                counter += 1
-                selfien.append(sym_table[sym])
-        selfs.append(selfien)
-        cannon_smiles.append(cannmon)
-
-        postfix = [f'len=%s' % (len(sym_table))]
-        tqdm_range.set_postfix_str(' '.join(postfix))
-    except KeyboardInterrupt:
-        exit()
-    except:
-        print("ERROR...")
+# df = pd.read_csv("../dataset_v1.csv")
+# df = df.sample(1000000, replace=False, random_state=42)
+# max_len = 0
+# selfs = []
+# counter = 51
+# sym_table = {}
+# cannon_smiles = []
+# tqdm_range = tqdm(range(df.shape[0]))
+# for i in tqdm_range:
+#     try:
+#         original = str(df.iloc[i,0])
+#         if len(original) > 150:
+#             continue
+#         m = Chem.MolFromSmiles(original)
+#         cannmon = Chem.MolToSmiles(m)
+#         # selfie = cannmon
+#         selfie = selfies.encoder(cannmon)
+#         selfien = []
+#         for sym in re.findall("\[(.*?)\]", selfie):
+#         # for sym in selfie:
+#             if sym in sym_table:
+#                 selfien.append(sym_table[sym])
+#             else:
+#                 sym_table[sym] = chr(counter)
+#                 counter += 1
+#                 selfien.append(sym_table[sym])
+#         selfs.append(selfien)
+#         cannon_smiles.append(cannmon)
 #
-charset = {k: v for v, k in sym_table.items()}
-vocab = mosesvocab.OneHotVocab(sym_table.values())
-#
-# with open("sym_table.pkl", 'rb') as f:
-#     sym_table = pickle.load(f)
-# with open("charset.pkl", 'rb') as f:
-#     charset = pickle.load(f)
-# with open("vocab.pkl", 'rb') as f:
-#     vocab = pickle.load(f)
-# with open("selfs.pkl", 'rb') as f:
-#     selfs = pickle.load(f)
-# with open("cannon_smiles.pkl", 'rb') as f:
-#     cannon_smiles = pickle.load(f)
+#         postfix = [f'len=%s' % (len(sym_table))]
+#         tqdm_range.set_postfix_str(' '.join(postfix))
+#     except KeyboardInterrupt:
+#         exit()
+#     except:
+#         print("ERROR...")
+# #
+# charset = {k: v for v, k in sym_table.items()}
+# vocab = mosesvocab.OneHotVocab(sym_table.values())
 
-with open("sym_table.pkl", 'wb') as f:
-    pickle.dump(sym_table, f)
-with open("charset.pkl", 'wb') as f:
-    pickle.dump(charset, f)
-with open("vocab.pkl", 'wb') as f:
-    pickle.dump(vocab, f)
-with open("selfs.pkl", 'wb') as f:
-    pickle.dump(selfs, f)
-with open("cannon_smiles.pkl", 'wb') as f:
-    pickle.dump(cannon_smiles, f)
+with open("sym_table.pkl", 'rb') as f:
+    sym_table = pickle.load(f)
+with open("charset.pkl", 'rb') as f:
+    charset = pickle.load(f)
+with open("vocab.pkl", 'rb') as f:
+    vocab = pickle.load(f)
+with open("selfs.pkl", 'rb') as f:
+    selfs = pickle.load(f)
+with open("cannon_smiles.pkl", 'rb') as f:
+    cannon_smiles = pickle.load(f)
+
+# with open("sym_table.pkl", 'wb') as f:
+#     pickle.dump(sym_table, f)
+# with open("charset.pkl", 'wb') as f:
+#     pickle.dump(charset, f)
+# with open("vocab.pkl", 'wb') as f:
+#     pickle.dump(vocab, f)
+# with open("selfs.pkl", 'wb') as f:
+#     pickle.dump(selfs, f)
+# with open("cannon_smiles.pkl", 'wb') as f:
+#     pickle.dump(cannon_smiles, f)
 
 
 #
@@ -265,7 +265,7 @@ decoder_optimizer = optim.Adam(model.decoder.parameters(), lr=1e-4)
 # model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], output_device=args.local_rank, find_unused_parameters=True)
 
 
-kl_annealer = KLAnnealer(50)
+kl_annealer = KLAnnealer(100)
 lr_annealer_d = CosineAnnealingLRWithRestart(encoder_optimizer)
 lr_annealer_e = CosineAnnealingLRWithRestart(decoder_optimizer)
 
@@ -299,7 +299,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
 
                     correct = float((x == predict).sum().cpu().detach().item()) / float(x.shape[0] * x.shape[1])
 
-                    loss = min(kl_weight + 5e-5, 1) * kl_loss + recon_loss
+                    loss = min(kl_weight * 1e-1 + 5e-4, 1) * kl_loss + 2 * recon_loss
                     # loss = kl_loss + recon_loss
                     loss.backward()
                     clip_grad_norm_((p for p in model.parameters() if p.requires_grad),
@@ -329,7 +329,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
         kl_loss = torch.sum(kl_loss, 0)
         recon_loss = torch.sum(recon_loss, 0)
 
-        loss = min(kl_weight + 5e-5,1) * kl_loss + recon_loss
+        loss = min(kl_weight + 5e-4,1) * kl_loss + recon_loss
         # loss = kl_loss + recon_loss
 
         loss.backward()
