@@ -303,8 +303,8 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
                     _, predict = torch.max(F.softmax(y, dim=-1), -1)
 
                     correct = float((x == predict).sum().cpu().detach().item()) / float(x.shape[0] * x.shape[1])
-                    # kl_weight = min(kl_weight * 1e-1 + 1e-4, 1)
-                    kl_weight = 1
+                    kl_weight = min(kl_weight * 1e-1 + 1e-3, 1)
+                    # kl_weight = 1
                     loss = kl_weight * kl_loss + recon_loss
                     # loss = kl_loss + recon_loss
                     loss.backward()
