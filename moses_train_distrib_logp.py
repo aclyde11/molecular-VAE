@@ -45,6 +45,10 @@ torch.cuda.set_device(args.local_rank)
 #     torch.distributed.init_process_group(backend='nccl',
 #                                          init_method='env://')
 
+def init_weights(m):
+    if type(m) == nn.Linear:
+        torch.nn.init.xavier_uniform(m.weight)
+        m.bias.data.fill_(0.01)
 
 run_bindings = True
 
@@ -255,6 +259,7 @@ def get_train_loader_agg():
 n_epochs = 100
 
 model = mosesvae.VAE(vocab).cuda()
+model.apply(init_weights)
 binding_optimizer = None
 
 # optimizer = optim.Adam(model.parameters() ,
