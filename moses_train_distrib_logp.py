@@ -144,7 +144,7 @@ class BindingDataSet(torch.utils.data.Dataset):
 
 
     def __len__(self):
-        return len(df)
+        return len(self.df)
 
     def __getitem__(self, idx):
         smile = self.df[idx]
