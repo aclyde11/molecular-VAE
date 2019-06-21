@@ -236,7 +236,7 @@ train_loader = torch.utils.data.DataLoader(bdata, batch_size=128,
                                            pin_memory=True,)
 train_loader_agg = torch.utils.data.DataLoader(bdata, batch_size=128,
                           shuffle=False,
-                          sampler=torch.utils.data.RandomSampler(bdata, replacement=True, num_samples=5000),
+                          sampler=torch.utils.data.RandomSampler(bdata, replacement=True, num_samples=20000),
                           num_workers=32, collate_fn=get_collate_fn_binding(),
                           worker_init_fn=mosesvocab.set_torch_seed_to_all_gens,
                                            pin_memory=True,)
@@ -282,7 +282,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
                     kl_loss = torch.sum(kl_loss, 0)
                     recon_loss = torch.sum(recon_loss, 0)
 
-                    loss = min(kl_weight* 0.5 + 1e-4, 1) * kl_loss + recon_loss
+                    loss = min(kl_weight* 0.5 + 1e-5, 1) * kl_loss + recon_loss
                     loss.backward()
                     clip_grad_norm_((p for p in model.parameters() if p.requires_grad),
                                     50)
@@ -299,7 +299,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
         kl_loss = torch.sum(kl_loss, 0)
         recon_loss = torch.sum(recon_loss, 0)
 
-        loss = min(kl_weight* 5e-2 + 1e-4,1) * kl_loss + recon_loss
+        loss = min(kl_weight* 5e-2 + 1e-5,1) * kl_loss + recon_loss
 
         # Backward
 
