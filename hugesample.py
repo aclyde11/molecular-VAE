@@ -128,7 +128,7 @@ if __name__ == '__main__':
         for h in hs:
             h.join()
         r.join()
-    except KeyboardInterrupt:
+    except:
         for p in ps:
             p.kill()
         for h in hs:
