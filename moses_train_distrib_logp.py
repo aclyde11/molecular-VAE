@@ -198,8 +198,8 @@ for i in tqdm_range:
     except:
         print("ERROR...")
 #
-# charset = {k: v for v, k in sym_table.items()}
-# vocab = mosesvocab.OneHotVocab(sym_table.values())
+charset = {k: v for v, k in sym_table.items()}
+vocab = mosesvocab.OneHotVocab(sym_table.values())
 #
 # with open("sym_table.pkl", 'rb') as f:
 #     sym_table = pickle.load(f)
