@@ -281,7 +281,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
                     kl_loss = torch.sum(kl_loss, 0)
                     recon_loss = torch.sum(recon_loss, 0)
 
-                    loss = min(kl_weight * 1e-2 + 1e-4, 1) * kl_loss + recon_loss
+                    loss = min(kl_weight* 0.5 + 1e-4, 1) * kl_loss + recon_loss
                     loss.backward()
                     clip_grad_norm_((p for p in model.parameters() if p.requires_grad),
                                     50)
@@ -298,7 +298,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
         kl_loss = torch.sum(kl_loss, 0)
         recon_loss = torch.sum(recon_loss, 0)
 
-        loss = min(kl_weight * 1e-2 + 1e-4, 1) * kl_loss + recon_loss
+        loss = min(kl_weight* 5e-2 + 1e-4,) * kl_loss + recon_loss
 
         # Backward
 
@@ -484,7 +484,7 @@ print("STARTING THING I WANT.....")
 # # xs.to_csv("smiles_computed.csv")
 # np.savez("z_vae_moses.npz", np.concatenate(vecs, axis=0))
 
-for epoch in range(50):
+for epoch in range(100):
 
 
     kl_weight = kl_annealer(epoch)
@@ -494,7 +494,7 @@ for epoch in range(50):
                      desc='Training (epoch #{})'.format(epoch))
     postfix = _train_epoch_binding(model, epoch,
                                 tqdm_data, kl_weight, encoder_optim=encoder_optimizer, decoder_optim=decoder_optimizer)
-    # torch.save(model.state_dict(), "trained_save_small.pt")
+    torch.save(model.state_dict(), "trained_save_small.pt")
     # with open('vocab.pkl', 'wb') as f:
     #     pickle.dump(vocab, f)
 
@@ -504,9 +504,10 @@ for epoch in range(50):
         for i in range(50):
             print(selfies.decoder("".join(['[' + charset[sym] + ']' for sym in res[i]]))
             # print("".join([ charset[sym] for sym in res[i]]))
-    except:
+    except Exception as e:
         print("error...")
         print("Not sure why nothing printed..")
+        print(e)
 
     # Epoch end
     lr_annealer_e.step()
