@@ -299,8 +299,8 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
         binding = binding.cuda().view(-1, 1)
         # Forwardd
         kl_loss, recon_loss, _, logvar, x, y = model(input_batch, binding)
-        _, predict = torch.max(y, 1)
-        correct = float((x == y).sum().cpu().detach().item()) / float(x.shape[0])
+        _, predict = torch.max(F.softmax(y, dim=-1), -1)
+        correct = float((x == predict).sum().cpu().detach().item()) / float(x.shape[0])
 
         kl_loss = torch.sum(kl_loss, 0)
         recon_loss = torch.sum(recon_loss, 0)
