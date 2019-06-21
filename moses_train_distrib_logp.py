@@ -298,8 +298,8 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
                     _, predict = torch.max(F.softmax(y, dim=-1), -1)
 
                     correct = float((x == predict).sum().cpu().detach().item()) / float(x.shape[0] * x.shape[1])
-
-                    loss = min(kl_weight * 1e-1 + 5e-4, 1) * kl_loss + 2 * recon_loss
+                    kl_weight = min(kl_weight * 1e-1 + 1e-3, 1)
+                    loss = kl_weight * kl_loss + 2 * recon_loss
                     # loss = kl_loss + recon_loss
                     loss.backward()
                     clip_grad_norm_((p for p in model.parameters() if p.requires_grad),
@@ -329,7 +329,8 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
         kl_loss = torch.sum(kl_loss, 0)
         recon_loss = torch.sum(recon_loss, 0)
 
-        loss = min(kl_weight + 5e-4,1) * kl_loss + recon_loss
+        kl_weight =  min(kl_weight + 1e-3,1)
+        loss = kl_weight * kl_loss + 2 * recon_loss
         # loss = kl_loss + recon_loss
 
         loss.backward()
