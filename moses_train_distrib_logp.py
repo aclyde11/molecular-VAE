@@ -240,7 +240,7 @@ train_loader = torch.utils.data.DataLoader(bdata, batch_size=128,
                                            pin_memory=True,)
 train_loader_agg = torch.utils.data.DataLoader(bdata, batch_size=128,
                           shuffle=False,
-                          sampler=torch.utils.data.RandomSampler(bdata, replacement=True, num_samples=10000),
+                          sampler=torch.utils.data.RandomSampler(bdata, replacement=True, num_samples=20000),
                           num_workers=32, collate_fn=get_collate_fn_binding(),
                           worker_init_fn=mosesvocab.set_torch_seed_to_all_gens,
                                            pin_memory=True,)
@@ -299,7 +299,9 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
         binding = binding.cuda().view(-1, 1)
         # Forwardd
         kl_loss, recon_loss, _, logvar, x, y = model(input_batch, binding)
-        print(x.shape, y.shape)
+        _, predict = torch.max(y, 1)
+        correct = float((x == y).sum().cpu().detach().item()) / float(x.shape[0])
+
         kl_loss = torch.sum(kl_loss, 0)
         recon_loss = torch.sum(recon_loss, 0)
 
@@ -329,7 +331,8 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
         postfix = [f'loss={loss_value:.5f}',
                    f'(kl={kl_loss_value:.5f}',
                    f'recon={recon_loss_value:.5f})',
-                   f'klw={kl_weight:.5f} lr={lr:.5f}']
+                   f'klw={kl_weight:.5f} lr={lr:.5f}'
+                   f'correct={correct:.5f}']
         tqdm_data.set_postfix_str(' '.join(postfix))
 
     postfix = {
