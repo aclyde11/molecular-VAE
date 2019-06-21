@@ -244,6 +244,14 @@ train_loader_agg = torch.utils.data.DataLoader(bdata, batch_size=128,
                           num_workers=32, collate_fn=get_collate_fn_binding(),
                           worker_init_fn=mosesvocab.set_torch_seed_to_all_gens,
                                            pin_memory=True,)
+
+def get_train_loader_agg():
+    return torch.utils.data.DataLoader(bdata, batch_size=128,
+                          shuffle=False,
+                          sampler=torch.utils.data.RandomSampler(bdata, replacement=True, num_samples=50000),
+                          num_workers=32, collate_fn=get_collate_fn_binding(),
+                          worker_init_fn=mosesvocab.set_torch_seed_to_all_gens,
+                                           pin_memory=True,)
 n_epochs = 100
 
 model = mosesvae.VAE(vocab).cuda()
@@ -276,7 +284,9 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
 
         if epoch < 5:
             if i % 150 == 0:
-                for (input_batch, binding) in train_loader_agg:
+                train_loader_agg_tqdm = tqdm(get_train_loader_agg,
+                     desc='Training encoder (epoch #{})'.format(epoch))
+                for (input_batch, binding) in train_loader_agg_tqdm:
                     encoder_optimizer.zero_grad()
                     decoder_optimizer.zero_grad()
                     input_batch = tuple(data.cuda() for data in input_batch)
@@ -285,6 +295,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
                     kl_loss, recon_loss, _, logvar, x, y = model(input_batch, binding)
                     kl_loss = torch.sum(kl_loss, 0)
                     recon_loss = torch.sum(recon_loss, 0)
+                    correct = float((x == predict).sum().cpu().detach().item()) / float(x.shape[0] * x.shape[1])
 
                     loss = min(kl_weight* 0.5 + 1e-5, 1) * kl_loss + recon_loss
                     # loss = kl_loss + recon_loss
@@ -292,6 +303,16 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
                     clip_grad_norm_((p for p in model.parameters() if p.requires_grad),
                                     50)
                     encoder_optimizer.step()
+                    loss_value = loss.item()
+                    kl_loss_value = kl_loss.item()
+                    recon_loss_value = recon_loss.item()
+
+                    postfix = [f'loss={loss_value:.5f}',
+                               f'(kl={kl_loss_value:.5f}',
+                               f'recon={recon_loss_value:.5f})',
+                               f'correct={correct:.5f}']
+                    train_loader_agg_tqdm.set_postfix_str(' '.join(postfix))
+
 
         encoder_optimizer.zero_grad()
         decoder_optimizer.zero_grad()
