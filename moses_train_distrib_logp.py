@@ -248,7 +248,7 @@ train_loader_agg = torch.utils.data.DataLoader(bdata, batch_size=128,
 def get_train_loader_agg():
     return torch.utils.data.DataLoader(bdata, batch_size=128,
                           shuffle=False,
-                          sampler=torch.utils.data.RandomSampler(bdata, replacement=True, num_samples=100000),
+                          sampler=torch.utils.data.RandomSampler(bdata, replacement=True, num_samples=200000),
                           num_workers=32, collate_fn=get_collate_fn_binding(),
                           worker_init_fn=mosesvocab.set_torch_seed_to_all_gens,
                                            pin_memory=True,)
@@ -259,8 +259,8 @@ binding_optimizer = None
 
 # optimizer = optim.Adam(model.parameters() ,
 #                                lr=3*1e-3 )
-encoder_optimizer = optim.Adam(model.encoder.parameters(), lr=1e-4)
-decoder_optimizer = optim.Adam(model.decoder.parameters(), lr=1e-4)
+encoder_optimizer = optim.Adam(model.encoder.parameters(), lr=8e-4)
+decoder_optimizer = optim.Adam(model.decoder.parameters(), lr=5e-4)
 # model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
 # model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], output_device=args.local_rank, find_unused_parameters=True)
 
@@ -298,12 +298,13 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
                     _, predict = torch.max(F.softmax(y, dim=-1), -1)
 
                     correct = float((x == predict).sum().cpu().detach().item()) / float(x.shape[0] * x.shape[1])
-                    kl_weight = min(kl_weight * 1e-1 + 1e-4, 1)
-                    loss = kl_weight * kl_loss + 2 * recon_loss
+                    # kl_weight = min(kl_weight * 1e-1 + 1e-4, 1)
+                    kl_weight = 1
+                    loss = kl_weight * kl_loss + recon_loss
                     # loss = kl_loss + recon_loss
                     loss.backward()
                     clip_grad_norm_((p for p in model.parameters() if p.requires_grad),
-                                    50)
+                                    25)
                     encoder_optimizer.step()
                     loss_value = loss.item()
                     kl_loss_value = kl_loss.item()
@@ -329,7 +330,8 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
         kl_loss = torch.sum(kl_loss, 0)
         recon_loss = torch.sum(recon_loss, 0)
 
-        kl_weight =  min(kl_weight + 1e-3,1)
+        # kl_weight =  min(kl_weight + 1e-3,1)
+        kl_weight = 1
         loss = recon_loss
         # loss = kl_loss + recon_loss
 
