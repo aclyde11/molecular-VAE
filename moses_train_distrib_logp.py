@@ -291,7 +291,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
                 for (input_batch_, _) in train_loader_agg_tqdm:
                     encoder_optimizer.zero_grad()
                     decoder_optimizer.zero_grad()
-                    input_batch = tuple(data.cuda() for data in input_batch_)
+                    input_batch_ = tuple(data.cuda() for data in input_batch_)
                     # Forwardd
                     kl_loss, recon_loss, _, logvar, x, y = model(input_batch_)
                     kl_loss = torch.sum(kl_loss, 0)
