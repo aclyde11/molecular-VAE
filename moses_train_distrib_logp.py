@@ -203,7 +203,8 @@ df['cannon'] = cannon_smiles
 df.to_csv("selfies.csv")
 print(df.head())
 print(df.shape)
-
+print(df.iloc[0,0][0])
+exit()
 # df = pd.read_csv("selfies.csv")
 # df = df[df.columns[1:]]
 
