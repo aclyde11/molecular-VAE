@@ -32,7 +32,7 @@ class VAE(nn.Module):
         q_bidir = False
         q_d_h = 256
         q_n_layers = 1
-        q_dropout=0.1
+        q_dropout=0.05
         d_cell = 'gru'
         d_n_layers = 3
         d_dropout = 0.2
