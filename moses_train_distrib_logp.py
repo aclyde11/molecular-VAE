@@ -163,69 +163,69 @@ class SmilesLoaderSelfies(torch.utils.data.Dataset):
         return selfie, 0
 
 df = pd.read_csv("../dataset_v1.csv")
-df = df.sample(1000000, replace=False, random_state=42)
+# df = df.sample(1000000, replace=False, random_state=42)
 max_len = 0
 selfs = []
 counter = 51
 sym_table = {}
 cannon_smiles = []
 tqdm_range = tqdm(range(df.shape[0]))
-# for i in tqdm_range:
-#     try:
-#         original = str(df.iloc[i,0])
-#         if len(original) > 150:
-#             continue
-#         m = Chem.MolFromSmiles(original)
-#         cannmon = Chem.MolToSmiles(m)
-#         selfie = cannmon
-#         # selfie = selfies.encoder(cannmon)
-#         selfien = []
-#         # for sym in re.findall("\[(.*?)\]", selfie):
-#         for sym in selfie:
-#             if sym in sym_table:
-#                 selfien.append(sym_table[sym])
-#             else:
-#                 sym_table[sym] = chr(counter)
-#                 counter += 1
-#                 selfien.append(sym_table[sym])
-#         selfs.append(selfien)
-#         cannon_smiles.append(cannmon)
-#
-#         postfix = [f'len=%s' % (len(sym_table))]
-#         tqdm_range.set_postfix_str(' '.join(postfix))
-#     except KeyboardInterrupt:
-#         exit()
-#     except:
-#         print("ERROR...")
-#
-# df = pd.DataFrame(pd.Series(selfs))
-# df['cannon'] = cannon_smiles
-# df.to_csv("selfies.csv")
-# print(df.head())
-# print(df.shape)
+for i in tqdm_range:
+    try:
+        original = str(df.iloc[i,0])
+        if len(original) > 150:
+            continue
+        m = Chem.MolFromSmiles(original)
+        cannmon = Chem.MolToSmiles(m)
+        # selfie = cannmon
+        selfie = selfies.encoder(cannmon)
+        selfien = []
+        for sym in re.findall("\[(.*?)\]", selfie):
+        # for sym in selfie:
+            if sym in sym_table:
+                selfien.append(sym_table[sym])
+            else:
+                sym_table[sym] = chr(counter)
+                counter += 1
+                selfien.append(sym_table[sym])
+        selfs.append(selfien)
+        cannon_smiles.append(cannmon)
+
+        postfix = [f'len=%s' % (len(sym_table))]
+        tqdm_range.set_postfix_str(' '.join(postfix))
+    except KeyboardInterrupt:
+        exit()
+    except:
+        print("ERROR...")
+
+df = pd.DataFrame(pd.Series(selfs))
+df['cannon'] = cannon_smiles
+df.to_csv("selfies.csv")
+print(df.head())
+print(df.shape)
 
 df = pd.read_csv("selfies.csv")
 df = df[df.columns[1:]]
 
 charset = {k: v for v, k in sym_table.items()}
 vocab = mosesvocab.OneHotVocab(sym_table.values())
-#
-with open("sym_table.pkl", 'rb') as f:
-    sym_table = pickle.load(f)
-with open("charset.pkl", 'rb') as f:
-    charset = pickle.load(f)
-with open("vocab.pkl", 'rb') as f:
-    vocab = pickle.load(f)
+# #
+# with open("sym_table.pkl", 'rb') as f:
+#     sym_table = pickle.load(f)
+# with open("charset.pkl", 'rb') as f:
+#     charset = pickle.load(f)
+# with open("vocab.pkl", 'rb') as f:
+#     vocab = pickle.load(f)
 
 
-# with open("sym_table.pkl", 'wb') as f:
-#     pickle.dump(sym_table, f)
-# with open("charset.pkl", 'wb') as f:
-#     pickle.dump(charset, f)
-# with open("vocab.pkl", 'wb') as f:
-#     pickle.dump(vocab, f)
-# with open("df.pkl", 'wb') as f:
-#     pickle.dump(vocab, f)
+with open("sym_table.pkl", 'wb') as f:
+    pickle.dump(sym_table, f)
+with open("charset.pkl", 'wb') as f:
+    pickle.dump(charset, f)
+with open("vocab.pkl", 'wb') as f:
+    pickle.dump(vocab, f)
+with open("df.pkl", 'wb') as f:
+    pickle.dump(df, f)
 bdata = BindingDataSet(df)
 # train_sampler = torch.utils.data.distributed.DistributedSampler(bdata)
 train_loader = torch.utils.data.DataLoader(bdata, batch_size=128,
@@ -235,7 +235,7 @@ train_loader = torch.utils.data.DataLoader(bdata, batch_size=128,
                                            pin_memory=True,)
 train_loader_agg = torch.utils.data.DataLoader(bdata, batch_size=128,
                           shuffle=False,
-                          sampler=torch.utils.data.RandomSampler(bdata, replacement=True, num_samples=10000),
+                          sampler=torch.utils.data.RandomSampler(bdata, replacement=True, num_samples=5000),
                           num_workers=32, collate_fn=get_collate_fn_binding(),
                           worker_init_fn=mosesvocab.set_torch_seed_to_all_gens,
                                            pin_memory=True,)
@@ -271,7 +271,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
         encoder_optimizer.zero_grad()
         decoder_optimizer.zero_grad()
         if epoch < 10:
-            if i % 50 == 0:
+            if i % 100 == 0:
                 for (input_batch, binding) in train_loader_agg:
                     encoder_optimizer.zero_grad()
                     input_batch = tuple(data.cuda() for data in input_batch)
@@ -502,8 +502,8 @@ for epoch in range(50):
     pd.DataFrame([res]).to_csv("out_tests.csv")
     try:
         for i in range(50):
-            # print(selfie.encoder("".join(['[' + charset[sym] + ']' for sym in res[i]]))
-            print("".join([ charset[sym] for sym in res[i]]))
+            print(selfies.decoder("".join(['[' + charset[sym] + ']' for sym in res[i]]))
+            # print("".join([ charset[sym] for sym in res[i]]))
     except:
         print("error...")
         print("Not sure why nothing printed..")
