@@ -337,7 +337,8 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
         clip_grad_norm_((p for p in model.parameters() if p.requires_grad),
                         50)
 
-        encoder_optimizer.step()
+        if epoch >= 10:
+            encoder_optimizer.step()
         decoder_optimizer.step()
 
         # Log
