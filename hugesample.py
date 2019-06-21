@@ -36,6 +36,8 @@ def gen_proc(comm, iters=10000, i=0, batch_size=4096):
                     smis.append(s)
                 except:
                     print("ERROR!!!")
+                    print('res', res[i])
+                    print("charset", charset)
             comm.put((smis, count))
             if comm.qsize() > 100:
                 time.sleep(20)
