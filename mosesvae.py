@@ -30,13 +30,13 @@ class VAE(nn.Module):
 
         q_cell = "gru"
         q_bidir = True
-        q_d_h = 512
+        q_d_h = 256
         q_n_layers = 2
-        q_dropout=0.2
+        q_dropout=0.1
         d_cell = 'gru'
         d_n_layers = 3
         d_dropout = 0.2
-        d_z = 128
+        d_z = 160
         d_d_h=512
 
         self.vocabulary = vocab
