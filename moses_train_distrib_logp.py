@@ -508,7 +508,7 @@ for epoch in range(100):
     except Exception as e:
         print("error...")
         print("Not sure why nothing printed..")
-        print(e)
+        print(str(e))
 
     # Epoch end
     lr_annealer_e.step()
