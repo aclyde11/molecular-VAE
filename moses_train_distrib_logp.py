@@ -163,7 +163,7 @@ class SmilesLoaderSelfies(torch.utils.data.Dataset):
         return selfie, 0
 
 df = pd.read_csv("../dataset_v1.csv")
-df = df.sample(1000, replace=False, random_state=42)
+# df = df.sample(, replace=False, random_state=42)
 max_len = 0
 selfs = []
 counter = 51
@@ -198,36 +198,39 @@ for i in tqdm_range:
     except:
         print("ERROR...")
 
-df = pd.DataFrame(pd.Series(selfs))
-df['cannon'] = cannon_smiles
-df.to_csv("selfies.csv")
-print(df.head())
-print(df.shape)
-print(df.iloc[0,0][0])
-exit()
-# df = pd.read_csv("selfies.csv")
-# df = df[df.columns[1:]]
-
 charset = {k: v for v, k in sym_table.items()}
 vocab = mosesvocab.OneHotVocab(sym_table.values())
-#
+
 # with open("sym_table.pkl", 'rb') as f:
 #     sym_table = pickle.load(f)
 # with open("charset.pkl", 'rb') as f:
 #     charset = pickle.load(f)
 # with open("vocab.pkl", 'rb') as f:
 #     vocab = pickle.load(f)
-# with open("df.pkl", 'rb') as f:
-#     df = pickle.load(f)
-#
+# with open("selfs.pkl", 'rb') as f:
+#     selfs = pickle.load(f)
+# with open("cannon_smiles.pkl", 'rb') as f:
+#     cannon_smiles = pickle.load(f)
+
 with open("sym_table.pkl", 'wb') as f:
     pickle.dump(sym_table, f)
 with open("charset.pkl", 'wb') as f:
     pickle.dump(charset, f)
 with open("vocab.pkl", 'wb') as f:
     pickle.dump(vocab, f)
-with open("df.pkl", 'wb') as f:
-    pickle.dump(df, f)
+with open("selfs.pkl", 'wb') as f:
+    pickle.dump(selfs, f)
+with open("cannon_smiles.pkl", 'wb') as f:
+    pickle.dump(cannon_smiles, f)
+
+
+
+df = pd.DataFrame(pd.Series(selfs))
+df['cannon'] = cannon_smiles
+print(df.head())
+print(df.shape)
+print(df.iloc[0,0][0])
+
 bdata = BindingDataSet(df)
 # train_sampler = torch.utils.data.distributed.DistributedSampler(bdata)
 train_loader = torch.utils.data.DataLoader(bdata, batch_size=128,
