@@ -252,7 +252,7 @@ train_loader_agg = torch.utils.data.DataLoader(bdata, batch_size=128,
 def get_train_loader_agg():
     return torch.utils.data.DataLoader(bdata, batch_size=128,
                           shuffle=False,
-                          sampler=torch.utils.data.RandomSampler(bdata, replacement=True, num_samples=200000),
+                          sampler=torch.utils.data.RandomSampler(bdata, replacement=True, num_samples=128 * 100),
                           num_workers=32, collate_fn=get_collate_fn_binding(),
                           worker_init_fn=mosesvocab.set_torch_seed_to_all_gens,
                                            pin_memory=True,)
@@ -288,7 +288,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
     for i, (input_batch, binding) in enumerate(tqdm_data):
 
         if epoch < 10:
-            if i % 200 == 0:
+            if i % 1 == 0:
                 train_loader_agg_tqdm = tqdm(get_train_loader_agg(),
                      desc='Training encoder (epoch #{})'.format(epoch))
                 for (input_batch, binding) in train_loader_agg_tqdm:
