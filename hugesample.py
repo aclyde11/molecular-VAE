@@ -31,7 +31,6 @@ def gen_proc(comm, iters=10000, i=0, batch_size=4096):
             for i in range(batch_size):
                 count += 1
                 try:
-                    print("".join(['[' + charset[sym] + ']' for sym in res[i]]))
                     s = "".join(['[' + charset[sym] + ']' for sym in res[i]])
                     smis.append(s)
                 except:
@@ -58,6 +57,7 @@ def hasher(q, hasher, valid, total, i):
             total.value += count
             for smi in smis:
                 try:
+                    smi = selfies.decoder(smi)
                     m = Chem.MolFromSmiles(smi)
                     s = Chem.MolToSmiles(m)
                     if s is not None:
