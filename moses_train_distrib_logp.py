@@ -293,7 +293,6 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
                     encoder_optimizer.zero_grad()
                     decoder_optimizer.zero_grad()
                     input_batch = tuple(data.cuda() for data in input_batch_)
-                    binding = binding.cuda().view(-1, 1)
                     # Forwardd
                     kl_loss, recon_loss, _, logvar, x, y = model(input_batch_, binding)
                     kl_loss = torch.sum(kl_loss, 0)
@@ -323,7 +322,6 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
         encoder_optimizer.zero_grad()
         decoder_optimizer.zero_grad()
         input_batch = tuple(data.cuda() for data in input_batch)
-        binding = binding.cuda().view(-1, 1)
         # Forwardd
         kl_loss, recon_loss, _, logvar, x, y = model(input_batch, binding)
         _, predict = torch.max(F.softmax(y, dim=-1), -1)
