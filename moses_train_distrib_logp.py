@@ -502,7 +502,7 @@ for epoch in range(100):
     pd.DataFrame([res]).to_csv("out_tests.csv")
     try:
         for i in range(50):
-            print(selfies.decoder("".join(['[' + charset[sym] + ']' for sym in res[i]]))
+            print(selfies.decoder("".join(['[' + charset[sym] + ']' for sym in res[i]])))
             # print("".join([ charset[sym] for sym in res[i]]))
     except Exception as e:
         print("error...")
