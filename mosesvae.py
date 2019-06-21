@@ -123,7 +123,7 @@ class VAE(nn.Module):
 
         return string
 
-    def forward(self, x, b):
+    def forward(self, x):
         """Do the VAE forward step
 
         :param x: list of tensors of longs, input sentence x
@@ -132,14 +132,14 @@ class VAE(nn.Module):
         """
 
         # Encoder: x -> z, kl_loss
-        z, kl_loss, logvar = self.forward_encoder(x, b)
+        z, kl_loss, logvar = self.forward_encoder(x)
 
         # Decoder: x, z -> recon_loss
         recon_loss, x, y = self.forward_decoder(x, z)
 
         return kl_loss, recon_loss, z, logvar, x, y
 
-    def forward_encoder(self, x, b):
+    def forward_encoder(self, x):
         """Encoder step, emulating z ~ E(x) = q_E(z|x)
 
         :param x: list of tensors of longs, input sentence x

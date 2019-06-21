@@ -284,7 +284,6 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
     kl_loss_values = mosesvocab.CircularBuffer(10)
     recon_loss_values = mosesvocab.CircularBuffer(10)
     loss_values =mosesvocab.CircularBuffer(10)
-    binding_loss_values = mosesvocab.CircularBuffer(10)
     for i, (input_batch, _) in enumerate(tqdm_data):
 
         if epoch < 10:
@@ -294,7 +293,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
                     decoder_optimizer.zero_grad()
                     input_batch = tuple(data.cuda() for data in input_batch_)
                     # Forwardd
-                    kl_loss, recon_loss, _, logvar, x, y = model(input_batch_, binding)
+                    kl_loss, recon_loss, _, logvar, x, y = model(input_batch_)
                     kl_loss = torch.sum(kl_loss, 0)
                     recon_loss = torch.sum(recon_loss, 0)
                     _, predict = torch.max(F.softmax(y, dim=-1), -1)
@@ -323,7 +322,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
         decoder_optimizer.zero_grad()
         input_batch = tuple(data.cuda() for data in input_batch)
         # Forwardd
-        kl_loss, recon_loss, _, logvar, x, y = model(input_batch, binding)
+        kl_loss, recon_loss, _, logvar, x, y = model(input_batch)
         _, predict = torch.max(F.softmax(y, dim=-1), -1)
 
         correct = float((x == predict).sum().cpu().detach().item()) / float(x.shape[0] * x.shape[1])
