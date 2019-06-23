@@ -25,6 +25,9 @@ import re
 import argparse
 from tqdm import tqdm
 
+OUTPUT_DIR = "seconddev/"
+INPUT_DIR = ""
+
 parser = argparse.ArgumentParser()
 # FOR DISTRIBUTED:  Parse for the local_rank argument, which will be supplied
 # automatically by torch.distributed.launch.
@@ -216,15 +219,15 @@ with open("selfs.pkl", 'rb') as f:
 with open("cannon_smiles.pkl", 'rb') as f:
     cannon_smiles = pickle.load(f)
 
-# with open("sym_table.pkl", 'wb') as f:
+# with open(OUTPUT_DIR + "sym_table.pkl", 'wb') as f:
 #     pickle.dump(sym_table, f)
-# with open("charset.pkl", 'wb') as f:
+# with open(OUTPUT_DIR + "charset.pkl", 'wb') as f:
 #     pickle.dump(charset, f)
-# with open("vocab.pkl", 'wb') as f:
+# with open(OUTPUT_DIR + "vocab.pkl", 'wb') as f:
 #     pickle.dump(vocab, f)
-# with open("selfs.pkl", 'wb') as f:
+# with open(OUTPUT_DIR + "selfs.pkl", 'wb') as f:
 #     pickle.dump(selfs, f)
-# with open("cannon_smiles.pkl", 'wb') as f:
+# with open(OUTPUT_DIR + "cannon_smiles.pkl", 'wb') as f:
 #     pickle.dump(cannon_smiles, f)
 
 
@@ -531,12 +534,12 @@ for epoch in range(100):
                                  desc='Training encoder (epoch #{})'.format(epoch))
     postfix = _train_epoch_binding(model, epoch,
                                 tqdm_data, kl_weight, encoder_optim=encoder_optimizer, decoder_optim=decoder_optimizer)
-    torch.save(model.state_dict(), "trained_save_small.pt")
+    torch.save(model.state_dict(), OUTPUT_DIR +  "trained_save_small.pt")
     # with open('vocab.pkl', 'wb') as f:
     #     pickle.dump(vocab, f)
 
     res, _ = model.sample(1024)
-    pd.DataFrame([res]).to_csv("out_tests.csv")
+    pd.DataFrame([res]).to_csv(OUTPUT_DIR + "out_tests.csv")
     try:
         for i in range(50):
             print(selfies.decoder("".join(['[' + charset[sym] + ']' for sym in res[i]])))
