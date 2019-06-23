@@ -253,7 +253,7 @@ train_loader_agg = torch.utils.data.DataLoader(bdata, batch_size=512,
                                            pin_memory=True,)
 
 def get_train_loader_agg():
-    return torch.utils.data.DataLoader(bdata, batch_size=128,
+    return torch.utils.data.DataLoader(bdata, batch_size=512,
                           shuffle=False,
                           sampler=torch.utils.data.RandomSampler(bdata, replacement=True, num_samples=512 * 25),
                           num_workers=32, collate_fn=get_collate_fn_binding(),
@@ -267,8 +267,8 @@ binding_optimizer = None
 
 # optimizer = optim.Adam(model.parameters() ,
 #                                lr=3*1e-3 )
-encoder_optimizer = optim.Adam(model.encoder.parameters(), lr=8e-4)
-decoder_optimizer = optim.Adam(model.decoder.parameters(), lr=5e-4)
+encoder_optimizer = optim.Adam(model.encoder.parameters(), lr=9e-4)
+decoder_optimizer = optim.Adam(model.decoder.parameters(), lr=9e-4)
 # model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
 # model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], output_device=args.local_rank, find_unused_parameters=True)
 
