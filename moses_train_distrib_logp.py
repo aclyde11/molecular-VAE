@@ -273,7 +273,7 @@ decoder_optimizer = optim.Adam(model.decoder.parameters(), lr=5e-4)
 # model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], output_device=args.local_rank, find_unused_parameters=True)
 
 
-kl_annealer = KLAnnealer(100)
+kl_annealer = 1e-3
 lr_annealer_d = CosineAnnealingLRWithRestart(encoder_optimizer)
 lr_annealer_e = CosineAnnealingLRWithRestart(decoder_optimizer)
 
@@ -284,8 +284,6 @@ kl_annealer_rate = 0.000001
 
 def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, decoder_optim):
     model.train()
-    kl_weight = min(kl_weight * 1e-1 + 1e-3, 1)
-    kl_weight += kl_annealer_rate
     kl_loss_values = mosesvocab.CircularBuffer(10)
     recon_loss_values = mosesvocab.CircularBuffer(10)
     loss_values =mosesvocab.CircularBuffer(10)
@@ -305,7 +303,6 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
                     _, predict = torch.max(F.softmax(y, dim=-1), -1)
 
                     correct = float((x == predict).sum().cpu().detach().item()) / float(x.shape[0] * x.shape[1])
-                    kl_weight = min(kl_weight * 1e-1 + 1e-3, 1)
                     # kl_weight = 1
                     loss = kl_weight * kl_loss + recon_loss
                     # loss = kl_loss + recon_loss
@@ -527,7 +524,7 @@ for epoch in range(100):
 
 
     # kl_weight = kl_annealer(epoch)
-    kl_weight = 0.1
+    kl_weight = 1e-3
 
 
     tqdm_data = tqdm(train_loader,
