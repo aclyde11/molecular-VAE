@@ -253,7 +253,7 @@ train_loader_agg = torch.utils.data.DataLoader(bdata, batch_size=512,
                                            pin_memory=True,)
 
 def get_train_loader_agg():
-    return torch.utils.data.DataLoader(bdata, batch_size=512,
+    return torch.utils.data.DataLoader(bdata, batch_size=128,
                           shuffle=False,
                           sampler=torch.utils.data.RandomSampler(bdata, replacement=True, num_samples=512 * 25),
                           num_workers=32, collate_fn=get_collate_fn_binding(),
@@ -267,8 +267,8 @@ binding_optimizer = None
 
 # optimizer = optim.Adam(model.parameters() ,
 #                                lr=3*1e-3 )
-encoder_optimizer = optim.Adam(model.encoder.parameters(), lr=9e-4)
-decoder_optimizer = optim.Adam(model.decoder.parameters(), lr=9e-4)
+encoder_optimizer = optim.Adam(model.encoder.parameters(), lr=8e-4)
+decoder_optimizer = optim.Adam(model.decoder.parameters(), lr=5e-4)
 # model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
 # model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], output_device=args.local_rank, find_unused_parameters=True)
 
@@ -279,15 +279,18 @@ lr_annealer_e = CosineAnnealingLRWithRestart(decoder_optimizer)
 
 model.zero_grad()
 
+kl_annealer_rate = 0.000001
 
 
 def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, decoder_optim):
     model.train()
-
+    kl_weight = min(kl_weight * 1e-1 + 1e-3, 1)
+    kl_weight += kl_annealer_rate
     kl_loss_values = mosesvocab.CircularBuffer(10)
     recon_loss_values = mosesvocab.CircularBuffer(10)
     loss_values =mosesvocab.CircularBuffer(10)
     for i, (input_batch, _) in enumerate(tqdm_data):
+        kl_weight += kl_annealer_rate
 
         if epoch < 10:
             if i % 1 == 0:
@@ -334,7 +337,6 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
         recon_loss = torch.sum(recon_loss, 0)
 
         # kl_weight =  min(kl_weight + 1e-3,1)
-        kl_weight = 1
         loss = recon_loss
         # loss = kl_loss + recon_loss
 
@@ -534,7 +536,7 @@ for epoch in range(100):
                                  desc='Training encoder (epoch #{})'.format(epoch))
     postfix = _train_epoch_binding(model, epoch,
                                 tqdm_data, kl_weight, encoder_optim=encoder_optimizer, decoder_optim=decoder_optimizer)
-    torch.save(model.state_dict(), OUTPUT_DIR +  "trained_save_small.pt")
+    torch.save(model.state_dict(), OUTPUT_DIR + "trained_save_small.pt")
     # with open('vocab.pkl', 'wb') as f:
     #     pickle.dump(vocab, f)
 
