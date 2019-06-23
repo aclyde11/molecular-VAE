@@ -208,7 +208,7 @@ class VAE(nn.Module):
         #$return torch.randn(n_batch, self.q_mu.out_features,
         #                  device=self.x_emb.weight.device)
 
-        return torch.zeros((n_batch, self.q_mu.out_features), device=self.x_emb.weight.device)
+        return torch.zeros((n_batch, self.d_z), device=self.x_emb.weight.device)
 
 
     def sample(self, n_batch, max_len=100, z=None, temp=1.0):
