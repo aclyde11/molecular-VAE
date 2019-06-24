@@ -37,6 +37,7 @@ class VAE(nn.Module):
         d_n_layers = 3
         d_dropout = 0.2
         self.d_z = 160
+        d_z = self.d_z
         d_d_h=512
 
         self.vocabulary = vocab
