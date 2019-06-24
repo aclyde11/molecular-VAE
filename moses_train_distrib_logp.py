@@ -528,7 +528,7 @@ for epoch in range(100):
     train_loader_agg_tqdm = tqdm(get_train_loader_agg(),
                                  desc='Training encoder (epoch #{})'.format(epoch))
     postfix, kl_weight = _train_epoch_binding(model, epoch,
-                                tqdm_data, encoder_optim=encoder_optimizer, decoder_optim=decoder_optimizer)
+                                tqdm_data, kl_weight, encoder_optim=encoder_optimizer, decoder_optim=decoder_optimizer)
     torch.save(model.state_dict(), OUTPUT_DIR + "trained_save_small.pt")
     # with open('vocab.pkl', 'wb') as f:
     #     pickle.dump(vocab, f)
