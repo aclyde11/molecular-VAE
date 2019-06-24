@@ -169,66 +169,66 @@ class SmilesLoaderSelfies(torch.utils.data.Dataset):
         selfie = self.df.iloc[idx, 0]
         return selfie, 0
 
-# df = pd.read_csv("../dataset_v1.csv")
-# df = df.sample(1000000, replace=False, random_state=42)
-# max_len = 0
-# selfs = []
-# counter = 51
-# sym_table = {}
-# cannon_smiles = []
-# tqdm_range = tqdm(range(df.shape[0]))
-# for i in tqdm_range:
-#     try:
-#         original = str(df.iloc[i,0])
-#         if len(original) > 150:
-#             continue
-#         m = Chem.MolFromSmiles(original)
-#         cannmon = Chem.MolToSmiles(m)
-#         # selfie = cannmon
-#         selfie = selfies.encoder(cannmon)
-#         selfien = []
-#         for sym in re.findall("\[(.*?)\]", selfie):
-#         # for sym in selfie:
-#             if sym in sym_table:
-#                 selfien.append(sym_table[sym])
-#             else:
-#                 sym_table[sym] = chr(counter)
-#                 counter += 1
-#                 selfien.append(sym_table[sym])
-#         selfs.append(selfien)
-#         cannon_smiles.append(cannmon)
+df = pd.read_csv("../dataset_v1.csv")
+df = df.sample(500000, replace=False, random_state=42)
+max_len = 0
+selfs = []
+counter = 51
+sym_table = {}
+cannon_smiles = []
+tqdm_range = tqdm(range(df.shape[0]))
+for i in tqdm_range:
+    try:
+        original = str(df.iloc[i,0])
+        if len(original) > 150:
+            continue
+        m = Chem.MolFromSmiles(original)
+        cannmon = Chem.MolToSmiles(m)
+        # selfie = cannmon
+        selfie = selfies.encoder(cannmon)
+        selfien = []
+        for sym in re.findall("\[(.*?)\]", selfie):
+        # for sym in selfie:
+            if sym in sym_table:
+                selfien.append(sym_table[sym])
+            else:
+                sym_table[sym] = chr(counter)
+                counter += 1
+                selfien.append(sym_table[sym])
+        selfs.append(selfien)
+        cannon_smiles.append(cannmon)
+
+        postfix = [f'len=%s' % (len(sym_table))]
+        tqdm_range.set_postfix_str(' '.join(postfix))
+    except KeyboardInterrupt:
+        exit()
+    except:
+        print("ERROR...")
 #
-#         postfix = [f'len=%s' % (len(sym_table))]
-#         tqdm_range.set_postfix_str(' '.join(postfix))
-#     except KeyboardInterrupt:
-#         exit()
-#     except:
-#         print("ERROR...")
-# #
-# charset = {k: v for v, k in sym_table.items()}
-# vocab = mosesvocab.OneHotVocab(sym_table.values())
+charset = {k: v for v, k in sym_table.items()}
+vocab = mosesvocab.OneHotVocab(sym_table.values())
 
-with open("sym_table.pkl", 'rb') as f:
-    sym_table = pickle.load(f)
-with open("charset.pkl", 'rb') as f:
-    charset = pickle.load(f)
-with open("vocab.pkl", 'rb') as f:
-    vocab = pickle.load(f)
-with open("selfs.pkl", 'rb') as f:
-    selfs = pickle.load(f)
-with open("cannon_smiles.pkl", 'rb') as f:
-    cannon_smiles = pickle.load(f)
+# with open("sym_table.pkl", 'rb') as f:
+#     sym_table = pickle.load(f)
+# with open("charset.pkl", 'rb') as f:
+#     charset = pickle.load(f)
+# with open("vocab.pkl", 'rb') as f:
+#     vocab = pickle.load(f)
+# with open("selfs.pkl", 'rb') as f:
+#     selfs = pickle.load(f)
+# with open("cannon_smiles.pkl", 'rb') as f:
+#     cannon_smiles = pickle.load(f)
 
-# with open(OUTPUT_DIR + "sym_table.pkl", 'wb') as f:
-#     pickle.dump(sym_table, f)
-# with open(OUTPUT_DIR + "charset.pkl", 'wb') as f:
-#     pickle.dump(charset, f)
-# with open(OUTPUT_DIR + "vocab.pkl", 'wb') as f:
-#     pickle.dump(vocab, f)
-# with open(OUTPUT_DIR + "selfs.pkl", 'wb') as f:
-#     pickle.dump(selfs, f)
-# with open(OUTPUT_DIR + "cannon_smiles.pkl", 'wb') as f:
-#     pickle.dump(cannon_smiles, f)
+with open(OUTPUT_DIR + "sym_table.pkl", 'wb') as f:
+    pickle.dump(sym_table, f)
+with open(OUTPUT_DIR + "charset.pkl", 'wb') as f:
+    pickle.dump(charset, f)
+with open(OUTPUT_DIR + "vocab.pkl", 'wb') as f:
+    pickle.dump(vocab, f)
+with open(OUTPUT_DIR + "selfs.pkl", 'wb') as f:
+    pickle.dump(selfs, f)
+with open(OUTPUT_DIR + "cannon_smiles.pkl", 'wb') as f:
+    pickle.dump(cannon_smiles, f)
 
 
 #
@@ -514,11 +514,12 @@ print("STARTING THING I WANT.....")
 # # xs.to_csv("smiles_computed.csv")
 # np.savez("z_vae_moses.npz", np.concatenate(vecs, axis=0))
 
+kl_weight = 1e-3
+
 for epoch in range(100):
 
 
     # kl_weight = kl_annealer(epoch)
-    kl_weight = 1e-3
 
 
     tqdm_data = tqdm(train_loader,
