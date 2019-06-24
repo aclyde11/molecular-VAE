@@ -36,7 +36,7 @@ class VAE(nn.Module):
         d_cell = 'gru'
         d_n_layers = 3
         d_dropout = 0.2
-        d_z = 160
+        self.d_z = 160
         d_d_h=512
 
         self.vocabulary = vocab
