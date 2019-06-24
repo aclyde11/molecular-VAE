@@ -274,9 +274,9 @@ lr_annealer_e = CosineAnnealingLRWithRestart(decoder_optimizer)
 model.zero_grad()
 
 kl_annealer_rate = 0.000001
+kl_weight = 0
 
-
-def _train_epoch_binding(model, epoch, tqdm_data, encoder_optim, decoder_optim):
+def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, decoder_optim):
     model.train()
     kl_loss_values = mosesvocab.CircularBuffer(10)
     recon_loss_values = mosesvocab.CircularBuffer(10)
@@ -367,7 +367,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, encoder_optim, decoder_optim):
         'recon_loss': recon_loss_value,
         'loss': loss_value}
 
-    return postfix
+    return postfix, kl_weight
 
 
 # Epoch start
@@ -514,6 +514,7 @@ print("STARTING THING I WANT.....")
 # # xs.to_csv("smiles_computed.csv")
 # np.savez("z_vae_moses.npz", np.concatenate(vecs, axis=0))
 
+
 kl_weight = 1e-3
 
 for epoch in range(100):
@@ -526,7 +527,7 @@ for epoch in range(100):
                      desc='Training (epoch #{})'.format(epoch))
     train_loader_agg_tqdm = tqdm(get_train_loader_agg(),
                                  desc='Training encoder (epoch #{})'.format(epoch))
-    postfix = _train_epoch_binding(model, epoch,
+    postfix, kl_weight = _train_epoch_binding(model, epoch,
                                 tqdm_data, encoder_optim=encoder_optimizer, decoder_optim=decoder_optimizer)
     torch.save(model.state_dict(), OUTPUT_DIR + "trained_save_small.pt")
     # with open('vocab.pkl', 'wb') as f:
