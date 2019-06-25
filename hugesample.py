@@ -62,8 +62,7 @@ def hasher(q, hasher, valid, total, i, s=False):
             total.value += count
             for smi in smis:
                 try:
-                    if s:
-                        smi = selfies.decoder(smi)
+
                     m = Chem.MolFromSmiles(smi)
                     s = Chem.MolToSmiles(m)
                     if s is not None:
