@@ -78,14 +78,16 @@ def hasher(q, hasher, valid, total, i, selfies=False):
                 except:
                     None
 
-def reporter(q, d, valid, total):
+def reporter(q, d, valid, total, dir):
     print("Starting up reporter.")
     start_time = time.time()
+    iter = 0
     with open("log_small.csv", 'w', buffering=1) as f:
         f.write("time,unique,valid,total\n")
         try:
             while True:
                 try:
+                    iter += 1
                     time.sleep(5)
                     curr_time = time.time()
                     u = len(d)
@@ -99,6 +101,11 @@ def reporter(q, d, valid, total):
                     print("Sampled: ", t)
                     print("Samples per second: ", float(t) / float(curr_time - start_time) )
                     print("Unique per second: ", float(u) / float(curr_time - start_time) )
+                    if iter % 10 == 0:
+                        with open(dir + "/out_samples.smi", 'w'):
+                            for i in d.keys():
+                                f.write(i + "\n")
+
                 except ZeroDivisionError:
                     print("eh zero error.")
 
@@ -126,7 +133,7 @@ if __name__ == '__main__':
     for i in range(1 * 1):
         hs.append(Process(target=hasher, args=(q, d, valid, total, i,args.s))) ## hasher
 
-    r = Process(target=reporter, args=(q, d, valid, total))
+    r = Process(target=reporter, args=(q, d, valid, total, args.in_dir))
 
     for  p in ps:
         p.start()
