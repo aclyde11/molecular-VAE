@@ -25,7 +25,7 @@ import re
 import argparse
 from tqdm import tqdm
 
-OUTPUT_DIR = "smiles_kinase/"
+OUTPUT_DIR = "selfies_kinase/"
 INPUT_DIR = ""
 
 parser = argparse.ArgumentParser()
@@ -185,11 +185,11 @@ for i in tqdm_range:
             continue
         m = Chem.MolFromSmiles(original)
         cannmon = Chem.MolToSmiles(m)
-        selfie = cannmon
-        # selfie = selfies.encoder(cannmon)
+        # selfie = cannmon
+        selfie = selfies.encoder(cannmon)
         selfien = []
-        # for sym in re.findall("\[(.*?)\]", selfie):
-        for sym in selfie:
+        for sym in re.findall("\[(.*?)\]", selfie):
+        # for sym in selfie:
             if sym in sym_table:
                 selfien.append(sym_table[sym])
             else:
@@ -268,13 +268,13 @@ decoder_optimizer = optim.Adam(model.decoder.parameters(), lr=5e-4)
 # model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], output_device=args.local_rank, find_unused_parameters=True)
 
 
-kl_annealer = 1e-3
+kl_annealer = 3e-4
 lr_annealer_d = CosineAnnealingLRWithRestart(encoder_optimizer)
 lr_annealer_e = CosineAnnealingLRWithRestart(decoder_optimizer)
 
 model.zero_grad()
 
-kl_annealer_rate = 0.000001
+kl_annealer_rate = 0.000002
 kl_weight = 0
 
 def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, decoder_optim):
@@ -285,7 +285,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
     for i, (input_batch, _) in enumerate(tqdm_data):
         kl_weight += kl_annealer_rate
 
-        if epoch < 10:
+        if epoch < 20:
             if i % 1 == 0:
                 for (input_batch_, _) in train_loader_agg_tqdm:
                     encoder_optimizer.zero_grad()
@@ -336,7 +336,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
         clip_grad_norm_((p for p in model.parameters() if p.requires_grad),
                         50)
 
-        if epoch >= 10:
+        if epoch >= 20:
             loss += kl_weight * kl_loss
             encoder_optimizer.step()
         decoder_optimizer.step()
@@ -538,8 +538,8 @@ for epoch in range(100):
     pd.DataFrame([res]).to_csv(OUTPUT_DIR + "out_tests.csv")
     try:
         for i in range(50):
-            # print(selfies.decoder("".join(['[' + charset[sym] + ']' for sym in res[i]])))
-            print("".join([ charset[sym] for sym in res[i]]))
+            print(selfies.decoder("".join(['[' + charset[sym] + ']' for sym in res[i]])))
+            # print("".join([ charset[sym] for sym in res[i]]))
     except Exception as e:
         print("error...")
         print("Not sure why nothing printed..")
