@@ -102,9 +102,9 @@ def reporter(q, d, valid, total, dir):
                     print("Samples per second: ", float(t) / float(curr_time - start_time) )
                     print("Unique per second: ", float(u) / float(curr_time - start_time) )
                     if iter % 10 == 0:
-                        with open(dir + "/out_samples.smi", 'w'):
+                        with open(dir + "/out_samples.smi", 'w') as outf:
                             for i in d.keys():
-                                f.write(i + "\n")
+                                outf.write(i + "\n")
 
                 except ZeroDivisionError:
                     print("eh zero error.")
