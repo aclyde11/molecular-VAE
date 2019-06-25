@@ -32,7 +32,7 @@ parser = argparse.ArgumentParser()
 # FOR DISTRIBUTED:  Parse for the local_rank argument, which will be supplied
 # automatically by torch.distributed.launch.
 parser.add_argument("--local_rank", default=0, type=int)
-parser.add_argument("--batch_size", defualt=512, type=int)
+parser.add_argument("--batch_size", default=512, type=int)
 parser.add_argument("--encoder_batch_size", default=128, type=int)
 parser.add_argument("--lr", default=1e-3, type=float)
 args = parser.parse_args()
