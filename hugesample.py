@@ -15,12 +15,12 @@ from multiprocessing import Process, Pipe, Queue, Manager, Value
 def gen_proc(comm, iters=10000, i=0, batch_size=4096, dir="", selfies=False):
     print("Generator on", i)
     try:
-        with open("smiles_kinase/charset.pkl", 'rb') as f:
+        with open(dir + "/charset.pkl", 'rb') as f:
             charset = pickle.load(f)
-        with open("kinase/vocab.pkl", 'rb') as f:
+        with open(dir + "/vocab.pkl", 'rb') as f:
             vocab = pickle.load(f)
         model = mosesvae.VAE(vocab)
-        model.load_state_dict(torch.load("kinase/trained_save_small.pt", map_location='cpu'))
+        model.load_state_dict(torch.load(dir + "/trained_save_small.pt", map_location='cpu'))
         model = model.cuda(i)
 
         for _ in range(iters):
