@@ -14,12 +14,12 @@ from multiprocessing import Process, Pipe, Queue, Manager, Value
 def gen_proc(comm, iters=10000, i=0, batch_size=4096):
     print("Generator on", i)
     try:
-        with open("seconddev/charset.pkl", 'rb') as f:
+        with open("smiles_kinase/charset.pkl", 'rb') as f:
             charset = pickle.load(f)
-        with open("seconddev/vocab.pkl", 'rb') as f:
+        with open("smiles_kinase/vocab.pkl", 'rb') as f:
             vocab = pickle.load(f)
         model = mosesvae.VAE(vocab)
-        model.load_state_dict(torch.load("seconddev/trained_save_small.pt", map_location='cpu'))
+        model.load_state_dict(torch.load("smiles_kinase/trained_save_small.pt", map_location='cpu'))
         model = model.cuda(i)
 
         for _ in range(iters):
@@ -57,7 +57,7 @@ def hasher(q, hasher, valid, total, i):
             total.value += count
             for smi in smis:
                 try:
-                    smi = selfies.decoder(smi)
+                    # smi = selfies.decoder(smi)
                     m = Chem.MolFromSmiles(smi)
                     s = Chem.MolToSmiles(m)
                     if s is not None:
