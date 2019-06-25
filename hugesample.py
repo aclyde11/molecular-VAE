@@ -7,11 +7,12 @@ import pickle
 import mosesvae
 
 import selfies
+import argparse
 import time
 from tqdm import tqdm
 from multiprocessing import Process, Pipe, Queue, Manager, Value
 
-def gen_proc(comm, iters=10000, i=0, batch_size=4096):
+def gen_proc(comm, iters=10000, i=0, batch_size=4096, dir="", selfies=False):
     print("Generator on", i)
     try:
         with open("smiles_kinase/charset.pkl", 'rb') as f:
@@ -31,7 +32,10 @@ def gen_proc(comm, iters=10000, i=0, batch_size=4096):
             for i in range(batch_size):
                 count += 1
                 try:
-                    s = "".join(['[' + charset[sym] + ']' for sym in res[i]])
+                    if selfies:
+                        s = "".join(['[' + charset[sym] + ']' for sym in res[i]])
+                    else:
+                        s = "".join([charset[sym]  for sym in res[i]])
                     smis.append(s)
                 except:
                     None
@@ -46,7 +50,7 @@ def gen_proc(comm, iters=10000, i=0, batch_size=4096):
         exit()
 
 
-def hasher(q, hasher, valid, total, i):
+def hasher(q, hasher, valid, total, i, selfies=False):
     from rdkit import rdBase
     rdBase.DisableLog('rdApp.error')
     print("Hasher Thread on", i)
@@ -58,7 +62,8 @@ def hasher(q, hasher, valid, total, i):
             total.value += count
             for smi in smis:
                 try:
-                    # smi = selfies.decoder(smi)
+                    if selfies:
+                        smi = selfies.decoder(smi)
                     m = Chem.MolFromSmiles(smi)
                     s = Chem.MolToSmiles(m)
                     if s is not None:
@@ -104,6 +109,11 @@ def reporter(q, d, valid, total):
 
 
 if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--in_dir", type=str, default="")
+    parser.add_argument('-s', action='store_true')
+    args = parser.parse_args()
     manager = Manager()
     valid = Value('i', 0)
     total = Value('i', 0)
@@ -111,10 +121,10 @@ if __name__ == '__main__':
     q = Queue()
     ps = []
     for i in range(1):
-        ps.append(Process(target=gen_proc, args=(q,10000,i,4096 * 2))) ##workers
+        ps.append(Process(target=gen_proc, args=(q,10000,i,4096 * 2, args.in_dir, args.s))) ##workers
     hs = []
     for i in range(1 * 1):
-        hs.append(Process(target=hasher, args=(q, d, valid, total, i))) ## hasher
+        hs.append(Process(target=hasher, args=(q, d, valid, total, i,args.s))) ## hasher
 
     r = Process(target=reporter, args=(q, d, valid, total))
 
