@@ -120,6 +120,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--in_dir", type=str, default="")
     parser.add_argument('-s', action='store_true')
+    parser.add_argument('--workers', type=int, default=1)
+    parser.add_argument('--hashers', type=int, default=1)
     args = parser.parse_args()
     manager = Manager()
     valid = Value('i', 0)
@@ -127,10 +129,10 @@ if __name__ == '__main__':
     d = manager.dict()
     q = Queue()
     ps = []
-    for i in range(1):
+    for i in range(args.workers):
         ps.append(Process(target=gen_proc, args=(q,10000,i,4096 * 2, args.in_dir, args.s))) ##workers
     hs = []
-    for i in range(1 * 1):
+    for i in range(args.hashers):
         hs.append(Process(target=hasher, args=(q, d, valid, total, i,args.s))) ## hasher
 
     r = Process(target=reporter, args=(q, d, valid, total, args.in_dir))
