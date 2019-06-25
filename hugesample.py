@@ -34,6 +34,7 @@ def gen_proc(comm, iters=10000, i=0, batch_size=4096):
                     s = "".join(['[' + charset[sym] + ']' for sym in res[i]])
                     smis.append(s)
                 except:
+                    None
                     # print("ERROR!!!")
                     # print('res', res[i])
                     # print("charset", charset)
