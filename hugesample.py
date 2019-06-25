@@ -14,7 +14,7 @@ from multiprocessing import Process, Pipe, Queue, Manager, Value
 def gen_proc(comm, iters=10000, i=0, batch_size=4096):
     print("Generator on", i)
     try:
-        with open("kinase/charset.pkl", 'rb') as f:
+        with open("smiles_kinase/charset.pkl", 'rb') as f:
             charset = pickle.load(f)
         with open("kinase/vocab.pkl", 'rb') as f:
             vocab = pickle.load(f)
