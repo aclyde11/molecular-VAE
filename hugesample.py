@@ -50,7 +50,7 @@ def gen_proc(comm, iters=10000, i=0, batch_size=4096, dir="", selfies=False):
         exit()
 
 
-def hasher(q, hasher, valid, total, i, selfies=False):
+def hasher(q, hasher, valid, total, i, s=False):
     from rdkit import rdBase
     rdBase.DisableLog('rdApp.error')
     print("Hasher Thread on", i)
@@ -62,7 +62,7 @@ def hasher(q, hasher, valid, total, i, selfies=False):
             total.value += count
             for smi in smis:
                 try:
-                    if selfies:
+                    if s:
                         smi = selfies.decoder(smi)
                     m = Chem.MolFromSmiles(smi)
                     s = Chem.MolToSmiles(m)
