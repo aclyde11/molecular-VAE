@@ -25,7 +25,7 @@ import re
 import argparse
 from tqdm import tqdm
 
-OUTPUT_DIR = "selfies_kinase/"
+OUTPUT_DIR = "selfies_kinase2/"
 INPUT_DIR = ""
 
 parser = argparse.ArgumentParser()
@@ -288,7 +288,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
     for i, (input_batch, _) in enumerate(tqdm_data):
         kl_weight += kl_annealer_rate
 
-        if epoch < 20:
+        if epoch < 50:
             if i % 1 == 0:
                 for (input_batch_, _) in train_loader_agg_tqdm:
                     encoder_optimizer.zero_grad()
@@ -333,6 +333,8 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
 
         # kl_weight =  min(kl_weight + 1e-3,1)
         loss = recon_loss
+        if epoch >= 50:
+            loss += kl_weight * kl_loss
         # loss = kl_loss + recon_loss
 
         loss.backward()
@@ -340,7 +342,6 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
                         50)
 
         if epoch >= 20:
-            loss += kl_weight * kl_loss
             encoder_optimizer.step()
         decoder_optimizer.step()
 
