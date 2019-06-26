@@ -158,6 +158,7 @@ class BindingDataSet(torch.utils.data.Dataset):
 
     def __getitem__(self, idx):
         smile = self.df[idx]
+        print(smile)
         return smile, smile.ljust(100)
 
 class SmilesLoaderSelfies(torch.utils.data.Dataset):
