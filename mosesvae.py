@@ -57,7 +57,7 @@ class VAE(nn.Module):
         d_cell = 'gru'
         d_n_layers = 3
         d_dropout = 0.2
-        self.d_z = 128
+        self.d_z = 188
         d_z = self.d_z
         d_d_h=512
 
@@ -87,8 +87,8 @@ class VAE(nn.Module):
             )
 
         q_d_last = q_d_h * (2 if q_bidir else 1)
-        self.q_mu = nn.Sequential(nn.Linear(q_d_last, 256), nn.ReLU(), nn.Linear(256, d_z))
-        self.q_logvar = nn.Sequential(nn.Linear(q_d_last, 256), nn.ReLU(), nn.Linear(256, d_z))
+        self.q_mu = nn.Sequential(nn.Linear(256, 256), nn.ReLU(), nn.Linear(256, d_z))
+        self.q_logvar = nn.Sequential(nn.Linear(256, 256), nn.ReLU(), nn.Linear(256, d_z))
 
         # Decoder
         if d_cell == 'gru':
@@ -129,7 +129,7 @@ class VAE(nn.Module):
         self.conv_1 = ConvSELU(40, 9, kernel_size=18)
         self.conv_2 = ConvSELU(9, 9, kernel_size=18)
         self.conv_3 = ConvSELU(9, 11, kernel_size=18)
-        self.compacter = nn.Sequential(nn.Linear(528, 128), nn.ReLU())
+        self.compacter = nn.Sequential(nn.Linear(528, 256), nn.ReLU())
 
     @property
     def device(self):
@@ -181,7 +181,6 @@ class VAE(nn.Module):
         x = self.conv_3(x)
 
         h = x.view(x.shape[0], -1)
-        print(h.shape)
         h = self.compacter(h)
 
         mu, logvar = self.q_mu(h), self.q_logvar(h)
