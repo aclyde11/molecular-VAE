@@ -184,7 +184,7 @@ class SmilesLoaderSelfies(torch.utils.data.Dataset):
 
 # df = pd.read_csv("../dataset_v1.csv")
 df = pd.read_csv("../kinases_jonhk_lab.smi", header=None, sep=' ', usecols=[0])
-df = df.sample(10000, replace=False, random_state=42)
+# df = df.sample(10000, replace=False, random_state=42)
 
 max_len = 0
 selfs = []
