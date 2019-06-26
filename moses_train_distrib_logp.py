@@ -32,7 +32,7 @@ parser = argparse.ArgumentParser()
 # FOR DISTRIBUTED:  Parse for the local_rank argument, which will be supplied
 # automatically by torch.distributed.launch.
 parser.add_argument("--local_rank", default=0, type=int)
-parser.add_argument("--batch_size", default=512, type=int)
+parser.add_argument("--batch_size", default=128, type=int)
 parser.add_argument("--encoder_batch_size", default=128, type=int)
 parser.add_argument("--lr", default=1e-3, type=float)
 args = parser.parse_args()
@@ -254,7 +254,7 @@ train_loader = torch.utils.data.DataLoader(bdata, batch_size=args.batch_size,
 def get_train_loader_agg():
     return torch.utils.data.DataLoader(bdata, batch_size=args.encoder_batch_size,
                           shuffle=False,
-                          sampler=torch.utils.data.RandomSampler(bdata, replacement=True, num_samples=512 * 25),
+                          sampler=torch.utils.data.RandomSampler(bdata, replacement=True, num_samples=args.encoder_batch_size * 15),
                           num_workers=32, collate_fn=get_collate_fn_binding(),
                           worker_init_fn=mosesvocab.set_torch_seed_to_all_gens,
                                            pin_memory=True,)
