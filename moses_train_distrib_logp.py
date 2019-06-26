@@ -277,7 +277,7 @@ binding_optimizer = None
 
 # optimizer = optim.Adam(model.parameters() ,
 #                                lr=3*1e-3 )
-encoder_optimizer = optim.Adam(model.encoder.parameters(), lr=8e-4)
+encoder_optimizer = optim.Adam(model.parameters(), lr=8e-4)
 decoder_optimizer = optim.Adam(model.decoder.parameters(), lr=5e-4)
 # model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
 # model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], output_device=args.local_rank, find_unused_parameters=True)
@@ -355,7 +355,6 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
 
         # if epoch >= 20:
         encoder_optimizer.step()
-        decoder_optimizer.step()
 
         # Log
         kl_loss_values.add(kl_loss.item())
