@@ -93,7 +93,7 @@ class VAE(nn.Module):
         # Decoder
         if d_cell == 'gru':
             self.decoder_rnn = nn.GRU(
-                d_emb + d_z,
+                 d_z,
                 d_d_h,
                 num_layers=d_n_layers,
                 batch_first=True,
