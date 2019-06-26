@@ -22,7 +22,7 @@ def interpolate_points(x,y, sampling):
     return ln.predict(sampling.reshape(-1, 1)).astype(np.float32)
 
 
-
+dir='smiles_kinase'
 i=0
 try:
     with open(dir + "/charset.pkl", 'rb') as f:
@@ -33,7 +33,7 @@ try:
     model.load_state_dict(torch.load(dir + "/trained_save_small.pt", map_location='cpu'))
     model = model.cuda(i)
 
-    for _ in range(iters):
+    for _ in range(1):
         count = 0
         data_latent  = torch.randn(100, 128,
                     device='cuda')
