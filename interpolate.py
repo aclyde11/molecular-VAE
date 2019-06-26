@@ -50,8 +50,8 @@ try:
         count = 0
         data_latent  = torch.randn(100, 128,
                     device='cuda')
-        pt_1 = data_latent[0, ...].cpu().numpy() * 1e-3
-        pt_2 = data_latent[1 + 1, ...].cpu().numpy() * 1e-3
+        pt_1 = data_latent[0, ...].cpu().numpy() * 1e-2
+        pt_2 = data_latent[1 + 2, ...].cpu().numpy() * 1e-2
         sample_vec = interpolate_points(pt_1, pt_2,
                                         np.linspace(0, 1, num=500, endpoint=True))
         sample_vec = torch.from_numpy(sample_vec).cuda()
