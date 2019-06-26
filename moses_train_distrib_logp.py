@@ -201,7 +201,7 @@ for i in tqdm_range:
                 counter += 1
                 selfien.append(sym_table[sym])
         selfs.append(selfien)
-        cannon_smiles.append()
+        cannon_smiles.append(cannmon)
 
         postfix = [f'len=%s' % (len(sym_table))]
         tqdm_range.set_postfix_str(' '.join(postfix))
