@@ -174,7 +174,7 @@ class VAE(nn.Module):
         :return: float, kl term component of loss
         """
         print(x[0].shape)
-        x = torch.cat(x, dim=0).cuda().long()
+        x = torch.stack(x).cuda().long()
         print(x.shape)
         x = self.x_emb(x)
         x = self.conv_1(x)
