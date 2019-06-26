@@ -178,7 +178,7 @@ df = pd.read_csv("../kinases_jonhk_lab.smi", header=None, sep=' ', usecols=[0])
 max_len = 0
 selfs = []
 counter = 51
-sym_table = {' ': 0}
+sym_table = {' ': '2'}
 cannon_smiles = []
 tqdm_range = tqdm(range(df.shape[0]))
 for i in tqdm_range:
