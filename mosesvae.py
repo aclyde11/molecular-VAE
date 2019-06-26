@@ -2,70 +2,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-class Repeat(nn.Module):
-
-    def __init__(self, rep):
-        super(Repeat, self).__init__()
-
-        self.rep = rep
-
-    def forward(self, x):
-        size = tuple(x.size())
-        size = (size[0], 1) + size[1:]
-        x_expanded = x.view(*size)
-        n = [1 for _ in size]
-        n[1] = self.rep
-        return x_expanded.repeat(*n)
-
-
-class TimeDistributed(nn.Module):
-
-    def __init__(self, module, batch_first=True):
-        super(TimeDistributed, self).__init__()
-        self.module = module
-        self.batch_first = batch_first
-
-    def forward(self, x):
-
-        if len(x.size()) <= 2:
-            return self.module(x)
-
-        # Squash samples and timesteps into a single axis
-        # (samples * timesteps, input_size)
-        x_reshape = x.contiguous().view(-1, x.size(-1))
-
-        y = self.module(x_reshape)
-
-        # We have to reshape Y
-        if self.batch_first:
-            # (samples, timesteps, output_size)
-            y = y.contiguous().view(x.size(0), -1, y.size(-1))
-        else:
-            # (timesteps, samples, output_size)
-            y = y.view(-1, x.size(1), y.size(-1))
-
-        return y
-
-class SELU(nn.Module):
-
-    def __init__(self, alpha=1.6732632423543772848170429916717,
-                 scale=1.0507009873554804934193349852946, inplace=False):
-        super(SELU, self).__init__()
-
-        self.scale = scale
-        self.elu = nn.ELU(alpha=alpha, inplace=inplace)
-
-    def forward(self, x):
-        return self.scale * self.elu(x)
-
-
-def ConvSELU(i, o, kernel_size=3, padding=0, p=0.):
-    model = [nn.Conv1d(i, o, kernel_size=kernel_size, padding=padding),
-             SELU(inplace=True)
-             ]
-    if p > 0.:
-        model += [nn.Dropout(p)]
-    return nn.Sequential(*model)
 
 class BindingModel(nn.Module):
     def __init__(self, z_size=128):
@@ -100,7 +36,7 @@ class VAE(nn.Module):
         d_cell = 'gru'
         d_n_layers = 3
         d_dropout = 0.2
-        self.d_z = 188
+        self.d_z = 128
         d_z = self.d_z
         d_d_h=512
 
@@ -130,13 +66,13 @@ class VAE(nn.Module):
             )
 
         q_d_last = q_d_h * (2 if q_bidir else 1)
-        self.q_mu = nn.Sequential(nn.Linear(256, 256), nn.ReLU(), nn.Linear(256, d_z))
-        self.q_logvar = nn.Sequential(nn.Linear(256, 256), nn.ReLU(), nn.Linear(256, d_z))
+        self.q_mu = nn.Sequential(nn.Linear(q_d_last, 256), nn.ReLU(), nn.Linear(256, d_z))
+        self.q_logvar = nn.Sequential(nn.Linear(q_d_last, 256), nn.ReLU(), nn.Linear(256, d_z))
 
         # Decoder
         if d_cell == 'gru':
             self.decoder_rnn = nn.GRU(
-                 d_z,
+                d_emb + d_z,
                 d_d_h,
                 num_layers=d_n_layers,
                 batch_first=True,
@@ -168,15 +104,6 @@ class VAE(nn.Module):
             self.encoder,
             self.decoder
         ])
-        self.latent_input = nn.Sequential(nn.Linear(self.d_z, self.d_z),
-                                          SELU(inplace=True))
-        self.gru = nn.LSTM(d_z, 512, 3, batch_first=True)
-        self.decoded_mean = TimeDistributed(nn.Sequential(nn.Linear(512, len(vocab)),
-                                                          nn.Softmax()))
-        self.conv_1 = ConvSELU(len(vocab), 16, kernel_size=18)
-        self.conv_2 = ConvSELU(16, 9, kernel_size=18)
-        self.conv_3 = ConvSELU(9, 11, kernel_size=18)
-        self.compacter = nn.Sequential(nn.Linear(561, 256), nn.ReLU())
 
     @property
     def device(self):
@@ -197,7 +124,7 @@ class VAE(nn.Module):
 
         return string
 
-    def forward(self, x, padded_x):
+    def forward(self, x):
         """Do the VAE forward step
 
         :param x: list of tensors of longs, input sentence x
@@ -205,13 +132,11 @@ class VAE(nn.Module):
         :return: float, recon component of loss
         """
 
-        x_t = torch.stack(padded_x, dim=-1).cuda().long().permute((1, 0))
-        x = self.x_emb(x_t)
         # Encoder: x -> z, kl_loss
         z, kl_loss, logvar = self.forward_encoder(x)
 
         # Decoder: x, z -> recon_loss
-        recon_loss, x, y = self.forward_decoder(x_t, z)
+        recon_loss, x, y = self.forward_decoder(x, z)
 
         return kl_loss, recon_loss, z, logvar, x, y
 
@@ -223,13 +148,13 @@ class VAE(nn.Module):
         :return: float, kl term component of loss
         """
 
-        x = x.permute((0, 2, 1))
-        x = self.conv_1(x)
-        x = self.conv_2(x)
-        x = self.conv_3(x)
+        x = [self.x_emb(i_x) for i_x in x]
+        x = nn.utils.rnn.pack_sequence(x)
 
-        h = x.view(x.shape[0], -1)
-        h = self.compacter(h)
+        _, h = self.encoder_rnn(x, None)
+
+        h = h[-(1 + int(self.encoder_rnn.bidirectional)):]
+        h = torch.cat(h.split(1), dim=-1).squeeze(0)
 
         mu, logvar = self.q_mu(h), self.q_logvar(h)
         eps = torch.randn_like(mu)
@@ -247,32 +172,31 @@ class VAE(nn.Module):
         :return: float, recon component of loss
         """
 
+        lengths = [len(i_x) for i_x in x]
 
-        # x_input = nn.utils.rnn.pack_padded_sequence(x_input, lengths,
-        #                                             batch_first=True)
-        # x_input = z_0
-        #
-        # h_0 = self.decoder_lat(z)
-        # h_0 = h_0.unsqueeze(0).repeat(self.decoder_rnn.num_layers, 1, 1)
-        #
-        # output, _ = self.decoder_rnn(x_input, h_0)
-        #
-        # # output, _ = nn.utils.rnn.pad_packed_sequence(output, batch_first=True)
-        # y = self.decoder_fc(output)
+        x = nn.utils.rnn.pad_sequence(x, batch_first=True,
+                                      padding_value=self.pad)
+        x_emb = self.x_emb(x)
 
+        z_0 = z.unsqueeze(1).repeat(1, x_emb.size(1), 1)
+        x_input = torch.cat([x_emb, z_0], dim=-1)
+        x_input = nn.utils.rnn.pack_padded_sequence(x_input, lengths,
+                                                    batch_first=True)
 
+        h_0 = self.decoder_lat(z)
+        h_0 = h_0.unsqueeze(0).repeat(self.decoder_rnn.num_layers, 1, 1)
 
+        output, _ = self.decoder_rnn(x_input, h_0)
 
+        output, _ = nn.utils.rnn.pad_packed_sequence(output, batch_first=True)
+        y = self.decoder_fc(output)
 
-        z = self.latent_input(z)
-        z_0 = z.unsqueeze(1).repeat(1, 102, 1)
-        y, h = self.gru(z_0)
-        y = self.decoded_mean(y)
-        print(y.shape)
         recon_loss = F.cross_entropy(
             y[:, :-1].contiguous().view(-1, y.size(-1)),
             x[:, 1:].contiguous().view(-1),
+            ignore_index=self.pad
         )
+
         return recon_loss, x, y
 
     def sample_z_prior(self, n_batch):
@@ -288,7 +212,7 @@ class VAE(nn.Module):
         # return torch.zeros((n_batch, self.d_z), device=self.x_emb.weight.device)
 
 
-    def sample(self, n_batch, max_len=100, z=None, temp=0.5):
+    def sample(self, n_batch, max_len=100, z=None, temp=1.0):
         """Generating n_batch samples in eval mode (`z` could be
         not on same device)
 
@@ -302,51 +226,38 @@ class VAE(nn.Module):
             if z is None:
                 z = self.sample_z_prior(n_batch)
             z = z.to(self.x_emb.weight.device)
+            z_0 = z.unsqueeze(1)
 
             # Initial values
             h = self.decoder_lat(z)
             h = h.unsqueeze(0).repeat(self.decoder_rnn.num_layers, 1, 1)
-            # w = torch.tensor(self.bos, device=self.device).repeat(n_batch)
-            # x = torch.tensor([self.pad], device=self.device).repeat(n_batch,
-            #                                                         max_len)
-            # x[:, 0] = self.bos
-            # end_pads = torch.tensor([max_len], device=self.device).repeat(
-            #     n_batch)
-            # eos_mask = torch.zeros(n_batch, dtype=torch.uint8,
-            #                        device=self.device)
+            w = torch.tensor(self.bos, device=self.device).repeat(n_batch)
+            x = torch.tensor([self.pad], device=self.device).repeat(n_batch,
+                                                                    max_len)
+            x[:, 0] = self.bos
+            end_pads = torch.tensor([max_len], device=self.device).repeat(
+                n_batch)
+            eos_mask = torch.zeros(n_batch, dtype=torch.uint8,
+                                   device=self.device)
 
+            # Generating cycle
+            for i in range(1, max_len):
+                x_emb = self.x_emb(w).unsqueeze(1)
+                x_input = torch.cat([x_emb, z_0], dim=-1)
 
-            z_0 = z.unsqueeze(1).repeat(1, 102, 1)
+                o, h = self.decoder_rnn(x_input, h)
+                y = self.decoder_fc(o.squeeze(1))
+                y = F.softmax(y / temp, dim=-1)
 
-            # # Generating cycle
-            # for i in range(1, max_len):
-            #     x_input = z_0
-            #
-            #     o, h = self.decoder_rnn(x_input, h)
-            #     y = self.decoder_fc(o.squeeze(1))
-            #     y = F.softmax(y / temp, dim=-1)
-            #     w = torch.multinomial(y, 1)[:, 0]
-            #     x[~eos_mask, i] = w[~eos_mask]
-            #     i_eos_mask = ~eos_mask & (w == self.eos)
-            #     end_pads[i_eos_mask] = i + 1
-            #     eos_mask = eos_mask | i_eos_mask
-            x_input = z_0
-
-            o, h = self.decoder_rnn(x_input, h)
-            y = self.decoder_fc(o.squeeze(1))
-            y = F.softmax(y / temp, dim=-1)
-            _, preds = torch.max(y, dim=-1)
-
-            # w = torch.multinomial(y, 1)[:, 0]
+                w = torch.multinomial(y, 1)[:, 0]
+                x[~eos_mask, i] = w[~eos_mask]
+                i_eos_mask = ~eos_mask & (w == self.eos)
+                end_pads[i_eos_mask] = i + 1
+                eos_mask = eos_mask | i_eos_mask
 
             # Converting `x` to list of tensors
             new_x = []
-            for i in range(preds.size(0)):
-                find_eos = 0
-                for j in range(0, 102):
-                    if preds[i, j] == self.eos:
-                        find_eos = j
-                        break
-                new_x.append(preds[i, :find_eos])
+            for i in range(x.size(0)):
+                new_x.append(x[i, :end_pads[i]])
 
             return [self.tensor2string(i_x) for i_x in new_x], z

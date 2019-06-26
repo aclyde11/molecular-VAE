@@ -32,7 +32,7 @@ parser = argparse.ArgumentParser()
 # FOR DISTRIBUTED:  Parse for the local_rank argument, which will be supplied
 # automatically by torch.distributed.launch.
 parser.add_argument("--local_rank", default=0, type=int)
-parser.add_argument("--batch_size", default=128, type=int)
+parser.add_argument("--batch_size", default=512, type=int)
 parser.add_argument("--encoder_batch_size", default=128, type=int)
 parser.add_argument("--lr", default=1e-3, type=float)
 args = parser.parse_args()
@@ -102,18 +102,12 @@ class CosineAnnealingLRWithRestart(_LRScheduler):
             self.current_epoch = 0
             self.t_end = self.n_mult * self.t_end
 
-def string2tensor(vocab, string, expand_to=102):
+def string2tensor(vocab, string):
     ids = vocab.string2ids(string, add_bos=True, add_eos=True)
     tensor = torch.tensor(
         ids, dtype=torch.long
     )
 
-    if expand_to is not None:
-        tensor_pad = torch.zeros((expand_to)).long()
-        tensor_pad[:tensor.shape[0]] = tensor
-        for i in range(tensor.shape[0], expand_to):
-            tensor_pad[i] = int(vocab.char2id(chr(50)))
-        return tensor_pad
     return tensor
 
 
@@ -134,11 +128,9 @@ def get_collate_fn_binding():
         data.sort(key=len, reverse=True)
         tensors = [string2tensor(vocab, string)
                    for string in sorted_strs]
-        tensors2 = [string2tensor(vocab, string)
-                   for string in bindings]
 
 
-        return tensors, tensors2
+        return tensors, torch.from_numpy(np.array(bindings)).float()
 
     return collate
 
@@ -166,9 +158,7 @@ class BindingDataSet(torch.utils.data.Dataset):
 
     def __getitem__(self, idx):
         smile = self.df[idx]
-        smile_pad = smile.copy()
-
-        return smile, smile_pad
+        return smile, 0
 
 class SmilesLoaderSelfies(torch.utils.data.Dataset):
     def __init__(self, df):
@@ -183,68 +173,66 @@ class SmilesLoaderSelfies(torch.utils.data.Dataset):
         return selfie, 0
 
 # df = pd.read_csv("../dataset_v1.csv")
-# df = pd.read_csv("../kinases_jonhk_lab.smi", header=None, sep=' ', usecols=[0])
-# df = df.sample(10000, replace=False, random_state=42)
+# df = df.sample(500000, replace=False, random_state=42)
+df = pd.read_csv("../kinases_jonhk_lab.smi", header=None, sep=' ', usecols=[0])
+max_len = 0
+selfs = []
+counter = 51
+sym_table = {}
+cannon_smiles = []
+tqdm_range = tqdm(range(df.shape[0]))
+for i in tqdm_range:
+    try:
+        original = str(df.iloc[i,0])
+        if len(original) > 150:
+            continue
+        m = Chem.MolFromSmiles(original)
+        cannmon = Chem.MolToSmiles(m)
+        selfie = cannmon
+        # selfie = selfies.encoder(cannmon)
+        selfien = []
+        # for sym in re.findall("\[(.*?)\]", selfie):
+        for sym in selfie:
+            if sym in sym_table:
+                selfien.append(sym_table[sym])
+            else:
+                sym_table[sym] = chr(counter)
+                counter += 1
+                selfien.append(sym_table[sym])
+        selfs.append(selfien)
+        cannon_smiles.append(cannmon)
 
-# max_len = 0
-# selfs = []
-# counter = 51
-# sym_table = {' ': '2'}
-# cannon_smiles = []
-# tqdm_range = tqdm(range(df.shape[0]))
-# for i in tqdm_range:
-#     try:
-#         original = str(df.iloc[i,0])
+        postfix = [f'len=%s' % (len(sym_table))]
+        tqdm_range.set_postfix_str(' '.join(postfix))
+    except KeyboardInterrupt:
+        exit()
+    except:
+        print("ERROR...")
 #
-#         m = Chem.MolFromSmiles(original)
-#         cannmon = Chem.MolToSmiles(m)
-#         if len(cannmon) > 100:
-#             continue
-#         selfie = cannmon
-#         # selfie = selfies.encoder(cannmon)
-#         selfien = []
-#         # for sym in re.findall("\[(.*?)\]", selfie):
-#         for sym in selfie:
-#             if sym in sym_table:
-#                 selfien.append(sym_table[sym])
-#             else:
-#                 sym_table[sym] = chr(counter)
-#                 counter += 1
-#                 selfien.append(sym_table[sym])
-#         selfs.append(selfien)
-#         cannon_smiles.append(cannmon)
-#
-#         postfix = [f'len=%s' % (len(sym_table))]
-#         tqdm_range.set_postfix_str(' '.join(postfix))
-#     except KeyboardInterrupt:
-#         exit()
-#     except:
-#         print("ERROR...")
-# #
-# charset = {k: v for v, k in sym_table.items()}
-# vocab = mosesvocab.OneHotVocab(sym_table.values())
+charset = {k: v for v, k in sym_table.items()}
+vocab = mosesvocab.OneHotVocab(sym_table.values())
 
-with open(OUTPUT_DIR +"sym_table.pkl", 'rb') as f:
-    sym_table = pickle.load(f)
-with open(OUTPUT_DIR +"charset.pkl", 'rb') as f:
-    charset = pickle.load(f)
-with open(OUTPUT_DIR +"vocab.pkl", 'rb') as f:
-    vocab = pickle.load(f)
-with open(OUTPUT_DIR +"selfs.pkl", 'rb') as f:
-    selfs = pickle.load(f)
-with open(OUTPUT_DIR +"cannon_smiles.pkl", 'rb') as f:
-    cannon_smiles = pickle.load(f)
+# with open(OUTPUT_DIR +"sym_table.pkl", 'rb') as f:
+#     sym_table = pickle.load(f)
+# with open(OUTPUT_DIR +"charset.pkl", 'rb') as f:
+#     charset = pickle.load(f)
+# with open(OUTPUT_DIR +"vocab.pkl", 'rb') as f:
+#     vocab = pickle.load(f)
+# with open(OUTPUT_DIR +"selfs.pkl", 'rb') as f:
+#     selfs = pickle.load(f)
+# with open(OUTPUT_DIR +"cannon_smiles.pkl", 'rb') as f:
+#     cannon_smiles = pickle.load(f)
 
-# with open(OUTPUT_DIR + "sym_table.pkl", 'wb') as f:
-#     pickle.dump(sym_table, f)
-# with open(OUTPUT_DIR + "charset.pkl", 'wb') as f:
-#     pickle.dump(charset, f)
-# with open(OUTPUT_DIR + "vocab.pkl", 'wb') as f:
-#     pickle.dump(vocab, f)
-# with open(OUTPUT_DIR + "selfs.pkl", 'wb') as f:
-#     pickle.dump(selfs, f)
-# with open(OUTPUT_DIR + "cannon_smiles.pkl", 'wb') as f:
-#     pickle.dump(cannon_smiles, f)
+with open(OUTPUT_DIR + "sym_table.pkl", 'wb') as f:
+    pickle.dump(sym_table, f)
+with open(OUTPUT_DIR + "charset.pkl", 'wb') as f:
+    pickle.dump(charset, f)
+with open(OUTPUT_DIR + "vocab.pkl", 'wb') as f:
+    pickle.dump(vocab, f)
+with open(OUTPUT_DIR + "selfs.pkl", 'wb') as f:
+    pickle.dump(selfs, f)
+with open(OUTPUT_DIR + "cannon_smiles.pkl", 'wb') as f:
+    pickle.dump(cannon_smiles, f)
 
 
 #
@@ -277,7 +265,7 @@ binding_optimizer = None
 
 # optimizer = optim.Adam(model.parameters() ,
 #                                lr=3*1e-3 )
-encoder_optimizer = optim.Adam(model.parameters(), lr=8e-4)
+encoder_optimizer = optim.Adam(model.encoder.parameters(), lr=8e-4)
 decoder_optimizer = optim.Adam(model.decoder.parameters(), lr=5e-4)
 # model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
 # model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], output_device=args.local_rank, find_unused_parameters=True)
@@ -297,45 +285,45 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
     kl_loss_values = mosesvocab.CircularBuffer(10)
     recon_loss_values = mosesvocab.CircularBuffer(10)
     loss_values =mosesvocab.CircularBuffer(10)
-    for i, (input_batch, padded_smile) in enumerate(tqdm_data):
+    for i, (input_batch, _) in enumerate(tqdm_data):
         kl_weight += kl_annealer_rate
 
-        # if epoch < 20:
-        #     if i % 1 == 0:
-        #         for (input_batch_, padded_smile) in train_loader_agg_tqdm:
-        #             encoder_optimizer.zero_grad()
-        #             decoder_optimizer.zero_grad()
-        #             input_batch_ = tuple(data.cuda() for data in input_batch_)
-        #             # Forwardd
-        #             kl_loss, recon_loss, _, logvar, x, y = model(input_batch_, padded_smile)
-        #             kl_loss = torch.sum(kl_loss, 0)
-        #             recon_loss = torch.sum(recon_loss, 0)
-        #             _, predict = torch.max(F.softmax(y, dim=-1), -1)
-        #
-        #             correct = float((x == predict).sum().cpu().detach().item()) / float(x.shape[0] * x.shape[1])
-        #             # kl_weight = 1
-        #             loss = kl_weight * kl_loss + recon_loss
-        #             # loss = kl_loss + recon_loss
-        #             loss.backward()
-        #             clip_grad_norm_((p for p in model.parameters() if p.requires_grad),
-        #                             25)
-        #             encoder_optimizer.step()
-        #             loss_value = loss.item()
-        #             kl_loss_value = kl_loss.item()
-        #             recon_loss_value = recon_loss.item()
-        #
-        #             postfix = [f'loss={loss_value:.5f}',
-        #                        f'(kl={kl_loss_value:.5f}',
-        #                        f'recon={recon_loss_value:.5f})',
-        #                        f'correct={correct:.5f}']
-        #             train_loader_agg_tqdm.set_postfix_str(' '.join(postfix))
+        if epoch < 20:
+            if i % 1 == 0:
+                for (input_batch_, _) in train_loader_agg_tqdm:
+                    encoder_optimizer.zero_grad()
+                    decoder_optimizer.zero_grad()
+                    input_batch_ = tuple(data.cuda() for data in input_batch_)
+                    # Forwardd
+                    kl_loss, recon_loss, _, logvar, x, y = model(input_batch_)
+                    kl_loss = torch.sum(kl_loss, 0)
+                    recon_loss = torch.sum(recon_loss, 0)
+                    _, predict = torch.max(F.softmax(y, dim=-1), -1)
+
+                    correct = float((x == predict).sum().cpu().detach().item()) / float(x.shape[0] * x.shape[1])
+                    # kl_weight = 1
+                    loss = kl_weight * kl_loss + recon_loss
+                    # loss = kl_loss + recon_loss
+                    loss.backward()
+                    clip_grad_norm_((p for p in model.parameters() if p.requires_grad),
+                                    25)
+                    encoder_optimizer.step()
+                    loss_value = loss.item()
+                    kl_loss_value = kl_loss.item()
+                    recon_loss_value = recon_loss.item()
+
+                    postfix = [f'loss={loss_value:.5f}',
+                               f'(kl={kl_loss_value:.5f}',
+                               f'recon={recon_loss_value:.5f})',
+                               f'correct={correct:.5f}']
+                    train_loader_agg_tqdm.set_postfix_str(' '.join(postfix))
 
 
         encoder_optimizer.zero_grad()
         decoder_optimizer.zero_grad()
         input_batch = tuple(data.cuda() for data in input_batch)
         # Forwardd
-        kl_loss, recon_loss, _, logvar, x, y = model(input_batch, padded_smile)
+        kl_loss, recon_loss, _, logvar, x, y = model(input_batch)
         _, predict = torch.max(F.softmax(y, dim=-1), -1)
 
         correct = float((x == predict).sum().cpu().detach().item()) / float(x.shape[0] * x.shape[1])
@@ -345,16 +333,17 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
 
         # kl_weight =  min(kl_weight + 1e-3,1)
         loss = recon_loss
-        # if epoch >= 20:
-        loss += kl_weight * kl_loss
+        if epoch >= 20:
+            loss += kl_weight * kl_loss
         # loss = kl_loss + recon_loss
 
         loss.backward()
         clip_grad_norm_((p for p in model.parameters() if p.requires_grad),
                         50)
 
-        # if epoch >= 20:
-        encoder_optimizer.step()
+        if epoch >= 20:
+            encoder_optimizer.step()
+        decoder_optimizer.step()
 
         # Log
         kl_loss_values.add(kl_loss.item())
