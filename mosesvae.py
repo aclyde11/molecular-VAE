@@ -2,6 +2,49 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+class Repeat(nn.Module):
+
+    def __init__(self, rep):
+        super(Repeat, self).__init__()
+
+        self.rep = rep
+
+    def forward(self, x):
+        size = tuple(x.size())
+        size = (size[0], 1) + size[1:]
+        x_expanded = x.view(*size)
+        n = [1 for _ in size]
+        n[1] = self.rep
+        return x_expanded.repeat(*n)
+
+
+class TimeDistributed(nn.Module):
+
+    def __init__(self, module, batch_first=True):
+        super(TimeDistributed, self).__init__()
+        self.module = module
+        self.batch_first = batch_first
+
+    def forward(self, x):
+
+        if len(x.size()) <= 2:
+            return self.module(x)
+
+        # Squash samples and timesteps into a single axis
+        # (samples * timesteps, input_size)
+        x_reshape = x.contiguous().view(-1, x.size(-1))
+
+        y = self.module(x_reshape)
+
+        # We have to reshape Y
+        if self.batch_first:
+            # (samples, timesteps, output_size)
+            y = y.contiguous().view(x.size(0), -1, y.size(-1))
+        else:
+            # (timesteps, samples, output_size)
+            y = y.view(-1, x.size(1), y.size(-1))
+
+        return y
 
 class SELU(nn.Module):
 
@@ -125,7 +168,11 @@ class VAE(nn.Module):
             self.encoder,
             self.decoder
         ])
-
+        self.latent_input = nn.Sequential(nn.Linear(self.d_z, self.d_z),
+                                          SELU(inplace=True))
+        self.gru = nn.LSTM(d_z, 512, 3, batch_first=True)
+        self.decoded_mean = TimeDistributed(nn.Sequential(nn.Linear(512, len(vocab)),
+                                                          nn.Softmax()))
         self.conv_1 = ConvSELU(len(vocab), 16, kernel_size=18)
         self.conv_2 = ConvSELU(16, 9, kernel_size=18)
         self.conv_3 = ConvSELU(9, 11, kernel_size=18)
@@ -200,26 +247,32 @@ class VAE(nn.Module):
         :return: float, recon component of loss
         """
 
-        z_0 = z.unsqueeze(1).repeat(1, 102, 1)
 
         # x_input = nn.utils.rnn.pack_padded_sequence(x_input, lengths,
         #                                             batch_first=True)
-        x_input = z_0
+        # x_input = z_0
+        #
+        # h_0 = self.decoder_lat(z)
+        # h_0 = h_0.unsqueeze(0).repeat(self.decoder_rnn.num_layers, 1, 1)
+        #
+        # output, _ = self.decoder_rnn(x_input, h_0)
+        #
+        # # output, _ = nn.utils.rnn.pad_packed_sequence(output, batch_first=True)
+        # y = self.decoder_fc(output)
 
-        h_0 = self.decoder_lat(z)
-        h_0 = h_0.unsqueeze(0).repeat(self.decoder_rnn.num_layers, 1, 1)
-
-        output, _ = self.decoder_rnn(x_input, h_0)
-
-        # output, _ = nn.utils.rnn.pad_packed_sequence(output, batch_first=True)
-        y = self.decoder_fc(output)
 
 
+
+
+        z = self.latent_input(z)
+        z_0 = z.unsqueeze(1).repeat(1, 102, 1)
+        y, h = self.gru(z_0)
+        y = self.decoded_mean(y)
+        print(y.shape)
         recon_loss = F.cross_entropy(
             y[:, :-1].contiguous().view(-1, y.size(-1)),
             x[:, 1:].contiguous().view(-1),
         )
-
         return recon_loss, x, y
 
     def sample_z_prior(self, n_batch):
