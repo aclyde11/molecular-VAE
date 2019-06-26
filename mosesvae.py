@@ -158,7 +158,7 @@ class VAE(nn.Module):
         :return: float, recon component of loss
         """
 
-        x_t = torch.stack(x, dim=-1).cuda().long().permute((1, 0))
+        x_t = torch.stack(padded_x, dim=-1).cuda().long().permute((1, 0))
         x = self.x_emb(x_t)
         # Encoder: x -> z, kl_loss
         z, kl_loss, logvar = self.forward_encoder(x)
