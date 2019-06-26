@@ -62,7 +62,9 @@ try:
             count += 1
             try:
                 s = "".join([charset[sym]  for sym in res[i]])
-                smis.append(s)
+                m = Chem.MolFromSmiles(s)
+                if m is not None:
+                    smis.append(s)
             except:
                 None
                 # print("ERROR!!!")
