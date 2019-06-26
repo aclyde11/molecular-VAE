@@ -158,7 +158,7 @@ class BindingDataSet(torch.utils.data.Dataset):
 
     def __getitem__(self, idx):
         smile = self.df[idx]
-        return smile, 0
+        return smile, smile.ljust(100)
 
 class SmilesLoaderSelfies(torch.utils.data.Dataset):
     def __init__(self, df):
@@ -172,67 +172,68 @@ class SmilesLoaderSelfies(torch.utils.data.Dataset):
         selfie = self.df.iloc[idx, 0]
         return selfie, 0
 
-# # df = pd.read_csv("../dataset_v1.csv")
-# # df = df.sample(500000, replace=False, random_state=42)
-# df = pd.read_csv("../kinases_jonhk_lab.smi", header=None, sep=' ', usecols=[0])
-# max_len = 0
-# selfs = []
-# counter = 51
-# sym_table = {}
-# cannon_smiles = []
-# tqdm_range = tqdm(range(df.shape[0]))
-# for i in tqdm_range:
-#     try:
-#         original = str(df.iloc[i,0])
-#         if len(original) > 150:
-#             continue
-#         m = Chem.MolFromSmiles(original)
-#         cannmon = Chem.MolToSmiles(m)
-#         selfie = cannmon
-#         # selfie = selfies.encoder(cannmon)
-#         selfien = []
-#         # for sym in re.findall("\[(.*?)\]", selfie):
-#         for sym in selfie:
-#             if sym in sym_table:
-#                 selfien.append(sym_table[sym])
-#             else:
-#                 sym_table[sym] = chr(counter)
-#                 counter += 1
-#                 selfien.append(sym_table[sym])
-#         selfs.append(selfien)
-#         cannon_smiles.append(cannmon)
+# df = pd.read_csv("../dataset_v1.csv")
+# df = df.sample(500000, replace=False, random_state=42)
+df = pd.read_csv("../kinases_jonhk_lab.smi", header=None, sep=' ', usecols=[0])
+max_len = 0
+selfs = []
+counter = 51
+sym_table = {' ': 0}
+cannon_smiles = []
+tqdm_range = tqdm(range(df.shape[0]))
+for i in tqdm_range:
+    try:
+        original = str(df.iloc[i,0])
+
+        m = Chem.MolFromSmiles(original)
+        cannmon = Chem.MolToSmiles(m)
+        if len(cannmon) > 100:
+            continue
+        selfie = cannmon
+        # selfie = selfies.encoder(cannmon)
+        selfien = []
+        # for sym in re.findall("\[(.*?)\]", selfie):
+        for sym in selfie:
+            if sym in sym_table:
+                selfien.append(sym_table[sym])
+            else:
+                sym_table[sym] = chr(counter)
+                counter += 1
+                selfien.append(sym_table[sym])
+        selfs.append(selfien)
+        cannon_smiles.append()
+
+        postfix = [f'len=%s' % (len(sym_table))]
+        tqdm_range.set_postfix_str(' '.join(postfix))
+    except KeyboardInterrupt:
+        exit()
+    except:
+        print("ERROR...")
 #
-#         postfix = [f'len=%s' % (len(sym_table))]
-#         tqdm_range.set_postfix_str(' '.join(postfix))
-#     except KeyboardInterrupt:
-#         exit()
-#     except:
-#         print("ERROR...")
-# #
-# charset = {k: v for v, k in sym_table.items()}
-# vocab = mosesvocab.OneHotVocab(sym_table.values())
+charset = {k: v for v, k in sym_table.items()}
+vocab = mosesvocab.OneHotVocab(sym_table.values())
 
-with open(OUTPUT_DIR +"sym_table.pkl", 'rb') as f:
-    sym_table = pickle.load(f)
-with open(OUTPUT_DIR +"charset.pkl", 'rb') as f:
-    charset = pickle.load(f)
-with open(OUTPUT_DIR +"vocab.pkl", 'rb') as f:
-    vocab = pickle.load(f)
-with open(OUTPUT_DIR +"selfs.pkl", 'rb') as f:
-    selfs = pickle.load(f)
-with open(OUTPUT_DIR +"cannon_smiles.pkl", 'rb') as f:
-    cannon_smiles = pickle.load(f)
+# with open(OUTPUT_DIR +"sym_table.pkl", 'rb') as f:
+#     sym_table = pickle.load(f)
+# with open(OUTPUT_DIR +"charset.pkl", 'rb') as f:
+#     charset = pickle.load(f)
+# with open(OUTPUT_DIR +"vocab.pkl", 'rb') as f:
+#     vocab = pickle.load(f)
+# with open(OUTPUT_DIR +"selfs.pkl", 'rb') as f:
+#     selfs = pickle.load(f)
+# with open(OUTPUT_DIR +"cannon_smiles.pkl", 'rb') as f:
+#     cannon_smiles = pickle.load(f)
 
-# with open(OUTPUT_DIR + "sym_table.pkl", 'wb') as f:
-#     pickle.dump(sym_table, f)
-# with open(OUTPUT_DIR + "charset.pkl", 'wb') as f:
-#     pickle.dump(charset, f)
-# with open(OUTPUT_DIR + "vocab.pkl", 'wb') as f:
-#     pickle.dump(vocab, f)
-# with open(OUTPUT_DIR + "selfs.pkl", 'wb') as f:
-#     pickle.dump(selfs, f)
-# with open(OUTPUT_DIR + "cannon_smiles.pkl", 'wb') as f:
-#     pickle.dump(cannon_smiles, f)
+with open(OUTPUT_DIR + "sym_table.pkl", 'wb') as f:
+    pickle.dump(sym_table, f)
+with open(OUTPUT_DIR + "charset.pkl", 'wb') as f:
+    pickle.dump(charset, f)
+with open(OUTPUT_DIR + "vocab.pkl", 'wb') as f:
+    pickle.dump(vocab, f)
+with open(OUTPUT_DIR + "selfs.pkl", 'wb') as f:
+    pickle.dump(selfs, f)
+with open(OUTPUT_DIR + "cannon_smiles.pkl", 'wb') as f:
+    pickle.dump(cannon_smiles, f)
 
 
 #
@@ -285,12 +286,12 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
     kl_loss_values = mosesvocab.CircularBuffer(10)
     recon_loss_values = mosesvocab.CircularBuffer(10)
     loss_values =mosesvocab.CircularBuffer(10)
-    for i, (input_batch, _) in enumerate(tqdm_data):
+    for i, (input_batch, padded_smile) in enumerate(tqdm_data):
         kl_weight += kl_annealer_rate
 
         if epoch < 20:
             if i % 1 == 0:
-                for (input_batch_, _) in train_loader_agg_tqdm:
+                for (input_batch_, padded_smile) in train_loader_agg_tqdm:
                     encoder_optimizer.zero_grad()
                     decoder_optimizer.zero_grad()
                     input_batch_ = tuple(data.cuda() for data in input_batch_)

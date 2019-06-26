@@ -3,6 +3,27 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
+class SELU(nn.Module):
+
+    def __init__(self, alpha=1.6732632423543772848170429916717,
+                 scale=1.0507009873554804934193349852946, inplace=False):
+        super(SELU, self).__init__()
+
+        self.scale = scale
+        self.elu = nn.ELU(alpha=alpha, inplace=inplace)
+
+    def forward(self, x):
+        return self.scale * self.elu(x)
+
+
+def ConvSELU(i, o, kernel_size=3, padding=0, p=0.):
+    model = [nn.Conv1d(i, o, kernel_size=kernel_size, padding=padding),
+             SELU(inplace=True)
+             ]
+    if p > 0.:
+        model += [nn.Dropout(p)]
+    return nn.Sequential(*model)
+
 class BindingModel(nn.Module):
     def __init__(self, z_size=128):
         super().__init__()
@@ -105,6 +126,11 @@ class VAE(nn.Module):
             self.decoder
         ])
 
+        self.conv_1 = ConvSELU(100, 120, kernel_size=18)
+        self.conv_2 = ConvSELU(120, 64, kernel_size=18)
+        self.conv_3 = ConvSELU(64, 64, kernel_size=18)
+        self.compacter = nn.Sequential(nn.Linear(128, 128), nn.ReLU())
+
     @property
     def device(self):
         return next(self.parameters()).device
@@ -124,7 +150,7 @@ class VAE(nn.Module):
 
         return string
 
-    def forward(self, x):
+    def forward(self, x, padded_x):
         """Do the VAE forward step
 
         :param x: list of tensors of longs, input sentence x
@@ -133,7 +159,7 @@ class VAE(nn.Module):
         """
 
         # Encoder: x -> z, kl_loss
-        z, kl_loss, logvar = self.forward_encoder(x)
+        z, kl_loss, logvar = self.forward_encoder(padded_x)
 
         # Decoder: x, z -> recon_loss
         recon_loss, x, y = self.forward_decoder(x, z)
@@ -148,15 +174,13 @@ class VAE(nn.Module):
         :return: float, kl term component of loss
         """
 
-        x = [self.x_emb(i_x) for i_x in x]
-        x = nn.utils.rnn.pack_sequence(x)
-        print(x.data.shape)
+        x = self.conv_1(x)
+        x = self.conv_2(x)
+        x = self.conv_3(x)
 
-
-        _, h = self.encoder_rnn(x, None)
-
-        h = h[-(1 + int(self.encoder_rnn.bidirectional)):]
-        h = torch.cat(h.split(1), dim=-1).squeeze(0)
+        h = x.view(x.shape[0], -1)
+        print(h.shape)
+        h = self.compacter(h)
 
         mu, logvar = self.q_mu(h), self.q_logvar(h)
         eps = torch.randn_like(mu)
