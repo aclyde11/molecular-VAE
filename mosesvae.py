@@ -173,7 +173,7 @@ class VAE(nn.Module):
         :return: (n_batch, d_z) of floats, sample of latent vector z
         :return: float, kl term component of loss
         """
-        x = torch.tensor(x)
+        x = torch.cat(x, dim=0).cuda().long()
         print(x.shape)
         x = self.x_emb(x)
         x = self.conv_1(x)
