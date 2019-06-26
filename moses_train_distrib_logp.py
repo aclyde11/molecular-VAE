@@ -300,35 +300,35 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
     for i, (input_batch, padded_smile) in enumerate(tqdm_data):
         kl_weight += kl_annealer_rate
 
-        if epoch < 20:
-            if i % 1 == 0:
-                for (input_batch_, padded_smile) in train_loader_agg_tqdm:
-                    encoder_optimizer.zero_grad()
-                    decoder_optimizer.zero_grad()
-                    input_batch_ = tuple(data.cuda() for data in input_batch_)
-                    # Forwardd
-                    kl_loss, recon_loss, _, logvar, x, y = model(input_batch_, padded_smile)
-                    kl_loss = torch.sum(kl_loss, 0)
-                    recon_loss = torch.sum(recon_loss, 0)
-                    _, predict = torch.max(F.softmax(y, dim=-1), -1)
-
-                    correct = float((x == predict).sum().cpu().detach().item()) / float(x.shape[0] * x.shape[1])
-                    # kl_weight = 1
-                    loss = kl_weight * kl_loss + recon_loss
-                    # loss = kl_loss + recon_loss
-                    loss.backward()
-                    clip_grad_norm_((p for p in model.parameters() if p.requires_grad),
-                                    25)
-                    encoder_optimizer.step()
-                    loss_value = loss.item()
-                    kl_loss_value = kl_loss.item()
-                    recon_loss_value = recon_loss.item()
-
-                    postfix = [f'loss={loss_value:.5f}',
-                               f'(kl={kl_loss_value:.5f}',
-                               f'recon={recon_loss_value:.5f})',
-                               f'correct={correct:.5f}']
-                    train_loader_agg_tqdm.set_postfix_str(' '.join(postfix))
+        # if epoch < 20:
+        #     if i % 1 == 0:
+        #         for (input_batch_, padded_smile) in train_loader_agg_tqdm:
+        #             encoder_optimizer.zero_grad()
+        #             decoder_optimizer.zero_grad()
+        #             input_batch_ = tuple(data.cuda() for data in input_batch_)
+        #             # Forwardd
+        #             kl_loss, recon_loss, _, logvar, x, y = model(input_batch_, padded_smile)
+        #             kl_loss = torch.sum(kl_loss, 0)
+        #             recon_loss = torch.sum(recon_loss, 0)
+        #             _, predict = torch.max(F.softmax(y, dim=-1), -1)
+        #
+        #             correct = float((x == predict).sum().cpu().detach().item()) / float(x.shape[0] * x.shape[1])
+        #             # kl_weight = 1
+        #             loss = kl_weight * kl_loss + recon_loss
+        #             # loss = kl_loss + recon_loss
+        #             loss.backward()
+        #             clip_grad_norm_((p for p in model.parameters() if p.requires_grad),
+        #                             25)
+        #             encoder_optimizer.step()
+        #             loss_value = loss.item()
+        #             kl_loss_value = kl_loss.item()
+        #             recon_loss_value = recon_loss.item()
+        #
+        #             postfix = [f'loss={loss_value:.5f}',
+        #                        f'(kl={kl_loss_value:.5f}',
+        #                        f'recon={recon_loss_value:.5f})',
+        #                        f'correct={correct:.5f}']
+        #             train_loader_agg_tqdm.set_postfix_str(' '.join(postfix))
 
 
         encoder_optimizer.zero_grad()
@@ -345,16 +345,16 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
 
         # kl_weight =  min(kl_weight + 1e-3,1)
         loss = recon_loss
-        if epoch >= 20:
-            loss += kl_weight * kl_loss
+        # if epoch >= 20:
+        loss += kl_weight * kl_loss
         # loss = kl_loss + recon_loss
 
         loss.backward()
         clip_grad_norm_((p for p in model.parameters() if p.requires_grad),
                         50)
 
-        if epoch >= 20:
-            encoder_optimizer.step()
+        # if epoch >= 20:
+        encoder_optimizer.step()
         decoder_optimizer.step()
 
         # Log
