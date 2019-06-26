@@ -29,7 +29,7 @@ def make_grid(images):
     images = [Chem.MolFromSmiles(x) for x in images]
     for m in images:
         tmp = AllChem.Compute2DCoords(m)
-    img = Draw.MolsToGridImage(images, molsPerRow=5, subImgSize=(200, 200))
+    img = Draw.MolsToGridImage(images, molsPerRow=10, subImgSize=(300, 300))
     img.save('interp.png')
 
 
@@ -53,12 +53,12 @@ try:
         pt_1 = data_latent[0, ...].cpu().numpy() * 1e-3
         pt_2 = data_latent[1 + 1, ...].cpu().numpy() * 1e-3
         sample_vec = interpolate_points(pt_1, pt_2,
-                                        np.linspace(0, 1, num=100, endpoint=True))
+                                        np.linspace(0, 1, num=500, endpoint=True))
         sample_vec = torch.from_numpy(sample_vec).cuda()
         res, _ = model.sample(100, z=sample_vec)
 
         smis = []
-        for i in range(100):
+        for i in range(500):
             count += 1
             try:
                 s = "".join([charset[sym]  for sym in res[i]])
