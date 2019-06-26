@@ -126,8 +126,8 @@ class VAE(nn.Module):
             self.decoder
         ])
 
-        self.conv_1 = ConvSELU(40, 9, kernel_size=18)
-        self.conv_2 = ConvSELU(9, 9, kernel_size=18)
+        self.conv_1 = ConvSELU(len(vocab), 16, kernel_size=18)
+        self.conv_2 = ConvSELU(16, 9, kernel_size=18)
         self.conv_3 = ConvSELU(9, 11, kernel_size=18)
         self.compacter = nn.Sequential(nn.Linear(561, 256), nn.ReLU())
 
