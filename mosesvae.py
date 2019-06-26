@@ -183,7 +183,7 @@ class VAE(nn.Module):
         x_input = nn.utils.rnn.pack_padded_sequence(z_0, lengths,
                                                     batch_first=True)
 
-        h_0 = self.decoder_lat(z)
+        h_0 = self.decoder_lat(x_input)
         h_0 = h_0.unsqueeze(0).repeat(self.decoder_rnn.num_layers, 1, 1)
 
         output, _ = self.decoder_rnn(z_0, h_0)
