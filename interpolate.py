@@ -41,6 +41,7 @@ try:
         pt_2 = data_latent[1 + 1, ...].cpu().numpy()
         sample_vec = interpolate_points(pt_1, pt_2,
                                         np.linspace(0, 1, num=100, endpoint=True))
+        sample_vec = torch.from_numpy(sample_vec).cuda()
         res, _ = model.sample(100, z=sample_vec)
 
         smis = []
