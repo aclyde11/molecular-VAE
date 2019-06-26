@@ -242,8 +242,8 @@ class VAE(nn.Module):
 
             # Generating cycle
             for i in range(1, max_len):
-                x_emb = self.x_emb(w).unsqueeze(1)
-                x_input = torch.cat([x_emb, z_0], dim=-1)
+                # x_emb = self.x_emb(w).unsqueeze(1)
+                x_input = z_0
 
                 o, h = self.decoder_rnn(x_input, h)
                 y = self.decoder_fc(o.squeeze(1))
