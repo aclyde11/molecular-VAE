@@ -225,7 +225,7 @@ class VAE(nn.Module):
         with torch.no_grad():
             if z is None:
                 z = self.sample_z_prior(n_batch)
-            z = z.to(self.device)
+            z = z.to(self.self.x_emb.weight.device)
             z_0 = z.unsqueeze(1)
 
             # Initial values
