@@ -128,9 +128,11 @@ def get_collate_fn_binding():
         data.sort(key=len, reverse=True)
         tensors = [string2tensor(vocab, string)
                    for string in sorted_strs]
+        tensors2 = [string2tensor(vocab, string)
+                   for string in bindings]
 
 
-        return tensors, torch.from_numpy(np.array(bindings)).float()
+        return tensors, tensors2
 
     return collate
 
