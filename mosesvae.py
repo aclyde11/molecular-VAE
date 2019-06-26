@@ -158,11 +158,13 @@ class VAE(nn.Module):
         :return: float, recon component of loss
         """
 
+        x_t = torch.stack(x, dim=-1).cuda().long().permute((1, 0))
+        x = self.x_emb(x_t)
         # Encoder: x -> z, kl_loss
-        z, kl_loss, logvar = self.forward_encoder(padded_x)
+        z, kl_loss, logvar = self.forward_encoder(x)
 
         # Decoder: x, z -> recon_loss
-        recon_loss, x, y = self.forward_decoder(padded_x, z)
+        recon_loss, x, y = self.forward_decoder(x_t, z)
 
         return kl_loss, recon_loss, z, logvar, x, y
 
@@ -173,8 +175,7 @@ class VAE(nn.Module):
         :return: (n_batch, d_z) of floats, sample of latent vector z
         :return: float, kl term component of loss
         """
-        x = torch.stack(x, dim=-1).cuda().long().permute((1, 0))
-        x = self.x_emb(x)
+
         x = x.permute((0, 2, 1))
         x = self.conv_1(x)
         x = self.conv_2(x)
@@ -198,12 +199,6 @@ class VAE(nn.Module):
         :param z: (n_batch, d_z) of floats, latent vector z
         :return: float, recon component of loss
         """
-
-        lengths = [len(i_x) for i_x in x]
-
-        x = nn.utils.rnn.pad_sequence(x, batch_first=True,
-                                      padding_value=self.pad)
-        x_emb = self.x_emb(x)
 
         z_0 = z.unsqueeze(1).repeat(1, 102, 1)
         print(z_0.shape)
