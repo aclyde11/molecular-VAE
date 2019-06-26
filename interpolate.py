@@ -55,7 +55,7 @@ try:
         sample_vec = interpolate_points(pt_1, pt_2,
                                         np.linspace(0, 1, num=500, endpoint=True))
         sample_vec = torch.from_numpy(sample_vec).cuda()
-        res, _ = model.sample(100, z=sample_vec)
+        res, _ = model.sample(500, z=sample_vec)
 
         smis = []
         for i in range(500):
