@@ -205,7 +205,7 @@ class VAE(nn.Module):
                                       padding_value=self.pad)
         x_emb = self.x_emb(x)
 
-        z_0 = z.unsqueeze(1).repeat(1, x_emb.size(1), 1)
+        z_0 = z.unsqueeze(1).repeat(1, 102, 1)
         print(z_0.shape)
 
         # x_input = nn.utils.rnn.pack_padded_sequence(x_input, lengths,
