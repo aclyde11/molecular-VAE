@@ -217,7 +217,7 @@ class VAE(nn.Module):
 
         output, _ = self.decoder_rnn(x_input, h_0)
 
-        output, _ = nn.utils.rnn.pad_packed_sequence(output, batch_first=True)
+        # output, _ = nn.utils.rnn.pad_packed_sequence(output, batch_first=True)
         y = self.decoder_fc(output)
 
         recon_loss = F.cross_entropy(
