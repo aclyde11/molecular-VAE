@@ -25,7 +25,7 @@ import re
 import argparse
 from tqdm import tqdm
 
-OUTPUT_DIR = "smiles3/"
+OUTPUT_DIR = "selfies2/"
 INPUT_DIR = ""
 
 parser = argparse.ArgumentParser()
@@ -190,10 +190,10 @@ for i in tqdm_range:
         m = Chem.MolFromSmiles(original)
         cannmon = Chem.MolToSmiles(m)
         selfie = cannmon
-        # selfie = selfies.encoder(cannmon)
+        selfie = selfies.encoder(cannmon)
         selfien = []
-        # for sym in re.findall("\[(.*?)\]", selfie):
-        for sym in selfie:
+        for sym in re.findall("\[(.*?)\]", selfie):
+        # for sym in selfie:
             if sym in sym_table:
                 selfien.append(sym_table[sym])
             else:
@@ -266,19 +266,17 @@ binding_optimizer = None
 
 # optimizer = optim.Adam(model.parameters() ,
 #                                lr=3*1e-3 )
-encoder_optimizer = optim.Adam(model.encoder.parameters(), lr=8e-4)
-decoder_optimizer = optim.Adam(model.decoder.parameters(), lr=5e-4)
+encoder_optimizer = optim.Adam(model.parameters(), lr=8e-4)
 # model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
 # model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], output_device=args.local_rank, find_unused_parameters=True)
 
 
 kl_annealer = 3e-4
 lr_annealer_d = CosineAnnealingLRWithRestart(encoder_optimizer)
-lr_annealer_e = CosineAnnealingLRWithRestart(decoder_optimizer)
 
 model.zero_grad()
 
-kl_annealer_rate = 0.000005
+kl_annealer_rate = 0.000002
 kl_weight = 0
 
 def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, decoder_optim):
@@ -342,7 +340,6 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
                         50)
 
         encoder_optimizer.step()
-        decoder_optimizer.step()
 
         # Log
         kl_loss_values.add(kl_loss.item())
@@ -532,7 +529,7 @@ for epoch in range(100):
     train_loader_agg_tqdm = tqdm(get_train_loader_agg(),
                                  desc='Training encoder (epoch #{})'.format(epoch))
     postfix, kl_weight = _train_epoch_binding(model, epoch,
-                                tqdm_data, kl_weight, encoder_optim=encoder_optimizer, decoder_optim=decoder_optimizer)
+                                tqdm_data, kl_weight, encoder_optim=encoder_optimizer, decoder_optim=None)
     torch.save(model.state_dict(), OUTPUT_DIR + "trained_save_small.pt")
     # with open('vocab.pkl', 'wb') as f:
     #     pickle.dump(vocab, f)
@@ -541,13 +538,12 @@ for epoch in range(100):
     pd.DataFrame([res]).to_csv(OUTPUT_DIR + "out_tests.csv")
     try:
         for i in range(50):
-            # print(selfies.decoder("".join(['[' + charset[sym] + ']' for sym in res[i]])))
-            print("".join([ charset[sym] for sym in res[i]]))
+            print(selfies.decoder("".join(['[' + charset[sym] + ']' for sym in res[i]])))
+            # print("".join([ charset[sym] for sym in res[i]]))
     except Exception as e:
         print("error...")
         print("Not sure why nothing printed..")
         print(str(e))
 
     # Epoch end
-    lr_annealer_e.step()
     lr_annealer_d.step()
