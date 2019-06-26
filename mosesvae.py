@@ -201,7 +201,6 @@ class VAE(nn.Module):
         """
 
         z_0 = z.unsqueeze(1).repeat(1, 102, 1)
-        print(z_0.shape)
 
         # x_input = nn.utils.rnn.pack_padded_sequence(x_input, lengths,
         #                                             batch_first=True)
@@ -215,8 +214,7 @@ class VAE(nn.Module):
         # output, _ = nn.utils.rnn.pad_packed_sequence(output, batch_first=True)
         y = self.decoder_fc(output)
 
-        print(y.shape)
-        print(x.shape)
+
         recon_loss = F.cross_entropy(
             y[:, :-1].contiguous().view(-1, y.size(-1)),
             x[:, 1:].contiguous().view(-1),

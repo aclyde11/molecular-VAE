@@ -102,12 +102,18 @@ class CosineAnnealingLRWithRestart(_LRScheduler):
             self.current_epoch = 0
             self.t_end = self.n_mult * self.t_end
 
-def string2tensor(vocab, string):
+def string2tensor(vocab, string, expand_to=102):
     ids = vocab.string2ids(string, add_bos=True, add_eos=True)
     tensor = torch.tensor(
         ids, dtype=torch.long
     )
 
+    if expand_to is not None:
+        tensor_pad = torch.zeros((expand_to)).long()
+        tensor_pad[:tensor.shape[0]] = tensor
+        for i in range(tensor.shape[0], expand_to):
+            tensor_pad[i] = int(vocab.char2id(chr(50)))
+        return tensor_pad
     return tensor
 
 
@@ -161,8 +167,6 @@ class BindingDataSet(torch.utils.data.Dataset):
     def __getitem__(self, idx):
         smile = self.df[idx]
         smile_pad = smile.copy()
-        while(len(smile_pad) < 100):
-            smile_pad.append(chr(50))
 
         return smile, smile_pad
 
