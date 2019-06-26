@@ -162,7 +162,7 @@ class VAE(nn.Module):
         z, kl_loss, logvar = self.forward_encoder(padded_x)
 
         # Decoder: x, z -> recon_loss
-        recon_loss, x, y = self.forward_decoder(x, z)
+        recon_loss, x, y = self.forward_decoder(padded_x, z)
 
         return kl_loss, recon_loss, z, logvar, x, y
 
