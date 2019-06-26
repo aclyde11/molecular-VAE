@@ -126,10 +126,10 @@ class VAE(nn.Module):
             self.decoder
         ])
 
-        self.conv_1 = ConvSELU(100, 120, kernel_size=18)
-        self.conv_2 = ConvSELU(120, 64, kernel_size=18)
-        self.conv_3 = ConvSELU(64, 64, kernel_size=18)
-        self.compacter = nn.Sequential(nn.Linear(128, 128), nn.ReLU())
+        self.conv_1 = ConvSELU(40, 9, kernel_size=18)
+        self.conv_2 = ConvSELU(9, 9, kernel_size=18)
+        self.conv_3 = ConvSELU(9, 11, kernel_size=18)
+        self.compacter = nn.Sequential(nn.Linear(528, 128), nn.ReLU())
 
     @property
     def device(self):
@@ -173,10 +173,9 @@ class VAE(nn.Module):
         :return: (n_batch, d_z) of floats, sample of latent vector z
         :return: float, kl term component of loss
         """
-        print(x[0].shape)
         x = torch.stack(x, dim=-1).cuda().long().permute((1, 0))
-        print(x.shape)
         x = self.x_emb(x)
+        x = x.permute((0, 2, 1))
         x = self.conv_1(x)
         x = self.conv_2(x)
         x = self.conv_3(x)
