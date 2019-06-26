@@ -22,6 +22,19 @@ def interpolate_points(x,y, sampling):
     return ln.predict(sampling.reshape(-1, 1)).astype(np.float32)
 
 
+from PIL import Image
+from rdkit.Chem import AllChem
+from rdkit.Chem import Draw
+def make_grid(images):
+    images = [Chem.MolFromSmiles(x) for x in images]
+    for m in images:
+        tmp = AllChem.Compute2DCoords(m)
+    img = Draw.MolsToGridImage(images, molsPerRow=5, subImgSize=(200, 200))
+    img.save('interp.png')
+
+
+
+
 dir='smiles_kinase'
 i=0
 try:
@@ -57,6 +70,13 @@ try:
                 # print("charset", charset)
         for i in smis:
             print(i)
+        make_grid(smis)
+
+
+
+
+
+
 except KeyboardInterrupt:
     print("exiting")
     exit()
