@@ -25,7 +25,7 @@ import re
 import argparse
 from tqdm import tqdm
 
-OUTPUT_DIR = "smiles_kinase/"
+OUTPUT_DIR = "smiles3/"
 INPUT_DIR = ""
 
 parser = argparse.ArgumentParser()
