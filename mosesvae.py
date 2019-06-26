@@ -212,7 +212,7 @@ class VAE(nn.Module):
         # return torch.zeros((n_batch, self.d_z), device=self.x_emb.weight.device)
 
 
-    def sample(self, n_batch, max_len=100, z=None, temp=0.7):
+    def sample(self, n_batch, max_len=100, z=None, temp=0.5):
         """Generating n_batch samples in eval mode (`z` could be
         not on same device)
 
