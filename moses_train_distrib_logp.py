@@ -158,8 +158,10 @@ class BindingDataSet(torch.utils.data.Dataset):
 
     def __getitem__(self, idx):
         smile = self.df[idx]
-        print(smile)
-        return smile, smile.ljust(100)
+        smile_pad = smile.copy()
+        while(len(smile_pad) < 100):
+            smile_pad.append('2')
+        return smile, smile_pad
 
 class SmilesLoaderSelfies(torch.utils.data.Dataset):
     def __init__(self, df):
