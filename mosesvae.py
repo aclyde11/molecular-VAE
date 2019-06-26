@@ -264,7 +264,7 @@ class VAE(nn.Module):
                                    device=self.device)
 
 
-            z_0 = z.unsqueeze(1).repeat(1, 102, 1)
+            z_0 = z.unsqueeze(1).repeat(1, 1, 1)
 
             # Generating cycle
             for i in range(1, max_len):
