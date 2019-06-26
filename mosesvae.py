@@ -252,7 +252,6 @@ class VAE(nn.Module):
             if z is None:
                 z = self.sample_z_prior(n_batch)
             z = z.to(self.x_emb.weight.device)
-            z_0 = z.unsqueeze(1)
 
             # Initial values
             h = self.decoder_lat(z)
@@ -266,10 +265,12 @@ class VAE(nn.Module):
             eos_mask = torch.zeros(n_batch, dtype=torch.uint8,
                                    device=self.device)
 
+
+            z_0 = z.unsqueeze(1).repeat(1, 102, 1)
+
             # Generating cycle
             for i in range(1, max_len):
-                x_emb = self.x_emb(w).unsqueeze(1)
-                x_input = torch.cat([x_emb, z_0], dim=-1)
+                x_input = z_0
 
                 o, h = self.decoder_rnn(x_input, h)
                 y = self.decoder_fc(o.squeeze(1))
