@@ -273,7 +273,7 @@ class VAE(nn.Module):
                 o, h = self.decoder_rnn(x_input, h)
                 y = self.decoder_fc(o.squeeze(1))
                 y = F.softmax(y / temp, dim=-1)
-
+                print(y.shape)
                 w = torch.multinomial(y, 1)[:, 0]
                 x[~eos_mask, i] = w[~eos_mask]
                 i_eos_mask = ~eos_mask & (w == self.eos)
