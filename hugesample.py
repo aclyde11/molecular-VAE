@@ -12,7 +12,7 @@ import time
 from tqdm import tqdm
 from multiprocessing import Process, Pipe, Queue, Manager, Value
 
-def gen_proc(comm, iters=10000, i=0, batch_size=4096, dir="", selfies=False):
+def gen_proc(comm, iters=10000, i=0, batch_size=4096, dir="", selfies=True):
     print("Generator on", i)
     try:
         with open(dir + "/charset.pkl", 'rb') as f:
@@ -62,7 +62,8 @@ def hasher(q, hasher, valid, total, i, s=False):
             total.value += count
             for smi in smis:
                 try:
-
+                    if s:
+                        smi = selfies.decoder(smi)
                     m = Chem.MolFromSmiles(smi)
                     s = Chem.MolToSmiles(m)
                     if s is not None:
