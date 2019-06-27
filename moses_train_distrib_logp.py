@@ -319,7 +319,6 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
         #
 
         encoder_optimizer.zero_grad()
-        decoder_optimizer.zero_grad()
         input_batch = tuple(data.cuda() for data in input_batch)
         # Forwardd
         kl_loss, recon_loss, _, logvar, x, y = model(input_batch)
