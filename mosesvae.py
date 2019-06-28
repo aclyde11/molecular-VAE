@@ -29,16 +29,16 @@ class VAE(nn.Module):
         super().__init__()
 
         q_cell = "gru"
-        q_bidir = False
+        q_bidir = True
         q_d_h = 256
         q_n_layers = 1
-        q_dropout=0.05
+        q_dropout=0.2
         d_cell = 'gru'
         d_n_layers = 3
         d_dropout = 0.2
-        self.d_z = 128
+        self.d_z = 188
         d_z = self.d_z
-        d_d_h=512
+        d_d_h=256
 
         self.vocabulary = vocab
         # Special symbols
