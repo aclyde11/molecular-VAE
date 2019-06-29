@@ -213,7 +213,7 @@ for i in tqdm_range:
 
 fine_tune_cannon = []
 fine_tune_selfie = []
-for i in range(fine_tune_cannon.shape[0]):
+for i in range(df_fine_tune.shape[0]):
     try:
         original = str(df_fine_tune.iloc[i,0])
         if len(original) > 100:
