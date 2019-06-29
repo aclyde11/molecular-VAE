@@ -25,7 +25,7 @@ import re
 import argparse
 from tqdm import tqdm
 
-OUTPUT_DIR = "selfies2/"
+OUTPUT_DIR = "finetuning/"
 INPUT_DIR = ""
 
 parser = argparse.ArgumentParser()
@@ -172,9 +172,10 @@ class SmilesLoaderSelfies(torch.utils.data.Dataset):
         selfie = self.df.iloc[idx, 0]
         return selfie, 0
 
-# df = pd.read_csv("../dataset_v1.csv")
+df = pd.read_csv("../dataset_v1.csv")
 # df = df.sample(500000, replace=False, random_state=42)
-df = pd.read_csv("../kinases_jonhk_lab.smi", header=None, sep=' ', usecols=[0])
+
+df_fine_tune = pd.read_csv("../kinases_jonhk_lab.smi", header=None, sep=' ', usecols=[0])
 # df = df.sample(1000, replace=False, random_state=42)
 max_len = 0
 selfs = []
@@ -185,7 +186,7 @@ tqdm_range = tqdm(range(df.shape[0]))
 for i in tqdm_range:
     try:
         original = str(df.iloc[i,0])
-        if len(original) > 150:
+        if len(original) > 100:
             continue
         m = Chem.MolFromSmiles(original)
         cannmon = Chem.MolToSmiles(m)
@@ -202,6 +203,36 @@ for i in tqdm_range:
                 selfien.append(sym_table[sym])
         selfs.append(selfien)
         cannon_smiles.append(cannmon)
+
+        postfix = [f'len=%s' % (len(sym_table))]
+        tqdm_range.set_postfix_str(' '.join(postfix))
+    except KeyboardInterrupt:
+        exit()
+    except:
+        print("ERROR...")
+
+fine_tune_cannon = []
+fine_tune_selfie = []
+for i in range(fine_tune_cannon.shape[0]):
+    try:
+        original = str(df_fine_tune.iloc[i,0])
+        if len(original) > 100:
+            continue
+        m = Chem.MolFromSmiles(original)
+        cannmon = Chem.MolToSmiles(m)
+        selfie = cannmon
+        selfie = selfies.encoder(cannmon)
+        selfien = []
+        for sym in re.findall("\[(.*?)\]", selfie):
+        # for sym in selfie:
+            if sym in sym_table:
+                selfien.append(sym_table[sym])
+            else:
+                sym_table[sym] = chr(counter)
+                counter += 1
+                selfien.append(sym_table[sym])
+        fine_tune_selfie.append(selfien)
+        fine_tune_cannon.append(cannmon)
 
         postfix = [f'len=%s' % (len(sym_table))]
         tqdm_range.set_postfix_str(' '.join(postfix))
@@ -234,7 +265,10 @@ with open(OUTPUT_DIR + "selfs.pkl", 'wb') as f:
     pickle.dump(selfs, f)
 with open(OUTPUT_DIR + "cannon_smiles.pkl", 'wb') as f:
     pickle.dump(cannon_smiles, f)
-
+with open(OUTPUT_DIR + "fine_tune_selfs.pkl", 'wb') as f:
+    pickle.dump(fine_tune_selfie, f)
+with open(OUTPUT_DIR + "fine_tune_canon.pkl", 'wb') as f:
+    pickle.dump(fine_tune_selfie, f)
 
 #
 # df = pd.DataFrame(pd.Series(selfs))
@@ -244,6 +278,7 @@ with open(OUTPUT_DIR + "cannon_smiles.pkl", 'wb') as f:
 # print(df.iloc[0,0][0])
 
 bdata = BindingDataSet(selfs)
+fine_tune_data = BindingDataSet(fine_tune_selfie)
 # train_sampler = torch.utils.data.distributed.DistributedSampler(bdata)
 train_loader = torch.utils.data.DataLoader(bdata, batch_size=args.batch_size,
                           shuffle=True,
@@ -251,13 +286,9 @@ train_loader = torch.utils.data.DataLoader(bdata, batch_size=args.batch_size,
                           worker_init_fn=mosesvocab.set_torch_seed_to_all_gens,
                                            pin_memory=True,)
 
-def get_train_loader_agg():
-    return torch.utils.data.DataLoader(bdata, batch_size=args.encoder_batch_size,
-                          shuffle=False,
-                          sampler=torch.utils.data.RandomSampler(bdata, replacement=True, num_samples=args.encoder_batch_size * 15),
-                          num_workers=32, collate_fn=get_collate_fn_binding(),
-                          worker_init_fn=mosesvocab.set_torch_seed_to_all_gens,
-                                           pin_memory=True,)
+fine_tune_loader = torch.utils.data.DataLoader(fine_tune_data, batch_size=args.batch_size, shuffle=True,
+                                               num_workers=32, collate_fn=get_collate_fn_binding(),
+                                               worker_init_fn=mosesvocab.set_torch_seed_to_all_gens, pin_memory=True)
 n_epochs = 100
 
 model = mosesvae.VAE(vocab).cuda()
@@ -523,10 +554,11 @@ for epoch in range(100):
     # kl_weight = kl_annealer(epoch)
 
 
-    tqdm_data = tqdm(train_loader,
-                     desc='Training (epoch #{})'.format(epoch))
-    train_loader_agg_tqdm = tqdm(get_train_loader_agg(),
-                                 desc='Training encoder (epoch #{})'.format(epoch))
+    if epoch < 90:
+        tqdm_data = tqdm(train_loader,
+                         desc='Training (epoch #{})'.format(epoch))
+    else:
+        tqdm_data = tqdm(fine_tune_loader, desc='Fine tuning (epoch #{}'.format(epoch))
     postfix, kl_weight = _train_epoch_binding(model, epoch,
                                 tqdm_data, kl_weight, encoder_optim=encoder_optimizer, decoder_optim=None)
     torch.save(model.state_dict(), OUTPUT_DIR + "trained_save_small.pt")
