@@ -78,14 +78,16 @@ class FastRocker():
 
                     for score in self.dbase.GetSortedScores(conf, self.opts):
                         # dbmol = oechem.OEMol()
-                        # dbmolidx = score.GetMolIdx()
+                        dbmolidx = score.GetMolIdx()
                         # if not self.moldb.GetMolecule(dbmol, dbmolidx):
                         #     print("Unable to retrieve molecule '%u' from the database" % dbmolidx)
                         #     continue
                         # print(dbmol.GetTitle())
-                        dbmolidx = 2
                         max_scorer_dbase = dbmolidx
-                        max_score = max(max_score, score.GetColorTanimoto())
+                        ct = score.GetColorTanimoto()
+                        if ct > max_score:
+                            max_score = ct
+                            max_scorer_dbase = dbmolidx
                         scores_run += 1
                         # print( "ColorTanimoto", "%.4f" % score.GetColorTanimoto(), dbmolidx, moltitle)
                         break
@@ -95,9 +97,11 @@ class FastRocker():
                 print("%s conformers processed" % qconfidx)
                 results[moltitle] = (max_score, dbmolidx)
                 qmolidx += 1
+        except KeyboardInterrupt:
+            exit()
         except:
             print("something fatal happened.")
             return None
 
-        return max_score, dbmolidx
+        return max_score, max_scorer_dbase
 
