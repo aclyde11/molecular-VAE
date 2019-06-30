@@ -50,6 +50,7 @@ def gen_proc(iters, i, batch_size, dir, selfies):
                     # print('res', res[i])
                     # print("charset", charset
             for smi in smis:
+                print(smi, "calling fast rocs~!")
                 score, idx = fastrocs.get_color(smi)
                 print(score, idx)
 
