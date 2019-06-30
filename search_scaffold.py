@@ -19,7 +19,7 @@ def gen_proc(iters, i, batch_size, dir, selfies):
     torch.cuda.manual_seed(i)
     print("Generator on", i)
 
-    fastrocs = FastRocker("data.oeb")
+    fastrocs = FastRocker("../data.oeb")
     try:
         with open(dir + "/charset.pkl", 'rb') as f:
             charset = pickle.load(f)
