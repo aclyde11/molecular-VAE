@@ -161,7 +161,7 @@ class VAE(nn.Module):
 
         x = [self.x_emb(i_x) for i_x in x]
         x = nn.utils.rnn.pack_sequence(x)
-        output, _ = nn.utils.rnn.pad_packed_sequence(x, batch_first=True, total_length=101)
+        output, _ = nn.utils.rnn.pad_packed_sequence(x, batch_first=True, total_length=110)
         x = self.encoder_rnn(output).view(output.shape[0], -1)
         x = self.flatten(x)
 
