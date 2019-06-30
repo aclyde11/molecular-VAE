@@ -296,7 +296,7 @@ n_epochs = 100
 
 model = mosesvae.VAE(vocab).cuda()
 model.apply(init_weights)
-model.load_state_dict(torch.load("finetuning/trained_save_small.pt"))
+# model.load_state_dict(torch.load("finetuning/trained_save_small.pt"))
 binding_optimizer = None
 
 # optimizer = optim.Adam(model.parameters() ,
