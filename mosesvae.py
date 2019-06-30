@@ -2,6 +2,27 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+class SELU(nn.Module):
+
+    def __init__(self, alpha=1.6732632423543772848170429916717,
+                 scale=1.0507009873554804934193349852946, inplace=False):
+        super(SELU, self).__init__()
+
+        self.scale = scale
+        self.elu = nn.ELU(alpha=alpha, inplace=inplace)
+
+    def forward(self, x):
+        return self.scale * self.elu(x)
+
+
+def ConvSELU(i, o, kernel_size=3, padding=0, p=0.):
+    model = [nn.Conv1d(i, o, kernel_size=kernel_size, padding=padding),
+             SELU(inplace=True)
+             ]
+    if p > 0.:
+        model += [nn.Dropout(p)]
+    return nn.Sequential(*model)
+
 
 class BindingModel(nn.Module):
     def __init__(self, z_size=128):
@@ -51,19 +72,14 @@ class VAE(nn.Module):
         self.x_emb.weight.data.copy_(vocab.vectors)
 
         # Encoder
-        if q_cell == 'gru':
-            self.encoder_rnn = nn.GRU(
-                d_emb,
-                q_d_h,
-                num_layers=q_n_layers,
-                batch_first=True,
-                dropout=q_dropout if q_n_layers > 1 else 0,
-                bidirectional=q_bidir
-            )
-        else:
-            raise ValueError(
-                "Invalid q_cell type, should be one of the ('gru',)"
-            )
+        self.encoder_rnn = nn.Sequential(
+            ConvSELU(5, 9, kernel_size=9),
+            ConvSELU(9, 9, kernel_size=9),
+            ConvSELU(9, 10, kernel_size=11),
+        )
+
+        self.flatten = nn.Sequential(nn.Linear((len(vocab) - 29 + 3) * 10, 435),
+                      SELU(inplace=True))
 
         q_d_last = q_d_h * (2 if q_bidir else 1)
         self.q_mu = nn.Sequential(nn.Linear(q_d_last, 256), nn.ReLU(), nn.Linear(256, d_z))
@@ -150,13 +166,13 @@ class VAE(nn.Module):
 
         x = [self.x_emb(i_x) for i_x in x]
         x = nn.utils.rnn.pack_sequence(x)
+        output, _ = nn.utils.rnn.pad_packed_sequence(x, batch_first=True, total_length=101)
+        x = self.encoder_rnn(output).view(output.shape[0], -1)
+        print(x.shape)
+        x = self.flatten(x)
 
-        _, h = self.encoder_rnn(x, None)
 
-        h = h[-(1 + int(self.encoder_rnn.bidirectional)):]
-        h = torch.cat(h.split(1), dim=-1).squeeze(0)
-
-        mu, logvar = self.q_mu(h), self.q_logvar(h)
+        mu, logvar = self.q_mu(x), self.q_logvar(x)
         eps = torch.randn_like(mu)
         z = mu + (logvar / 2).exp() * eps
 
