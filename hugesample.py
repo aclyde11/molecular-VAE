@@ -8,6 +8,7 @@ import mosesvae
 
 import selfies
 import argparse
+import subprocess
 import time
 from tqdm import tqdm
 from multiprocessing import Process, Pipe, Queue, Manager, Value
@@ -90,7 +91,8 @@ def reporter(q, d, valid, total, dir, stop, pause, new_unique):
     print("Starting up reporter.")
     start_time = time.time()
     iter = 0
-    file_counter = 0
+    mol_counter = 0
+    mols = {}
     with open("log_small.csv", 'w', buffering=1) as f:
         f.write("time,unique,valid,total\n")
         try:
@@ -116,16 +118,21 @@ def reporter(q, d, valid, total, dir, stop, pause, new_unique):
                                 outf.write(i + "\n")
                     if len(new_unique >= 100):
                         pause.value = True
-                        with open("unique_out_" + str(file_counter) + ".smi") as f:
+                        with open("unique_out" + ".smi") as f:
                             for i in range(len(new_unique)):
-                                f.write(new_unique[i] + " " + "m_" + str() + "\n" )
+                                mols[mol_counter] = i
+                                f.write(new_unique[i] + " " + "m_" + str(mol_counter) + "\n" )
+                        new_unique.clear()
 
                     print("Pausing. Then exiting")
                     time.sleep(10)
                     stop.value = True
                     exit()
                         # send off to rocs and omega.
-                    hits = oe_analysis.get_color("unique_out_" + str(file_counter) + ".smi", hits=100)
+
+                    subprocess.check_call(['./omega2 -in unique_out.smi -out unique_out.oeb.gz'])
+                    hits = oe_analysis.get_color("data.oeb.gz", "unique_out"  + ".oeb.gz")
+                    ##find best hit and output it.
 
                 except ZeroDivisionError:
                     print("eh zero error.")
