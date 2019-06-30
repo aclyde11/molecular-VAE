@@ -317,7 +317,8 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
     recon_loss_values = mosesvocab.CircularBuffer(10)
     loss_values =mosesvocab.CircularBuffer(10)
     for i, (input_batch, _) in enumerate(tqdm_data):
-        kl_weight += kl_annealer_rate
+        if epoch >= 1:
+            kl_weight += kl_annealer_rate
 
         # if epoch < 20:
         #     if i % 1 == 0:
@@ -363,7 +364,8 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
 
         # kl_weight =  min(kl_weight + 1e-3,1)
         loss = recon_loss
-        loss += min(1.0, kl_weight) * kl_loss
+        if epoch >= 1:
+            loss += min(1.0, kl_weight) * kl_loss
         # loss = kl_loss + recon_loss
 
         loss.backward()
