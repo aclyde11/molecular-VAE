@@ -44,56 +44,60 @@ class FastRocker():
 
     def get_color(self, smi):
 
-        ##use omega here to get conformers:
-        with open("tmp.smi", 'w') as f:
-            f.write(smi + " tmp_0\n")
-        subprocess.check_call(["/workspace/openeye/bin/omega2", "-in", "tmp.smi", "-out", "tmp.oeb.gz"])
-        qfname = "tmp.oeb.gz"
+        try:
+            ##use omega here to get conformers:
+            with open("tmp.smi", 'w') as f:
+                f.write(smi + " tmp_0\n")
+            subprocess.check_call(["/workspace/openeye/bin/omega2", "-in", "tmp.smi", "-out", "tmp.oeb.gz"])
+            qfname = "tmp.oeb.gz"
 
-        # read in query
-        qfs = oechem.oemolistream()
-        if not qfs.open(qfname):
-            oechem.OEThrow.Fatal("Unable to open '%s'" % qfname)
+            # read in query
+            qfs = oechem.oemolistream()
+            if not qfs.open(qfname):
+                oechem.OEThrow.Fatal("Unable to open '%s'" % qfname)
 
-        mcmol = oechem.OEMol()
-        if not oechem.OEReadMolecule(qfs, mcmol):
-            oechem.OEThrow.Fatal("Unable to read query from '%s'" % qfname)
-        qfs.rewind()
+            mcmol = oechem.OEMol()
+            if not oechem.OEReadMolecule(qfs, mcmol):
+                oechem.OEThrow.Fatal("Unable to read query from '%s'" % qfname)
+            qfs.rewind()
 
-        qmolidx = 0
-        results = {}
-        while oechem.OEReadMolecule(qfs, mcmol):
-            moltitle = mcmol.GetTitle()
-            if len(moltitle) == 0:
-                moltitle = str(qmolidx)
-            results[moltitle] = 0
-            print("Searching for %s of %s (%s conformers)" % (moltitle, qfname, mcmol.NumConfs()))
+            qmolidx = 0
+            results = {}
+            while oechem.OEReadMolecule(qfs, mcmol):
+                moltitle = mcmol.GetTitle()
+                if len(moltitle) == 0:
+                    moltitle = str(qmolidx)
+                results[moltitle] = 0
+                print("Searching for %s of %s (%s conformers)" % (moltitle, qfname, mcmol.NumConfs()))
 
-            qconfidx = 0
-            max_score = 0
-            scores_run = 0
-            max_scorer_dbase = 0
-            for conf in mcmol.GetConfs():
+                qconfidx = 0
+                max_score = 0
+                scores_run = 0
+                max_scorer_dbase = 0
+                for conf in mcmol.GetConfs():
 
-                for score in self.dbase.GetSortedScores(conf, self.opts):
-                    # dbmol = oechem.OEMol()
-                    # dbmolidx = score.GetMolIdx()
-                    # if not self.moldb.GetMolecule(dbmol, dbmolidx):
-                    #     print("Unable to retrieve molecule '%u' from the database" % dbmolidx)
-                    #     continue
-                    # print(dbmol.GetTitle())
-                    dbmolidx = 2
-                    max_scorer_dbase = dbmolidx
-                    max_score = max(max_score, score.GetColorTanimoto())
-                    scores_run += 1
-                    # print( "ColorTanimoto", "%.4f" % score.GetColorTanimoto(), dbmolidx, moltitle)
-                    break
+                    for score in self.dbase.GetSortedScores(conf, self.opts):
+                        # dbmol = oechem.OEMol()
+                        # dbmolidx = score.GetMolIdx()
+                        # if not self.moldb.GetMolecule(dbmol, dbmolidx):
+                        #     print("Unable to retrieve molecule '%u' from the database" % dbmolidx)
+                        #     continue
+                        # print(dbmol.GetTitle())
+                        dbmolidx = 2
+                        max_scorer_dbase = dbmolidx
+                        max_score = max(max_score, score.GetColorTanimoto())
+                        scores_run += 1
+                        # print( "ColorTanimoto", "%.4f" % score.GetColorTanimoto(), dbmolidx, moltitle)
+                        break
 
-                qconfidx += 1
-            print("Color: ", max_score, scores_run, dbmolidx)
-            print("%s conformers processed" % qconfidx)
-            results[moltitle] = (max_score, dbmolidx)
-            qmolidx += 1
+                    qconfidx += 1
+                print("Color: ", max_score, scores_run, dbmolidx)
+                print("%s conformers processed" % qconfidx)
+                results[moltitle] = (max_score, dbmolidx)
+                qmolidx += 1
+        except:
+            print("something fatal happened.")
+            return None
 
         return max_score, dbmolidx
 
