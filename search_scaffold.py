@@ -44,6 +44,7 @@ def gen_proc(iters, i, batch_size, dir, selfies):
                     else:
                         s = "".join([charset[sym]  for sym in res[i]])
                     smis.append(s)
+                    print("valid selfie: ", s)
                 except:
                     None
                     # print("ERROR!!!")
