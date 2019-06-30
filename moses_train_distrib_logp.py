@@ -311,7 +311,7 @@ lr_annealer_d = CosineAnnealingLRWithRestart(encoder_optimizer)
 
 model.zero_grad()
 
-kl_annealer_rate = 0.000003
+kl_annealer_rate = 0.000001
 kl_weight = 0
 
 def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, decoder_optim):
@@ -320,7 +320,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
     recon_loss_values = mosesvocab.CircularBuffer(10)
     loss_values =mosesvocab.CircularBuffer(10)
     for i, (input_batch, _) in enumerate(tqdm_data):
-        if epoch >= 1:
+        if epoch >= 5:
             kl_weight += kl_annealer_rate
 
         # if epoch < 20:
@@ -367,7 +367,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
 
         # kl_weight =  min(kl_weight + 1e-3,1)
         loss = recon_loss
-        if epoch >= 1:
+        if epoch >= 5:
             loss += min(1.0, kl_weight) * kl_loss
         # loss = kl_loss + recon_loss
 
@@ -552,12 +552,13 @@ print("STARTING THING I WANT.....")
 # np.savez("z_vae_moses.npz", np.concatenate(vecs, axis=0))
 
 
-kl_weight = 1e-3
 
-for epoch in range(10, 30):
+for epoch in range(0, 40):
 
 
     # kl_weight = kl_annealer(epoch)
+    if epoch < 5:
+        kl_weight = 0
 
 
     if epoch < 20:
