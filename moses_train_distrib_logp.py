@@ -32,8 +32,8 @@ parser = argparse.ArgumentParser()
 # FOR DISTRIBUTED:  Parse for the local_rank argument, which will be supplied
 # automatically by torch.distributed.launch.
 parser.add_argument("--local_rank", default=0, type=int)
-parser.add_argument("--batch_size", default=128, type=int)
-parser.add_argument("--encoder_batch_size", default=128, type=int)
+parser.add_argument("--batch_size", default=512, type=int)
+parser.add_argument("--encoder_batch_size", default=512, type=int)
 parser.add_argument("--lr", default=1e-3, type=float)
 args = parser.parse_args()
 torch.cuda.set_device(args.local_rank)
@@ -297,7 +297,7 @@ binding_optimizer = None
 
 # optimizer = optim.Adam(model.parameters() ,
 #                                lr=3*1e-3 )
-encoder_optimizer = optim.Adam(model.parameters(), lr=8e-4)
+encoder_optimizer = optim.Adam(model.parameters(), lr=1e-4)
 # model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
 # model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], output_device=args.local_rank, find_unused_parameters=True)
 
@@ -362,7 +362,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
 
         # kl_weight =  min(kl_weight + 1e-3,1)
         loss = recon_loss
-        loss += kl_weight * kl_loss
+        loss += 1 * kl_loss
         # loss = kl_loss + recon_loss
 
         loss.backward()
@@ -548,13 +548,13 @@ print("STARTING THING I WANT.....")
 
 kl_weight = 1e-3
 
-for epoch in range(100):
+for epoch in range(40):
 
 
     # kl_weight = kl_annealer(epoch)
 
 
-    if epoch < 90:
+    if epoch < 20:
         tqdm_data = tqdm(train_loader,
                          desc='Training (epoch #{})'.format(epoch))
     else:
