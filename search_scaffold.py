@@ -39,16 +39,16 @@ def gen_proc(iters, i, batch_size, dir, selfies):
             for i in range(batch_size):
                 count += 1
                 try:
-                    if selfies:
-                        s = "".join(['[' + charset[sym] + ']' for sym in res[i]])
-                        s = selfies.decoder(s)
-                    else:
-                        s = "".join([charset[sym]  for sym in res[i]])
+                    # if selfies:
+                    s = "".join(['[' + charset[sym] + ']' for sym in res[i]])
+                    s = selfies.decoder(s)
+                    # else:
+                    #     s = "".join([charset[sym]  for sym in res[i]])
                     smis.append(s)
                     print("valid selfie: ", s)
                 except:
-                    None
-                    # print("ERROR!!!")
+                    # None
+                    print("ERROR!!!")
                     # print('res', res[i])
                     # print("charset", charset
             for smi in smis:
