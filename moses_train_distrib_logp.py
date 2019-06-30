@@ -294,6 +294,7 @@ n_epochs = 100
 
 model = mosesvae.VAE(vocab).cuda()
 model.apply(init_weights)
+model.load_state_dict(torch.load("finetuning/trained_save_small.pt"))
 binding_optimizer = None
 
 # optimizer = optim.Adam(model.parameters() ,
@@ -551,7 +552,7 @@ print("STARTING THING I WANT.....")
 
 kl_weight = 1e-3
 
-for epoch in range(40):
+for epoch in range(20, 40):
 
 
     # kl_weight = kl_annealer(epoch)
