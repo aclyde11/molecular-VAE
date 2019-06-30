@@ -74,7 +74,7 @@ class VAE(nn.Module):
             ConvSELU(30, 10, kernel_size=11),
         )
 
-        self.flatten = nn.Sequential(nn.Linear((45 - 29 + 3) * 10, 512),
+        self.flatten = nn.Sequential(nn.Linear(840, 512),
                       SELU(inplace=True))
 
         self.q_mu = nn.Sequential(nn.Linear(512, 256), nn.ReLU(), nn.Linear(256, d_z))
