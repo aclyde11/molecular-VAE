@@ -163,7 +163,6 @@ class VAE(nn.Module):
         x = nn.utils.rnn.pack_sequence(x)
         output, _ = nn.utils.rnn.pad_packed_sequence(x, batch_first=True, total_length=101)
         x = self.encoder_rnn(output).view(output.shape[0], -1)
-        print(x.shape)
         x = self.flatten(x)
 
 
