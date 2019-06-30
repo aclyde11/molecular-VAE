@@ -190,11 +190,11 @@ for i in tqdm_range:
             continue
         m = Chem.MolFromSmiles(original)
         cannmon = Chem.MolToSmiles(m)
-        # selfie = cannmon
-        selfie = selfies.encoder(cannmon)
+        selfie = cannmon
+        # selfie = selfies.encoder(cannmon)
         selfien = []
-        for sym in re.findall("\[(.*?)\]", selfie):
-        # for sym in selfie:
+        # for sym in re.findall("\[(.*?)\]", selfie):
+        for sym in selfie:
             if sym in sym_table:
                 selfien.append(sym_table[sym])
             else:
@@ -220,11 +220,11 @@ for i in tqdm_range:
             continue
         m = Chem.MolFromSmiles(original)
         cannmon = Chem.MolToSmiles(m)
-        # selfie = cannmon
-        selfie = selfies.encoder(cannmon)
+        selfie = cannmon
+        # selfie = selfies.encoder(cannmon)
         selfien = []
-        for sym in re.findall("\[(.*?)\]", selfie):
-        # for sym in selfie:
+        # for sym in re.findall("\[(.*?)\]", selfie):
+        for sym in selfie:
             if sym in sym_table:
                 selfien.append(sym_table[sym])
             else:
@@ -576,8 +576,8 @@ for epoch in range(0, 40):
     pd.DataFrame([res]).to_csv(OUTPUT_DIR + "out_tests.csv")
     try:
         for i in range(50):
-            print(selfies.decoder("".join(['[' + charset[sym] + ']' for sym in res[i]])))
-            # print("".join([ charset[sym] for sym in res[i]]))
+            # print(selfies.decoder("".join(['[' + charset[sym] + ']' for sym in res[i]])))
+            print("".join([ charset[sym] for sym in res[i]]))
     except Exception as e:
         print("error...")
         print("Not sure why nothing printed..")
