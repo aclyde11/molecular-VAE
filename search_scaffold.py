@@ -35,6 +35,7 @@ def gen_proc(iters, i, batch_size, dir, selfies):
             res, _ = model.sample(batch_size)
 
             smis = []
+            print("did one batch")
             for i in range(batch_size):
                 count += 1
                 try:
