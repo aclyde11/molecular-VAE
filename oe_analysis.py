@@ -47,7 +47,7 @@ class FastRocker():
         ##use omega here to get conformers:
         with open("tmp.smi", 'w') as f:
             f.write(smi + " tmp_0\n")
-        subprocess.check_call("/workspace/openeye/bin/omega2 -mpi_np 4 -in tmp.smi -out -tmp.oeb.gz")
+        subprocess.check_call(["/workspace/openeye/bin/omega2", "-mpi_np 4 -in tmp.smi -out -tmp.oeb.gz"])
         qfname = "tmp.oeb.gz"
 
         # read in query
