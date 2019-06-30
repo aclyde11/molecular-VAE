@@ -51,7 +51,7 @@ def gen_proc(iters, i, batch_size, dir, selfies):
                     # print("charset", charset
             for smi in smis:
                 score, idx = fastrocs.get_color(smi)
-                print(score, idx)s
+                print(score, idx)
 
     except KeyboardInterrupt:
         print("exiting")
