@@ -231,6 +231,8 @@ for i in range(df_fine_tune.shape[0]):
                 sym_table[sym] = chr(counter)
                 counter += 1
                 selfien.append(sym_table[sym])
+        if len(selfien) > 100:
+            continue
         fine_tune_selfie.append(selfien)
         fine_tune_cannon.append(cannmon)
 
