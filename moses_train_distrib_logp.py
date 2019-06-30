@@ -308,7 +308,7 @@ lr_annealer_d = CosineAnnealingLRWithRestart(encoder_optimizer)
 
 model.zero_grad()
 
-kl_annealer_rate = 0.000002
+kl_annealer_rate = 0.00001
 kl_weight = 0
 
 def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, decoder_optim):
@@ -363,12 +363,12 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
 
         # kl_weight =  min(kl_weight + 1e-3,1)
         loss = recon_loss
-        loss += 1 * kl_loss
+        loss += min(1.0, kl_weight) * kl_loss
         # loss = kl_loss + recon_loss
 
         loss.backward()
         clip_grad_norm_((p for p in model.parameters() if p.requires_grad),
-                        50)
+                        25)
 
         encoder_optimizer.step()
 
