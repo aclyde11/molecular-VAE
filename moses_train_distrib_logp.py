@@ -172,17 +172,17 @@ class SmilesLoaderSelfies(torch.utils.data.Dataset):
         selfie = self.df.iloc[idx, 0]
         return selfie, 0
 
-df = pd.read_csv("../dataset_v1.csv")
-# df = df.sample(500000, replace=False, random_state=42)
-
-df_fine_tune = pd.read_csv("../kinases_jonhk_lab.smi", header=None, sep=' ', usecols=[0])
-# df = df.sample(1000, replace=False, random_state=42)
-max_len = 0
-selfs = []
-counter = 51
-sym_table = {}
-cannon_smiles = []
-tqdm_range = tqdm(range(df.shape[0]))
+# df = pd.read_csv("../dataset_v1.csv")
+# # df = df.sample(500000, replace=False, random_state=42)
+#
+# df_fine_tune = pd.read_csv("../kinases_jonhk_lab.smi", header=None, sep=' ', usecols=[0])
+# # df = df.sample(1000, replace=False, random_state=42)
+# max_len = 0
+# selfs = []
+# counter = 51
+# sym_table = {}
+# cannon_smiles = []
+# tqdm_range = tqdm(range(df.shape[0]))
 # for i in tqdm_range:
 #     try:
 #         original = str(df.iloc[i,0])
@@ -210,69 +210,68 @@ tqdm_range = tqdm(range(df.shape[0]))
 #         exit()
 #     except:
 #         print("ERROR...")
-
-fine_tune_cannon = []
-fine_tune_selfie = []
-tqdm_range = tqdm(range(df_fine_tune.shape[0]))
-for i in tqdm_range:
-    try:
-        original = str(df_fine_tune.iloc[i,0])
-        if len(original) > 100:
-            continue
-        m = Chem.MolFromSmiles(original)
-        cannmon = Chem.MolToSmiles(m)
-        selfie = cannmon
-        selfie = selfies.encoder(cannmon)
-        selfien = []
-        for sym in re.findall("\[(.*?)\]", selfie):
-        # for sym in selfie:
-            if sym in sym_table:
-                selfien.append(sym_table[sym])
-            else:
-                sym_table[sym] = chr(counter)
-                counter += 1
-                selfien.append(sym_table[sym])
-        if len(selfien) > 100:
-            continue
-        fine_tune_selfie.append(selfien)
-        fine_tune_cannon.append(cannmon)
-
-        postfix = [f'len=%s' % (len(sym_table))]
-        tqdm_range.set_postfix_str(' '.join(postfix))
-    except KeyboardInterrupt:
-        exit()
-    except:
-        print("ERROR...")
+# fine_tune_cannon = []
+# fine_tune_selfie = []
+# tqdm_range = tqdm(range(df_fine_tune.shape[0]))
+# for i in tqdm_range:
+#     try:
+#         original = str(df_fine_tune.iloc[i,0])
+#         if len(original) > 100:
+#             continue
+#         m = Chem.MolFromSmiles(original)
+#         cannmon = Chem.MolToSmiles(m)
+#         selfie = cannmon
+#         selfie = selfies.encoder(cannmon)
+#         selfien = []
+#         for sym in re.findall("\[(.*?)\]", selfie):
+#         # for sym in selfie:
+#             if sym in sym_table:
+#                 selfien.append(sym_table[sym])
+#             else:
+#                 sym_table[sym] = chr(counter)
+#                 counter += 1
+#                 selfien.append(sym_table[sym])
+#         if len(selfien) > 100:
+#             continue
+#         fine_tune_selfie.append(selfien)
+#         fine_tune_cannon.append(cannmon)
 #
-charset = {k: v for v, k in sym_table.items()}
-vocab = mosesvocab.OneHotVocab(sym_table.values())
+#         postfix = [f'len=%s' % (len(sym_table))]
+#         tqdm_range.set_postfix_str(' '.join(postfix))
+#     except KeyboardInterrupt:
+#         exit()
+#     except:
+#         print("ERROR...")
+# #
+# charset = {k: v for v, k in sym_table.items()}
+# vocab = mosesvocab.OneHotVocab(sym_table.values())
 
-# with open(OUTPUT_DIR +"sym_table.pkl", 'rb') as f:
-#     sym_table = pickle.load(f)
-# with open(OUTPUT_DIR +"charset.pkl", 'rb') as f:
-#     charset = pickle.load(f)
-# with open(OUTPUT_DIR +"vocab.pkl", 'rb') as f:
-#     vocab = pickle.load(f)
-# with open(OUTPUT_DIR +"selfs.pkl", 'rb') as f:
-#     selfs = pickle.load(f)
-# with open(OUTPUT_DIR +"cannon_smiles.pkl", 'rb') as f:
-#     cannon_smiles = pickle.load(f)
-# with open(OUTPUT_DIR + "fine_tune_selfs.pkl", 'rb') as f:
-#     fine_tune_selfie = pickle.load( f)
+with open(OUTPUT_DIR +"sym_table.pkl", 'rb') as f:
+    sym_table = pickle.load(f)
+with open(OUTPUT_DIR +"charset.pkl", 'rb') as f:
+    charset = pickle.load(f)
+with open(OUTPUT_DIR +"vocab.pkl", 'rb') as f:
+    vocab = pickle.load(f)
+with open(OUTPUT_DIR +"selfs.pkl", 'rb') as f:
+    selfs = pickle.load(f)
+with open(OUTPUT_DIR +"cannon_smiles.pkl", 'rb') as f:
+    cannon_smiles = pickle.load(f)
+with open(OUTPUT_DIR + "fine_tune_selfs.pkl", 'rb') as f:
+    fine_tune_selfie = pickle.load( f)
 
 
-with open(OUTPUT_DIR + "sym_table.pkl", 'wb') as f:
-    pickle.dump(sym_table, f)
-with open(OUTPUT_DIR + "charset.pkl", 'wb') as f:
-    pickle.dump(charset, f)
-with open(OUTPUT_DIR + "vocab.pkl", 'wb') as f:
-    pickle.dump(vocab, f)
-with open(OUTPUT_DIR + "selfs.pkl", 'wb') as f:
-    pickle.dump(selfs, f)
-with open(OUTPUT_DIR + "cannon_smiles.pkl", 'wb') as f:
-    pickle.dump(cannon_smiles, f)
-with open(OUTPUT_DIR + "fine_tune_selfs.pkl", 'wb') as f:
-    pickle.dump(fine_tune_selfie, f)
+# with open(OUTPUT_DIR + "sym_table.pkl", 'wb') as f:
+#     pickle.dump(sym_table, f)
+# with open(OUTPUT_DIR + "charset.pkl", 'wb') as f:
+#     pickle.dump(charset, f)
+# with open(OUTPUT_DIR + "vocab.pkl", 'wb') as f:
+#     pickle.dump(vocab, f)
+# with open(OUTPUT_DIR + "selfs.pkl", 'wb') as f:
+#     pickle.dump(selfs, f)
+# with open(OUTPUT_DIR + "cannon_smiles.pkl", 'wb') as f:
+#     pickle.dump(cannon_smiles, f)
+# with open(OUTPUT_DIR + "fine_tune_selfs.pkl", 'wb') as f:
+#     pickle.dump(fine_tune_selfie, f)
 
 #
 # df = pd.DataFrame(pd.Series(selfs))
@@ -284,12 +283,12 @@ with open(OUTPUT_DIR + "fine_tune_selfs.pkl", 'wb') as f:
 bdata = BindingDataSet(selfs)
 fine_tune_data = BindingDataSet(fine_tune_selfie)
 # train_sampler = torch.utils.data.distributed.DistributedSampler(bdata)
-train_loader = torch.utils.data.DataLoader(bdata, batch_size=args.batch_size,
-                          shuffle=True,
-                          num_workers=32, collate_fn=get_collate_fn_binding(),
-                          worker_init_fn=mosesvocab.set_torch_seed_to_all_gens,
-                                           pin_memory=True,)
-
+# train_loader = torch.utils.data.DataLoader(bdata, batch_size=args.batch_size,
+#                           shuffle=True,
+#                           num_workers=32, collate_fn=get_collate_fn_binding(),
+#                           worker_init_fn=mosesvocab.set_torch_seed_to_all_gens,
+#                                            pin_memory=True,)
+#
 fine_tune_loader = torch.utils.data.DataLoader(fine_tune_data, batch_size=args.batch_size, shuffle=True,
                                                num_workers=32, collate_fn=get_collate_fn_binding(),
                                                worker_init_fn=mosesvocab.set_torch_seed_to_all_gens, pin_memory=True)
