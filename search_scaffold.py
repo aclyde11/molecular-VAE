@@ -152,7 +152,7 @@ if __name__ == '__main__':
     parser.add_argument('--hashers', type=int, default=1)
     args = parser.parse_args()
     manager = Manager()
-    gen_proc(10000,42,4096 * 2, args.in_dir, args.s)
+    gen_proc(10000,2,4096 * 2, args.in_dir, args.s)
 
 
 
