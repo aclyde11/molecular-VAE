@@ -71,7 +71,7 @@ class VAE(nn.Module):
         self.encoder_rnn = nn.Sequential(
             ConvSELU(110, 60, kernel_size=9),
             ConvSELU(60, 30, kernel_size=9),
-            ConvSELU(10, 10, kernel_size=11),
+            ConvSELU(30, 10, kernel_size=11),
         )
 
         self.flatten = nn.Sequential(nn.Linear((len(vocab) - 29 + 3) * 10, 512),
