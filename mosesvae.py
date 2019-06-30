@@ -69,12 +69,12 @@ class VAE(nn.Module):
 
         # Encoder
         self.encoder_rnn = nn.Sequential(
-            ConvSELU(110, 60, kernel_size=9),
-            ConvSELU(60, 30, kernel_size=9),
+            ConvSELU(45, 45, kernel_size=9),
+            ConvSELU(45, 30, kernel_size=9),
             ConvSELU(30, 10, kernel_size=11),
         )
 
-        self.flatten = nn.Sequential(nn.Linear((len(vocab) - 29 + 3) * 10, 512),
+        self.flatten = nn.Sequential(nn.Linear((45 - 29 + 3) * 10, 512),
                       SELU(inplace=True))
 
         self.q_mu = nn.Sequential(nn.Linear(512, 256), nn.ReLU(), nn.Linear(256, d_z))
