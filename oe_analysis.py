@@ -76,12 +76,13 @@ class FastRocker():
             for conf in mcmol.GetConfs():
 
                 for score in self.dbase.GetSortedScores(conf, self.opts):
-                    dbmol = oechem.OEMol()
-                    dbmolidx = score.GetMolIdx()
-                    if not self.moldb.GetMolecule(dbmol, dbmolidx):
-                        print("Unable to retrieve molecule '%u' from the database" % dbmolidx)
-                        continue
-                    print(dbmol.GetTitle())
+                    # dbmol = oechem.OEMol()
+                    # dbmolidx = score.GetMolIdx()
+                    # if not self.moldb.GetMolecule(dbmol, dbmolidx):
+                    #     print("Unable to retrieve molecule '%u' from the database" % dbmolidx)
+                    #     continue
+                    # print(dbmol.GetTitle())
+                    dbmolidx = 2
                     max_scorer_dbase = dbmolidx
                     max_score = max(max_score, score.GetColorTanimoto())
                     scores_run += 1
