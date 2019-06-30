@@ -152,38 +152,7 @@ if __name__ == '__main__':
     parser.add_argument('--hashers', type=int, default=1)
     args = parser.parse_args()
     manager = Manager()
-    valid = Value('i', 0)
-    total = Value('i', 0)
-    stop = Value('b', False)
-    pause = Value('b', False)
-    d = manager.dict()
-    q = Queue()
-    new_unique = Queue()
-    ps = []
-    for i in range(args.workers):
-        ps.append(Process(target=gen_proc, args=(10000,i,4096 * 2, args.in_dir, args.s))) ##workers
-    # hs = []
-    # for i in range(args.hashers):
-    #     hs.append(Process(target=hasher, args=(q, d, valid, total, i,args.s, stop, pause, new_unique))) ## hasher
-    #
-    # r = Process(target=reporter, args=(q, d, valid, total, args.in_dir, stop, pause, new_unique))
-    #
-    for  p in ps:
-        p.start()
-    # for h in hs:
-    #     h.start()
-    # r.start()
-    # try:
-    #     for p in ps:
-    #         p.join()
-    #     for h in hs:
-    #         h.join()
-    #     r.join()
-    # except:
-    #     for p in ps:
-    #         p.kill()
-    #     for h in hs:
-    #         h.kill()
-    #     r.kill()
+    gen_proc(10000,42,4096 * 2, args.in_dir, args.s)
+
 
 
