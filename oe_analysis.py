@@ -2,6 +2,7 @@ from __future__ import print_function
 import os
 import sys
 import argparse
+import subprocess
 
 from openeye import oechem
 from openeye import oefastrocs
@@ -18,9 +19,9 @@ class FastRocker():
             return 0
 
         # set options
-        opts = oefastrocs.OEShapeDatabaseOptions()
-        opts.SetLimit(nHits)
-        print("Number of hits set to %u" % opts.GetLimit())
+        self.opts = oefastrocs.OEShapeDatabaseOptions()
+        self.opts.SetLimit(nHits)
+        print("Number of hits set to %u" % self.opts.GetLimit())
 
         # read in database
         ifs = oechem.oemolistream()
@@ -43,11 +44,11 @@ class FastRocker():
 
     def get_color(self, smi):
 
-
-
         ##use omega here to get conformers:
-
-
+        with open("tmp.smi", 'w') as f:
+            f.write(smi + " tmp_0\n")
+        subprocess.check_call("../omega2 -mpi_np 4 -in tmp.smi -out -tmp.oeb.gz")
+        qfname = "tmp.oeb.gz"
 
         # read in query
         qfs = oechem.oemolistream()
@@ -74,10 +75,10 @@ class FastRocker():
             max_scorer_dbase = 0
             for conf in mcmol.GetConfs():
 
-                for score in self.dbase.GetSortedScores(conf, opts):
+                for score in self.dbase.GetSortedScores(conf, self.opts):
                     dbmol = oechem.OEMol()
                     dbmolidx = score.GetMolIdx()
-                    if not moldb.GetMolecule(dbmol, dbmolidx):
+                    if not self.moldb.GetMolecule(dbmol, dbmolidx):
                         print("Unable to retrieve molecule '%u' from the database" % dbmolidx)
                         continue
                     print(dbmol.GetTitle())
@@ -93,18 +94,5 @@ class FastRocker():
             results[moltitle] = (max_score, dbmolidx)
             qmolidx += 1
 
-        return 0
-
-
-def get_color(database, qfname, nHits=1):
-    parser = argparse.ArgumentParser()
-
-    # positional arguments retaining backward compatibility
-    parser.add_argument('database',
-                        help='File containing the database molecules to be search (format not restricted to *.oeb).')
-    parser.add_argument('query', default=[], nargs='+',
-                        help='File containing the query molecule(s) to be search (format not restricted to *.oeb).')
-    parser.add_argument('--nHits', dest='nHits', type=int, default=100,
-                        help='Number of hits to return (default = number of database mols).')
-
+        return max_score, dbmolidx
 

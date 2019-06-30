@@ -9,6 +9,7 @@ import mosesvae
 import selfies
 import argparse
 import subprocess
+from oe_analysis import FastRocker
 import time
 from tqdm import tqdm
 from multiprocessing import Process, Pipe, Queue, Manager, Value
@@ -17,6 +18,8 @@ def gen_proc(iters, i, batch_size, dir, selfies):
     torch.manual_seed(i)
     torch.cuda.manual_seed(i)
     print("Generator on", i)
+
+    fastrocs = FastRocker("data.oeb")
     try:
         with open(dir + "/charset.pkl", 'rb') as f:
             charset = pickle.load(f)
@@ -37,6 +40,7 @@ def gen_proc(iters, i, batch_size, dir, selfies):
                 try:
                     if selfies:
                         s = "".join(['[' + charset[sym] + ']' for sym in res[i]])
+                        s = selfies.decoder(s)
                     else:
                         s = "".join([charset[sym]  for sym in res[i]])
                     smis.append(s)
@@ -45,7 +49,9 @@ def gen_proc(iters, i, batch_size, dir, selfies):
                     # print("ERROR!!!")
                     # print('res', res[i])
                     # print("charset", charset
-
+            for smi in smis:
+                score, idx = fastrocs.get_color(smi)
+                print(score, idx)s
 
     except KeyboardInterrupt:
         print("exiting")
@@ -154,29 +160,29 @@ if __name__ == '__main__':
     new_unique = Queue()
     ps = []
     for i in range(args.workers):
-        ps.append(Process(target=gen_proc, args=(q,10000,i,4096 * 2, args.in_dir, args.s, stop, pause))) ##workers
-    hs = []
-    for i in range(args.hashers):
-        hs.append(Process(target=hasher, args=(q, d, valid, total, i,args.s, stop, pause, new_unique))) ## hasher
-
-    r = Process(target=reporter, args=(q, d, valid, total, args.in_dir, stop, pause, new_unique))
-
+        ps.append(Process(target=gen_proc, args=(10000,i,4096 * 2, args.in_dir, args.s))) ##workers
+    # hs = []
+    # for i in range(args.hashers):
+    #     hs.append(Process(target=hasher, args=(q, d, valid, total, i,args.s, stop, pause, new_unique))) ## hasher
+    #
+    # r = Process(target=reporter, args=(q, d, valid, total, args.in_dir, stop, pause, new_unique))
+    #
     for  p in ps:
         p.start()
-    for h in hs:
-        h.start()
-    r.start()
-    try:
-        for p in ps:
-            p.join()
-        for h in hs:
-            h.join()
-        r.join()
-    except:
-        for p in ps:
-            p.kill()
-        for h in hs:
-            h.kill()
-        r.kill()
+    # for h in hs:
+    #     h.start()
+    # r.start()
+    # try:
+    #     for p in ps:
+    #         p.join()
+    #     for h in hs:
+    #         h.join()
+    #     r.join()
+    # except:
+    #     for p in ps:
+    #         p.kill()
+    #     for h in hs:
+    #         h.kill()
+    #     r.kill()
 
 
