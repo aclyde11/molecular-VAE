@@ -74,11 +74,11 @@ class VAE(nn.Module):
             ConvSELU(30, 10, kernel_size=11),
         )
 
-        self.flatten = nn.Sequential(nn.Linear(840, 512),
+        self.flatten = nn.Sequential(nn.Linear(840, 512, bias=True),
                       SELU(inplace=True))
 
-        self.q_mu = nn.Sequential(nn.Linear(512, 256), nn.ReLU(), nn.Linear(256, d_z))
-        self.q_logvar = nn.Sequential(nn.Linear(512, 256), nn.ReLU(), nn.Linear(256, d_z))
+        self.q_mu = nn.Sequential(nn.Linear(512, 256, bias=True), nn.ReLU(), nn.Linear(256, d_z, bias=True))
+        self.q_logvar = nn.Sequential(nn.Linear(512, 256, bias=True), nn.ReLU(), nn.Linear(256, d_z, bias=True))
 
         # Decoder
         if d_cell == 'gru':
@@ -94,8 +94,8 @@ class VAE(nn.Module):
                 "Invalid d_cell type, should be one of the ('gru',)"
             )
 
-        self.decoder_lat = nn.Linear(d_z, d_d_h)
-        self.decoder_fc = nn.Linear(d_d_h, n_vocab)
+        self.decoder_lat = nn.Linear(d_z, d_d_h, bias=True)
+        self.decoder_fc = nn.Linear(d_d_h, n_vocab, bias=True)
 
 
         # Grouping the model's parameters
