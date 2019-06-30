@@ -2,7 +2,7 @@ import torch
 import torch.utils.data
 
 from rdkit import Chem
-
+import oe_analysis
 import pickle
 import mosesvae
 
@@ -12,7 +12,7 @@ import time
 from tqdm import tqdm
 from multiprocessing import Process, Pipe, Queue, Manager, Value
 
-def gen_proc(comm, iters=10000, i=0, batch_size=4096, dir="", selfies=True):
+def gen_proc(comm, iters, i, batch_size, dir, selfies, stop, pause):
     print("Generator on", i)
     try:
         with open(dir + "/charset.pkl", 'rb') as f:
@@ -45,18 +45,23 @@ def gen_proc(comm, iters=10000, i=0, batch_size=4096, dir="", selfies=True):
             comm.put((smis, count))
             if comm.qsize() > 100:
                 time.sleep(20)
+            while pause.value:
+                time.sleep(60)
+            if stop.value:
+                exit()
+
     except KeyboardInterrupt:
         print("exiting")
         exit()
 
 
-def hasher(q, hasher, valid, total, i, s=False):
+def hasher(q, hasher, valid, total, i, s, stop, pause, new_unique):
     from rdkit import rdBase
     rdBase.DisableLog('rdApp.error')
     print("Hasher Thread on", i)
     torch.manual_seed(i)
     torch.cuda.manual_seed(i)
-    while True:
+    while not stop.value:
         if not q.empty():
             smis, count = q.get(block=True)
             total.value += count
@@ -72,20 +77,24 @@ def hasher(q, hasher, valid, total, i, s=False):
                             hasher[s] += 1
                         else:
                             hasher[s] = 1
+                            new_unique.append(s)
                 except KeyboardInterrupt:
                     print("Bye")
                     exit()
                 except:
                     None
+        while pause.value:
+            time.sleep(60)
 
-def reporter(q, d, valid, total, dir):
+def reporter(q, d, valid, total, dir, stop, pause, new_unique):
     print("Starting up reporter.")
     start_time = time.time()
     iter = 0
+    file_counter = 0
     with open("log_small.csv", 'w', buffering=1) as f:
         f.write("time,unique,valid,total\n")
         try:
-            while True:
+            while not stop:
                 try:
                     iter += 1
                     time.sleep(5)
@@ -105,6 +114,18 @@ def reporter(q, d, valid, total, dir):
                         with open(dir + "/out_samples.smi", 'w') as outf:
                             for i in d.keys():
                                 outf.write(i + "\n")
+                    if len(new_unique >= 100):
+                        pause.value = True
+                        with open("unique_out_" + str(file_counter) + ".smi") as f:
+                            for i in range(len(new_unique)):
+                                f.write(new_unique[i] + " " + "m_" + str() + "\n" )
+
+                    print("Pausing. Then exiting")
+                    time.sleep(10)
+                    stop.value = True
+                    exit()
+                        # send off to rocs and omega.
+                    hits = oe_analysis.get_color("unique_out_" + str(file_counter) + ".smi", hits=100)
 
                 except ZeroDivisionError:
                     print("eh zero error.")
@@ -126,16 +147,19 @@ if __name__ == '__main__':
     manager = Manager()
     valid = Value('i', 0)
     total = Value('i', 0)
+    stop = Value('b', False)
+    pause = Value('b', False)
     d = manager.dict()
     q = Queue()
+    new_unique = Queue()
     ps = []
     for i in range(args.workers):
-        ps.append(Process(target=gen_proc, args=(q,10000,i,4096 * 2, args.in_dir, args.s))) ##workers
+        ps.append(Process(target=gen_proc, args=(q,10000,i,4096 * 2, args.in_dir, args.s, stop, pause))) ##workers
     hs = []
     for i in range(args.hashers):
-        hs.append(Process(target=hasher, args=(q, d, valid, total, i,args.s))) ## hasher
+        hs.append(Process(target=hasher, args=(q, d, valid, total, i,args.s, stop, pause, new_unique))) ## hasher
 
-    r = Process(target=reporter, args=(q, d, valid, total, args.in_dir))
+    r = Process(target=reporter, args=(q, d, valid, total, args.in_dir, stop, pause, new_unique))
 
     for  p in ps:
         p.start()
