@@ -73,17 +73,16 @@ class VAE(nn.Module):
 
         # Encoder
         self.encoder_rnn = nn.Sequential(
-            ConvSELU(5, 9, kernel_size=9),
+            ConvSELU(101, 9, kernel_size=9),
             ConvSELU(9, 9, kernel_size=9),
             ConvSELU(9, 10, kernel_size=11),
         )
 
-        self.flatten = nn.Sequential(nn.Linear((len(vocab) - 29 + 3) * 10, 435),
+        self.flatten = nn.Sequential(nn.Linear((len(vocab) - 29 + 3) * 10, 512),
                       SELU(inplace=True))
 
-        q_d_last = q_d_h * (2 if q_bidir else 1)
-        self.q_mu = nn.Sequential(nn.Linear(q_d_last, 256), nn.ReLU(), nn.Linear(256, d_z))
-        self.q_logvar = nn.Sequential(nn.Linear(q_d_last, 256), nn.ReLU(), nn.Linear(256, d_z))
+        self.q_mu = nn.Sequential(nn.Linear(512, 256), nn.ReLU(), nn.Linear(256, d_z))
+        self.q_logvar = nn.Sequential(nn.Linear(512, 256), nn.ReLU(), nn.Linear(256, d_z))
 
         # Decoder
         if d_cell == 'gru':
