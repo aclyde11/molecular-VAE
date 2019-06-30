@@ -54,11 +54,11 @@ class FastRocker():
             # read in query
             qfs = oechem.oemolistream()
             if not qfs.open(qfname):
-                oechem.OEThrow.Fatal("Unable to open '%s'" % qfname)
+                return None
 
             mcmol = oechem.OEMol()
             if not oechem.OEReadMolecule(qfs, mcmol):
-                oechem.OEThrow.Fatal("Unable to read query from '%s'" % qfname)
+                return None
             qfs.rewind()
 
             qmolidx = 0
