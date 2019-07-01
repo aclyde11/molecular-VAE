@@ -173,7 +173,7 @@ class VAE(nn.Module):
 
         return string
 
-    def forward(self, x):
+    def forward(self, x, rate):
         """Do the VAE forward step
 
         :param x: list of tensors of longs, input sentence x
@@ -185,7 +185,7 @@ class VAE(nn.Module):
         z, kl_loss, logvar = self.forward_encoder(x)
 
         # Decoder: x, z -> recon_loss
-        recon_loss, x, y = self.forward_decoder(x, z)
+        recon_loss, x, y = self.forward_decoder(x, z, rate)
 
         return kl_loss, recon_loss, z, logvar, x, y
 
@@ -250,7 +250,7 @@ class VAE(nn.Module):
     #             if decoder_input.item() == self.eos:
     #                 break
 
-    def forward_decoder(self, x, z):
+    def forward_decoder(self, x, z, rate=0.5):
         """Decoder step, emulating x ~ G(z)
 
         :param x: list of tensors of longs, input sentence x
@@ -263,7 +263,7 @@ class VAE(nn.Module):
         x = nn.utils.rnn.pad_sequence(x, batch_first=True,
                                       padding_value=self.pad)
 
-        if random.random() < 0.4:
+        if random.random() < rate:
             x_emb = self.x_emb(x)
         else:
             w = torch.tensor(self.bos, device=self.device).repeat(x.shape[0])

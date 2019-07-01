@@ -314,13 +314,13 @@ model.zero_grad()
 kl_annealer_rate = 0.002
 kl_weight = 0
 
-def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, encoder_optim, decoder_optim):
+def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encoder_optim, decoder_optim):
     model.train()
     kl_loss_values = mosesvocab.CircularBuffer(10)
     recon_loss_values = mosesvocab.CircularBuffer(10)
     loss_values =mosesvocab.CircularBuffer(10)
 
-
+    rate = max(0, rate - 0.1)
 
     for i, (input_batch, _) in enumerate(tqdm_data):
         iters += 1
@@ -407,7 +407,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, encoder_opti
         'recon_loss': recon_loss_value,
         'loss': loss_value}
 
-    return postfix, kl_weight
+    return postfix, kl_weight, iters, rate
 
 
 # Epoch start
@@ -561,14 +561,14 @@ for epoch in range(0, 50):
 
     iters = 0
     kl_weight = 0
-
+    rate = 0.5
     if epoch < 40:
         tqdm_data = tqdm(train_loader,
                          desc='Training (epoch #{})'.format(epoch))
     else:
         tqdm_data = tqdm(fine_tune_loader, desc='Fine tuning (epoch #{}'.format(epoch))
-    postfix, kl_weight = _train_epoch_binding(model, epoch,
-                                tqdm_data, kl_weight, iters, encoder_optim=encoder_optimizer, decoder_optim=None)
+    postfix, kl_weight, iters, rate = _train_epoch_binding(model, epoch,
+                                tqdm_data, kl_weight, iters, rate, encoder_optim=encoder_optimizer, decoder_optim=None)
     torch.save(model.state_dict(), OUTPUT_DIR + "trained_save_small.pt")
     # with open('vocab.pkl', 'wb') as f:
     #     pickle.dump(vocab, f)
