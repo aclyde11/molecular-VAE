@@ -172,106 +172,106 @@ class SmilesLoaderSelfies(torch.utils.data.Dataset):
         selfie = self.df.iloc[idx, 0]
         return selfie, 0
 
-# df = pd.read_csv("../dataset_v1.csv")
-# df = df.sample(500000, replace=False, random_state=42)
-#
-# df_fine_tune = pd.read_csv("../kinases_jonhk_lab.smi", header=None, sep=' ', usecols=[0])
-# # df = df.sample(1000, replace=False, random_state=42)
-# max_len = 0
-# selfs = []
-# counter = 51
-# sym_table = {}
-# cannon_smiles = []
-# tqdm_range = tqdm(range(df.shape[0]))
-# for i in tqdm_range:
-#     try:
-#         original = str(df.iloc[i,0])
-#         if len(original) > 100:
-#             continue
-#         m = Chem.MolFromSmiles(original)
-#         cannmon = Chem.MolToSmiles(m)
-#         selfie = cannmon
-#         # selfie = selfies.encoder(cannmon)
-#         selfien = []
-#         # for sym in re.findall("\[(.*?)\]", selfie):
-#         for sym in selfie:
-#             if sym in sym_table:
-#                 selfien.append(sym_table[sym])
-#             else:
-#                 sym_table[sym] = chr(counter)
-#                 counter += 1
-#                 selfien.append(sym_table[sym])
-#         selfs.append(selfien)
-#         cannon_smiles.append(cannmon)
-#
-#         postfix = [f'len=%s' % (len(sym_table))]
-#         tqdm_range.set_postfix_str(' '.join(postfix))
-#     except KeyboardInterrupt:
-#         exit()
-#     except:
-#         print("ERROR...")
-# fine_tune_cannon = []
-# fine_tune_selfie = []
-# tqdm_range = tqdm(range(df_fine_tune.shape[0]))
-# for i in tqdm_range:
-#     try:
-#         original = str(df_fine_tune.iloc[i,0])
-#         if len(original) > 100:
-#             continue
-#         m = Chem.MolFromSmiles(original)
-#         cannmon = Chem.MolToSmiles(m)
-#         selfie = cannmon
-#         # selfie = selfies.encoder(cannmon)
-#         selfien = []
-#         # for sym in re.findall("\[(.*?)\]", selfie):
-#         for sym in selfie:
-#             if sym in sym_table:
-#                 selfien.append(sym_table[sym])
-#             else:
-#                 sym_table[sym] = chr(counter)
-#                 counter += 1
-#                 selfien.append(sym_table[sym])
-#         if len(selfien) > 100:
-#             continue
-#         fine_tune_selfie.append(selfien)
-#         fine_tune_cannon.append(cannmon)
-#
-#         postfix = [f'len=%s' % (len(sym_table))]
-#         tqdm_range.set_postfix_str(' '.join(postfix))
-#     except KeyboardInterrupt:
-#         exit()
-#     except:
-#         print("ERROR...")
-# #
-# charset = {k: v for v, k in sym_table.items()}
-# vocab = mosesvocab.OneHotVocab(sym_table.values())
+df = pd.read_csv("../dataset_v1.csv")
+df = df.sample(1000000, replace=False, random_state=42)
 
-with open(OUTPUT_DIR +"sym_table.pkl", 'rb') as f:
-    sym_table = pickle.load(f)
-with open(OUTPUT_DIR +"charset.pkl", 'rb') as f:
-    charset = pickle.load(f)
-with open(OUTPUT_DIR +"vocab.pkl", 'rb') as f:
-    vocab = pickle.load(f)
-with open(OUTPUT_DIR +"selfs.pkl", 'rb') as f:
-    selfs = pickle.load(f)
-with open(OUTPUT_DIR +"cannon_smiles.pkl", 'rb') as f:
-    cannon_smiles = pickle.load(f)
-with open(OUTPUT_DIR + "fine_tune_selfs.pkl", 'rb') as f:
-    fine_tune_selfie = pickle.load( f)
+df_fine_tune = pd.read_csv("../kinases_jonhk_lab.smi", header=None, sep=' ', usecols=[0])
+# df = df.sample(1000, replace=False, random_state=42)
+max_len = 0
+selfs = []
+counter = 51
+sym_table = {}
+cannon_smiles = []
+tqdm_range = tqdm(range(df.shape[0]))
+for i in tqdm_range:
+    try:
+        original = str(df.iloc[i,0])
+        if len(original) > 100:
+            continue
+        m = Chem.MolFromSmiles(original)
+        cannmon = Chem.MolToSmiles(m)
+        selfie = cannmon
+        selfie = selfies.encoder(cannmon)
+        selfien = []
+        for sym in re.findall("\[(.*?)\]", selfie):
+        # for sym in selfie:
+            if sym in sym_table:
+                selfien.append(sym_table[sym])
+            else:
+                sym_table[sym] = chr(counter)
+                counter += 1
+                selfien.append(sym_table[sym])
+        selfs.append(selfien)
+        cannon_smiles.append(cannmon)
+
+        postfix = [f'len=%s' % (len(sym_table))]
+        tqdm_range.set_postfix_str(' '.join(postfix))
+    except KeyboardInterrupt:
+        exit()
+    except:
+        print("ERROR...")
+fine_tune_cannon = []
+fine_tune_selfie = []
+tqdm_range = tqdm(range(df_fine_tune.shape[0]))
+for i in tqdm_range:
+    try:
+        original = str(df_fine_tune.iloc[i,0])
+        if len(original) > 100:
+            continue
+        m = Chem.MolFromSmiles(original)
+        cannmon = Chem.MolToSmiles(m)
+        selfie = cannmon
+        selfie = selfies.encoder(cannmon)
+        selfien = []
+        for sym in re.findall("\[(.*?)\]", selfie):
+        # for sym in selfie:
+            if sym in sym_table:
+                selfien.append(sym_table[sym])
+            else:
+                sym_table[sym] = chr(counter)
+                counter += 1
+                selfien.append(sym_table[sym])
+        if len(selfien) > 100:
+            continue
+        fine_tune_selfie.append(selfien)
+        fine_tune_cannon.append(cannmon)
+
+        postfix = [f'len=%s' % (len(sym_table))]
+        tqdm_range.set_postfix_str(' '.join(postfix))
+    except KeyboardInterrupt:
+        exit()
+    except:
+        print("ERROR...")
+#
+charset = {k: v for v, k in sym_table.items()}
+vocab = mosesvocab.OneHotVocab(sym_table.values())
+
+# with open(OUTPUT_DIR +"sym_table.pkl", 'rb') as f:
+#     sym_table = pickle.load(f)
+# with open(OUTPUT_DIR +"charset.pkl", 'rb') as f:
+#     charset = pickle.load(f)
+# with open(OUTPUT_DIR +"vocab.pkl", 'rb') as f:
+#     vocab = pickle.load(f)
+# with open(OUTPUT_DIR +"selfs.pkl", 'rb') as f:
+#     selfs = pickle.load(f)
+# with open(OUTPUT_DIR +"cannon_smiles.pkl", 'rb') as f:
+#     cannon_smiles = pickle.load(f)
+# with open(OUTPUT_DIR + "fine_tune_selfs.pkl", 'rb') as f:
+#     fine_tune_selfie = pickle.load( f)
 
 
-# with open(OUTPUT_DIR + "sym_table.pkl", 'wb') as f:
-#     pickle.dump(sym_table, f)
-# with open(OUTPUT_DIR + "charset.pkl", 'wb') as f:
-#     pickle.dump(charset, f)
-# with open(OUTPUT_DIR + "vocab.pkl", 'wb') as f:
-#     pickle.dump(vocab, f)
-# with open(OUTPUT_DIR + "selfs.pkl", 'wb') as f:
-#     pickle.dump(selfs, f)
-# with open(OUTPUT_DIR + "cannon_smiles.pkl", 'wb') as f:
-#     pickle.dump(cannon_smiles, f)
-# with open(OUTPUT_DIR + "fine_tune_selfs.pkl", 'wb') as f:
-#     pickle.dump(fine_tune_selfie, f)
+with open(OUTPUT_DIR + "sym_table.pkl", 'wb') as f:
+    pickle.dump(sym_table, f)
+with open(OUTPUT_DIR + "charset.pkl", 'wb') as f:
+    pickle.dump(charset, f)
+with open(OUTPUT_DIR + "vocab.pkl", 'wb') as f:
+    pickle.dump(vocab, f)
+with open(OUTPUT_DIR + "selfs.pkl", 'wb') as f:
+    pickle.dump(selfs, f)
+with open(OUTPUT_DIR + "cannon_smiles.pkl", 'wb') as f:
+    pickle.dump(cannon_smiles, f)
+with open(OUTPUT_DIR + "fine_tune_selfs.pkl", 'wb') as f:
+    pickle.dump(fine_tune_selfie, f)
 
 #
 # df = pd.DataFrame(pd.Series(selfs))
@@ -301,7 +301,7 @@ binding_optimizer = None
 
 # optimizer = optim.Adam(model.parameters() ,
 #                                lr=3*1e-3 )
-encoder_optimizer = optim.Adam(model.parameters(), lr=1e-3)
+encoder_optimizer = optim.Adam(model.parameters(), lr=8e-4)
 # model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
 # model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], output_device=args.local_rank, find_unused_parameters=True)
 
@@ -311,16 +311,20 @@ lr_annealer_d = CosineAnnealingLRWithRestart(encoder_optimizer)
 
 model.zero_grad()
 
-kl_annealer_rate = 0.000001
+kl_annealer_rate = 0.002
 kl_weight = 0
 
-def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, decoder_optim):
+def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, encoder_optim, decoder_optim):
     model.train()
     kl_loss_values = mosesvocab.CircularBuffer(10)
     recon_loss_values = mosesvocab.CircularBuffer(10)
     loss_values =mosesvocab.CircularBuffer(10)
+
+
+
     for i, (input_batch, _) in enumerate(tqdm_data):
-        if epoch >= 5:
+        iters += 1
+        if iters > 4000 and iters % 1000 == 0:
             kl_weight += kl_annealer_rate
 
         # if epoch < 20:
@@ -367,8 +371,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, encoder_optim, deco
 
         # kl_weight =  min(kl_weight + 1e-3,1)
         loss = recon_loss
-        if epoch >= 5:
-            loss += min(1.0, kl_weight) * kl_loss
+        loss += min(1.0, kl_weight) * kl_loss
         # loss = kl_loss + recon_loss
 
         loss.backward()
@@ -553,31 +556,29 @@ print("STARTING THING I WANT.....")
 
 
 
-for epoch in range(0, 40):
+for epoch in range(0, 50):
 
 
-    # kl_weight = kl_annealer(epoch)
-    if epoch < 5:
-        kl_weight = 0
+    iters = 0
+    kl_weight = 0
 
-
-    if epoch < 20:
+    if epoch < 40:
         tqdm_data = tqdm(train_loader,
                          desc='Training (epoch #{})'.format(epoch))
     else:
         tqdm_data = tqdm(fine_tune_loader, desc='Fine tuning (epoch #{}'.format(epoch))
     postfix, kl_weight = _train_epoch_binding(model, epoch,
-                                tqdm_data, kl_weight, encoder_optim=encoder_optimizer, decoder_optim=None)
+                                tqdm_data, kl_weight, iters, encoder_optim=encoder_optimizer, decoder_optim=None)
     torch.save(model.state_dict(), OUTPUT_DIR + "trained_save_small.pt")
     # with open('vocab.pkl', 'wb') as f:
     #     pickle.dump(vocab, f)
 
-    res, _ = model.sample(1024)
+    res, _ = model.sample(120)
     pd.DataFrame([res]).to_csv(OUTPUT_DIR + "out_tests.csv")
     try:
         for i in range(50):
-            # print(selfies.decoder("".join(['[' + charset[sym] + ']' for sym in res[i]])))
-            print("".join([ charset[sym] for sym in res[i]]))
+            print(selfies.decoder("".join(['[' + charset[sym] + ']' for sym in res[i]])))
+            # print("".join([ charset[sym] for sym in res[i]]))
     except Exception as e:
         print("error...")
         print("Not sure why nothing printed..")
