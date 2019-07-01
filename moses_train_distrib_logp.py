@@ -361,7 +361,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
         encoder_optimizer.zero_grad()
         input_batch = tuple(data.cuda() for data in input_batch)
         # Forwardd
-        kl_loss, recon_loss, _, logvar, x, y = model(input_batch)
+        kl_loss, recon_loss, _, logvar, x, y = model(input_batch, rate)
         _, predict = torch.max(F.softmax(y, dim=-1), -1)
 
         correct = float((x == predict).sum().cpu().detach().item()) / float(x.shape[0] * x.shape[1])
@@ -561,7 +561,7 @@ for epoch in range(0, 50):
 
     iters = 0
     kl_weight = 0
-    rate = 0.5
+    rate = 0.6
     if epoch < 40:
         tqdm_data = tqdm(train_loader,
                          desc='Training (epoch #{})'.format(epoch))
