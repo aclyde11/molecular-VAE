@@ -263,12 +263,14 @@ class VAE(nn.Module):
         x = nn.utils.rnn.pad_sequence(x, batch_first=True,
                                       padding_value=self.pad)
 
-        if random.random() < 0.3:
+        if random.random() < 0.5:
+            print("regular")
             x_emb = self.x_emb(x)
         else:
+            print("Special")
             w = torch.tensor(self.bos, device=self.device).repeat(x.shape[0])
             x_emb = self.x_emb(w).unsqueeze(1)
-
+        print(x_emb.shape)
         z_0 = z.unsqueeze(1).repeat(1, x_emb.size(1), 1)
         x_input = torch.cat([x_emb, z_0], dim=-1)
         x_input = nn.utils.rnn.pack_padded_sequence(x_input, lengths,
