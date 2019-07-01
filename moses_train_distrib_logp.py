@@ -32,8 +32,8 @@ parser = argparse.ArgumentParser()
 # FOR DISTRIBUTED:  Parse for the local_rank argument, which will be supplied
 # automatically by torch.distributed.launch.
 parser.add_argument("--local_rank", default=0, type=int)
-parser.add_argument("--batch_size", default=256, type=int)
-parser.add_argument("--encoder_batch_size", default=256, type=int)
+parser.add_argument("--batch_size", default=128, type=int)
+parser.add_argument("--encoder_batch_size", default=128, type=int)
 parser.add_argument("--lr", default=1e-3, type=float)
 args = parser.parse_args()
 torch.cuda.set_device(args.local_rank)
@@ -311,7 +311,7 @@ lr_annealer_d = CosineAnnealingLRWithRestart(encoder_optimizer)
 
 model.zero_grad()
 
-kl_annealer_rate = 0.002
+kl_annealer_rate = 0.0005
 kl_weight = 0
 
 def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encoder_optim, decoder_optim):
@@ -321,11 +321,11 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
     loss_values =mosesvocab.CircularBuffer(10)
 
     rate = max(0, rate - 0.1)
+    if epoch > 5:
+        kl_weight += kl_annealer_rate
 
     for i, (input_batch, _) in enumerate(tqdm_data):
         iters += 1
-        if epoch > 5 and iters % 1000 == 0:
-            kl_weight += kl_annealer_rate
 
         # if epoch < 20:
         #     if i % 1 == 0:
@@ -362,9 +362,9 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
         input_batch = tuple(data.cuda() for data in input_batch)
         # Forwardd
         kl_loss, recon_loss, _, logvar, x, y = model(input_batch, rate)
-        _, predict = torch.max(F.softmax(y, dim=-1), -1)
+        _, predict = torch.max(F.softmax(y[:, :-1], dim=-1), -1)
 
-        correct = float((x == predict).sum().cpu().detach().item()) / float(x.shape[0] * x.shape[1])
+        correct = float((x[:, 1:] == predict).sum().cpu().detach().item()) / float(x.shape[0] * x.shape[1])
 
         kl_loss = torch.sum(kl_loss, 0)
         recon_loss = torch.sum(recon_loss, 0)
@@ -556,9 +556,9 @@ print("STARTING THING I WANT.....")
 
 iters = 0
 kl_weight = 0
-rate = 0.4
+rate = 0.3
 
-for epoch in range(0, 50):
+for epoch in range(0, 100):
 
 
 
@@ -569,7 +569,7 @@ for epoch in range(0, 50):
         tqdm_data = tqdm(fine_tune_loader, desc='Fine tuning (epoch #{}'.format(epoch))
     postfix, kl_weight, iters, rate = _train_epoch_binding(model, epoch,
                                 tqdm_data, kl_weight, iters, rate, encoder_optim=encoder_optimizer, decoder_optim=None)
-    torch.save(model.state_dict(), OUTPUT_DIR + "trained_save_small.pt")
+    torch.save({'state_dict' : model.state_dict(), 'opt_state_dict' : encoder_optimizer.state_dict()}, OUTPUT_DIR + "trained_save_small.pt")
     # with open('vocab.pkl', 'wb') as f:
     #     pickle.dump(vocab, f)
 
