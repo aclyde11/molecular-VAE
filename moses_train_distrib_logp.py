@@ -301,7 +301,7 @@ binding_optimizer = None
 
 # optimizer = optim.Adam(model.parameters() ,
 #                                lr=3*1e-3 )
-encoder_optimizer = optim.Adam(model.parameters(), lr=8e-4)
+encoder_optimizer = optim.Adam(model.parameters(), lr=1e-4)
 # model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
 # model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], output_device=args.local_rank, find_unused_parameters=True)
 
