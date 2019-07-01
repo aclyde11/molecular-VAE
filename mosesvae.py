@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
+import random
 
 class AttnDecoderRNN(nn.Module):
     def __init__(self, hidden_size, output_size, dropout_p=0.1, max_length=110):
@@ -262,8 +262,12 @@ class VAE(nn.Module):
 
         x = nn.utils.rnn.pad_sequence(x, batch_first=True,
                                       padding_value=self.pad)
-        x_emb = self.x_emb(x)
-        x_emb = torch.LongTensor(10, 10).uniform_() > 0.8
+
+        if random.random() < 0.3:
+            x_emb = self.x_emb(x)
+        else:
+            w = torch.tensor(self.bos, device=self.device).repeat(x.shape[0])
+            x_emb = self.x_emb(w).unsqueeze(1)
 
         z_0 = z.unsqueeze(1).repeat(1, x_emb.size(1), 1)
         x_input = torch.cat([x_emb, z_0], dim=-1)
