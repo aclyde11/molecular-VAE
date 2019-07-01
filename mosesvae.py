@@ -2,6 +2,43 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+
+class AttnDecoderRNN(nn.Module):
+    def __init__(self, hidden_size, output_size, dropout_p=0.1, max_length=110):
+        super(AttnDecoderRNN, self).__init__()
+        self.hidden_size = hidden_size
+        self.output_size = output_size
+        self.dropout_p = dropout_p
+        self.max_length = max_length
+
+        self.embedding = nn.Embedding(self.output_size, self.hidden_size)
+        self.attn = nn.Linear(self.hidden_size * 2, self.max_length)
+        self.attn_combine = nn.Linear(self.hidden_size * 2, self.hidden_size)
+        self.dropout = nn.Dropout(self.dropout_p)
+        self.gru = nn.GRU(self.hidden_size, self.hidden_size)
+        self.out = nn.Linear(self.hidden_size, self.output_size)
+
+    def forward(self, input, hidden, encoder_outputs):
+        embedded = self.embedding(input).view(1, 1, -1)
+        embedded = self.dropout(embedded)
+
+        attn_weights = F.softmax(
+            self.attn(torch.cat((embedded[0], hidden[0]), 1)), dim=1)
+        attn_applied = torch.bmm(attn_weights.unsqueeze(0),
+                                 encoder_outputs.unsqueeze(0))
+
+        output = torch.cat((embedded[0], attn_applied[0]), 1)
+        output = self.attn_combine(output).unsqueeze(0)
+
+        output = F.relu(output)
+        output, hidden = self.gru(output, hidden)
+
+        output = F.log_softmax(self.out(output[0]), dim=1)
+        return output, hidden, attn_weights
+
+    def initHidden(self):
+        return torch.zeros(1, 1, self.hidden_size, device='cuda')
+
 class SELU(nn.Module):
 
     def __init__(self, alpha=1.6732632423543772848170429916717,
@@ -69,9 +106,11 @@ class VAE(nn.Module):
 
         # Encoder
         self.encoder_rnn = nn.Sequential(
-            ConvSELU(45, 45, kernel_size=9),
-            ConvSELU(45, 30, kernel_size=9),
-            ConvSELU(30, 10, kernel_size=11),
+            ConvSELU(106, 64, kernel_size=9),
+            ConvSELU(64, 48, kernel_size=9),
+            ConvSELU(48, 32, kernel_size=11),
+            ConvSELU(32, 10, kernel_size=11),
+
         )
 
         self.flatten = nn.Sequential(nn.Linear(840, 512, bias=True),
@@ -175,6 +214,43 @@ class VAE(nn.Module):
 
         return z, kl_loss, logvar
 
+    #
+    # def decoder_step(self, input_tensor, target_tensor, z):
+    #     import random
+    #     decoder = AttnDecoderRNN(hidden_size=512, output_size=100)
+    #     input_length = input_tensor.size(0)
+    #     target_length = target_tensor.size(0)
+    #
+    #     x_emb = self.x_emb(input_tensor)
+    #     encoder_outputs = z.unsqueeze(1).repeat(1, x_emb.size(1), 1)
+    #
+    #     decoder_input = torch.tensor([[self.eos]], device='cuda')
+    #
+    #     decoder_hidden = encoder_outputs
+    #
+    #     teacher_forcing_ratio = 0.5
+    #     use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
+    #
+    #     if use_teacher_forcing:
+    #         # Teacher forcing: Feed the target as the next input
+    #         for di in range(target_length):
+    #             decoder_output, decoder_hidden, decoder_attention = decoder(
+    #                 decoder_input, decoder_hidden, encoder_outputs)
+    #             loss += criterion(decoder_output, target_tensor[di])
+    #             decoder_input = target_tensor[di]  # Teacher forcing
+    #
+    #     else:
+    #         # Without teacher forcing: use its own predictions as the next input
+    #         for di in range(target_length):
+    #             decoder_output, decoder_hidden, decoder_attention = decoder(
+    #                 decoder_input, decoder_hidden, encoder_outputs)
+    #             topv, topi = decoder_output.topk(1)
+    #             decoder_input = topi.squeeze().detach()  # detach from history as input
+    #
+    #             loss += criterion(decoder_output, target_tensor[di])
+    #             if decoder_input.item() == self.eos:
+    #                 break
+
     def forward_decoder(self, x, z):
         """Decoder step, emulating x ~ G(z)
 
@@ -188,6 +264,7 @@ class VAE(nn.Module):
         x = nn.utils.rnn.pad_sequence(x, batch_first=True,
                                       padding_value=self.pad)
         x_emb = self.x_emb(x)
+        x_emb = torch.LongTensor(10, 10).uniform_() > 0.8
 
         z_0 = z.unsqueeze(1).repeat(1, x_emb.size(1), 1)
         x_input = torch.cat([x_emb, z_0], dim=-1)
