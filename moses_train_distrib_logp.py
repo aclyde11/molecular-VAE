@@ -76,7 +76,7 @@ class CosineAnnealingLRWithRestart(_LRScheduler):
     def __init__(self, optimizer):
         self.n_period = 10
         self.n_mult = 1
-        self.lr_end = 1e-4
+        self.lr_end = 8e-5
 
         self.current_epoch = 0
         self.t_end = self.n_period
@@ -306,7 +306,7 @@ encoder_optimizer = optim.Adam(model.parameters(), lr=3e-4)
 # model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], output_device=args.local_rank, find_unused_parameters=True)
 
 
-kl_annealer = 3e-4
+kl_annealer = 2e-4
 lr_annealer_d = CosineAnnealingLRWithRestart(encoder_optimizer)
 
 model.zero_grad()
