@@ -324,7 +324,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
 
     for i, (input_batch, _) in enumerate(tqdm_data):
         iters += 1
-        if iters > 4000 and iters % 1000 == 0:
+        if epoch > 5 and iters % 1000 == 0:
             kl_weight += kl_annealer_rate
 
         # if epoch < 20:
@@ -554,14 +554,14 @@ print("STARTING THING I WANT.....")
 # # xs.to_csv("smiles_computed.csv")
 # np.savez("z_vae_moses.npz", np.concatenate(vecs, axis=0))
 
-
+iters = 0
+kl_weight = 0
+rate = 0.4
 
 for epoch in range(0, 50):
 
 
-    iters = 0
-    kl_weight = 0
-    rate = 0.6
+
     if epoch < 40:
         tqdm_data = tqdm(train_loader,
                          desc='Training (epoch #{})'.format(epoch))
