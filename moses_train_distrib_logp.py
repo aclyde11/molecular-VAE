@@ -321,12 +321,12 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
     loss_values =mosesvocab.CircularBuffer(10)
 
     rate = max(0, rate - 0.1)
-    if epoch > 8:
+    if epoch > 10:
         kl_weight += kl_annealer_rate
 
     for i, (input_batch, _) in enumerate(tqdm_data):
         iters += 1
-
+        #
         # if epoch < 20:
         #     if i % 1 == 0:
         #         for (input_batch_, _) in train_loader_agg_tqdm:
@@ -356,7 +356,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
         #                        f'recon={recon_loss_value:.5f})',
         #                        f'correct={correct:.5f}']
         #             train_loader_agg_tqdm.set_postfix_str(' '.join(postfix))
-        #
+
 
         encoder_optimizer.zero_grad()
         input_batch = tuple(data.cuda() for data in input_batch)
@@ -562,7 +562,7 @@ for epoch in range(0, 100):
 
 
 
-    if epoch < 40:
+    if epoch < 80:
         tqdm_data = tqdm(train_loader,
                          desc='Training (epoch #{})'.format(epoch))
     else:
