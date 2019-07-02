@@ -336,10 +336,9 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
         kl_loss, recon_loss, _, logvar, x, y = model(input_batch, rate)
         # _, predict = torch.max(F.softmax(y[:, :-1], dim=-1), -1)
         res = [model.tensor2string(ix) for ix in y[0, ...]]
-        print((y))
 
         for i in range(50):
-            print(i)
+            print(res[i])
             print(selfies.decoder("".join(['[' + charset[sym] + ']' for sym in res[i]])))
         exit()
         # correct = float((x[:, 1:] == predict).sum().cpu().detach().item()) / float(x.shape[0] * x.shape[1])
