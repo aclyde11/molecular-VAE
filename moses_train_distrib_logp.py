@@ -321,7 +321,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
     loss_values =mosesvocab.CircularBuffer(10)
 
     rate = max(0, rate - 0.1)
-    if epoch > 10:
+    if epoch > 10 and epoch % 2 == 0:
         kl_weight += kl_annealer_rate
 
     for i, (input_batch, _) in enumerate(tqdm_data):
@@ -558,7 +558,7 @@ iters = 0
 kl_weight = 0
 rate = 0.3
 
-for epoch in range(0, 100):
+for epoch in range(0, 1000):
 
 
 
