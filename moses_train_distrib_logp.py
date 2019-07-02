@@ -335,8 +335,8 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
         # Forwardd
         kl_loss, recon_loss, _, logvar, x, y = model(input_batch, rate)
         # _, predict = torch.max(F.softmax(y[:, :-1], dim=-1), -1)
-        res = model.tensor2string(y)
-        print(model.tensor2string(y))
+        res = [model.tensor2string(ix) for ix in y]
+        print((y))
 
         for i in range(50):
             print(i)
