@@ -339,12 +339,9 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
 
         for i in range(50):
             sample = predict[i,...].tolist()
-            sample = [vocab.i2c[sym] for sym in sample]
+            sample = list(filter(lambda x : x != '<eos>' and x != '<pad>', [vocab.i2c[sym] for sym in sample]))
             x_ix = x[i,1:].tolist()
-            x_ix = [vocab.i2c[sym] for sym in x_ix]
-            print(sample)
-            print(x_ix)
-            print(charset, sym_table)
+            x_ix = list(filter(lambda x : x != '<eos>' and x != '<pad>', [vocab.i2c[sym] for sym in x_ix]))
             print(selfies.decoder("".join(['[' + charset[sym] + ']' for sym in sample[:-1]])))
             print(selfies.decoder("".join(['[' + charset[sym] + ']' for sym in x_ix[:-1]])))
 
