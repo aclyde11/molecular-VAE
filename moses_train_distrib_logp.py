@@ -345,8 +345,8 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
             print(sample)
             print(x_ix)
             print(charset, sym_table)
-            print(selfies.decoder("".join(['[' + charset[sym] + ']' for sym in sample])))
-            print(selfies.decoder("".join(['[' + charset[sym] + ']' for sym in x_ix])))
+            print(selfies.decoder("".join(['[' + charset[sym] + ']' for sym in sample[:-1]])))
+            print(selfies.decoder("".join(['[' + charset[sym] + ']' for sym in x_ix[:-1]])))
 
         exit()
         # correct = float((x[:, 1:] == predict).sum().cpu().detach().item()) / float(x.shape[0] * x.shape[1])
