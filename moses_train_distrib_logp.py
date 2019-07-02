@@ -32,8 +32,8 @@ parser = argparse.ArgumentParser()
 # FOR DISTRIBUTED:  Parse for the local_rank argument, which will be supplied
 # automatically by torch.distributed.launch.
 parser.add_argument("--local_rank", default=0, type=int)
-parser.add_argument("--batch_size", default=128, type=int)
-parser.add_argument("--encoder_batch_size", default=128, type=int)
+parser.add_argument("--batch_size", default=256, type=int)
+parser.add_argument("--encoder_batch_size", default=256, type=int)
 parser.add_argument("--lr", default=1e-3, type=float)
 args = parser.parse_args()
 torch.cuda.set_device(args.local_rank)
@@ -301,17 +301,17 @@ binding_optimizer = None
 
 # optimizer = optim.Adam(model.parameters() ,
 #                                lr=3*1e-3 )
-encoder_optimizer = optim.Adam(model.parameters(), lr=3e-4)
+decoder_optimizer = optim.Adam(model.encoder.parameters(), lr=2e-4)
+encoder_optimizer = optim.Adam(model.decoder.parameters(), lr=2e-4)
 # model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
 # model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], output_device=args.local_rank, find_unused_parameters=True)
 
 
 kl_annealer = 2e-4
-lr_annealer_d = CosineAnnealingLRWithRestart(encoder_optimizer)
 
 model.zero_grad()
 
-kl_annealer_rate = 0.000001
+kl_annealer_rate = 0.00001
 kl_weight = 0
 
 def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encoder_optim, decoder_optim):
@@ -321,7 +321,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
     loss_values =mosesvocab.CircularBuffer(10)
 
     rate = max(0, rate - 0.1)
-    if epoch > 10 and epoch % 2 == 0:
+    if epoch > 10 and epoch % 3 == 0:
         kl_weight += kl_annealer_rate
 
     for i, (input_batch, _) in enumerate(tqdm_data):
@@ -359,6 +359,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
 
 
         encoder_optimizer.zero_grad()
+        decoder_optimizer.zero_grad()
         input_batch = tuple(data.cuda() for data in input_batch)
         # Forwardd
         kl_loss, recon_loss, _, logvar, x, y = model(input_batch, rate)
@@ -368,6 +369,8 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
 
         kl_loss = torch.sum(kl_loss, 0)
         recon_loss = torch.sum(recon_loss, 0)
+
+        prob_decoder = bool(random.random() < 0.8)
 
         # kl_weight =  min(kl_weight + 1e-3,1)
         loss = recon_loss
@@ -379,6 +382,8 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
                         25)
 
         encoder_optimizer.step()
+        if prob_decoder:
+            decoder_optimizer.step()
 
         # Log
         kl_loss_values.add(kl_loss.item())
@@ -562,7 +567,7 @@ for epoch in range(0, 1000):
 
 
 
-    if epoch < 80:
+    if epoch < 12000:
         tqdm_data = tqdm(train_loader,
                          desc='Training (epoch #{})'.format(epoch))
     else:
@@ -585,4 +590,3 @@ for epoch in range(0, 1000):
         print(str(e))
 
     # Epoch end
-    lr_annealer_d.step()

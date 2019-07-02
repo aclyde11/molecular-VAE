@@ -140,6 +140,7 @@ class VAE(nn.Module):
         self.encoder = nn.ModuleList([
             self.x_emb,
             self.encoder_rnn,
+            self.flatten,
             self.q_mu,
             self.q_logvar
         ])
