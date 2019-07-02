@@ -32,8 +32,8 @@ parser = argparse.ArgumentParser()
 # FOR DISTRIBUTED:  Parse for the local_rank argument, which will be supplied
 # automatically by torch.distributed.launch.
 parser.add_argument("--local_rank", default=0, type=int)
-parser.add_argument("--batch_size", default=256, type=int)
-parser.add_argument("--encoder_batch_size", default=256, type=int)
+parser.add_argument("--batch_size", default=192, type=int)
+parser.add_argument("--encoder_batch_size", default=192, type=int)
 parser.add_argument("--lr", default=1e-3, type=float)
 args = parser.parse_args()
 torch.cuda.set_device(args.local_rank)
@@ -301,8 +301,8 @@ binding_optimizer = None
 
 # optimizer = optim.Adam(model.parameters() ,
 #                                lr=3*1e-3 )
-decoder_optimizer = optim.Adam(model.encoder.parameters(), lr=3e-4)
-encoder_optimizer = optim.Adam(model.decoder.parameters(), lr=3e-4)
+decoder_optimizer = optim.Adam(model.decoder.parameters(), lr=1e-4)
+encoder_optimizer = optim.Adam(model.encoder.parameters(), lr=2.5-4)
 # model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
 # model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], output_device=args.local_rank, find_unused_parameters=True)
 
@@ -316,9 +316,9 @@ kl_weight = 0
 
 def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encoder_optim, decoder_optim):
     model.train()
-    kl_loss_values = mosesvocab.CircularBuffer(10)
-    recon_loss_values = mosesvocab.CircularBuffer(10)
-    loss_values =mosesvocab.CircularBuffer(10)
+    kl_loss_values = mosesvocab.CircularBuffer(50)
+    recon_loss_values = mosesvocab.CircularBuffer(50)
+    loss_values =mosesvocab.CircularBuffer(50)
 
     rate = max(0, rate - 0.1)
     if epoch > 10 and epoch % 3 == 0:
@@ -370,7 +370,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
         kl_loss = torch.sum(kl_loss, 0)
         recon_loss = torch.sum(recon_loss, 0)
 
-        prob_decoder = bool(random.random() < 0.9)
+        prob_decoder = bool(random.random() < 0.85)
 
         # kl_weight =  min(kl_weight + 1e-3,1)
         loss = recon_loss
