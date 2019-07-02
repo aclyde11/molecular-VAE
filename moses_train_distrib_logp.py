@@ -323,7 +323,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
     loss_values =mosesvocab.CircularBuffer(50)
 
     rate = max(0, rate - 0.1)
-    if epoch > 10 and epoch % 3 == 0:
+    if epoch > 10 and epoch % 2 == 0:
         kl_weight += kl_annealer_rate
 
     for i, (input_batch, _) in enumerate(tqdm_data):
@@ -334,14 +334,22 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
         input_batch = tuple(data.cuda() for data in input_batch)
         # Forwardd
         kl_loss, recon_loss, _, logvar, x, y = model(input_batch, rate)
-        _, predict = torch.max(F.softmax(y[:, :-1], dim=-1), -1)
+        # _, predict = torch.max(F.softmax(y[:, :-1], dim=-1), -1)
+        res = model.tensor2string(y)
+        print(model.tensor2string(y))
 
-        correct = float((x[:, 1:] == predict).sum().cpu().detach().item()) / float(x.shape[0] * x.shape[1])
+        for i in range(50):
+            print(i)
+            print(selfies.decoder("".join(['[' + charset[sym] + ']' for sym in res[i]])))
+        exit()
+        # correct = float((x[:, 1:] == predict).sum().cpu().detach().item()) / float(x.shape[0] * x.shape[1])
+
+
 
         kl_loss = torch.sum(kl_loss, 0)
         recon_loss = torch.sum(recon_loss, 0)
 
-        prob_decoder = bool(random.random() < 0.5)
+        prob_decoder = bool(random.random() < 0.35)
 
         # kl_weight =  min(kl_weight + 1e-3,1)
         loss = recon_loss
@@ -533,7 +541,7 @@ print("STARTING THING I WANT.....")
 # np.savez("z_vae_moses.npz", np.concatenate(vecs, axis=0))
 
 iters = 0
-kl_weight = torch.load("finetuning/trained_save_small.pt")['kl_weight']
+kl_weight = torch.load("finetuning/trained_save_small.pt")['kl_weight'] * 0.96
 rate = 0.3
 
 for epoch in range(torch.load("finetuning/trained_save_small.pt")['epoch'] + 1, 1000):

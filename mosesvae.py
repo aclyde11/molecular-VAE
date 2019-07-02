@@ -284,8 +284,7 @@ class VAE(nn.Module):
 
         recon_loss = F.cross_entropy(
             y[:, :-1].contiguous().view(-1, y.size(-1)),
-            x[:, 1:].contiguous().view(-1),
-            ignore_index=self.pad
+            x[:, 1:].contiguous().view(-1)
         )
 
         return recon_loss, x, y
