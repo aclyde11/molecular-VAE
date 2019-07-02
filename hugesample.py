@@ -20,7 +20,7 @@ def gen_proc(comm, iters=10000, i=0, batch_size=4096, dir="", selfies=False):
         with open(dir + "/vocab.pkl", 'rb') as f:
             vocab = pickle.load(f)
         model = mosesvae.VAE(vocab)
-        model.load_state_dict(torch.load(dir + "/trained_save_small.pt", map_location='cpu'))
+        model.load_state_dict(torch.load(dir + "/trained_save_small.pt", map_location='cpu')['state_dict'])
         model = model.cuda(i)
 
         for _ in range(iters):

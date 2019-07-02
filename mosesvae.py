@@ -297,10 +297,10 @@ class VAE(nn.Module):
         :return: (n_batch, d_z) of floats, sample of latent z
         """
 
-        return torch.randn(n_batch, self.d_z,
-                         device=self.x_emb.weight.device)
-        #
-        # return torch.zeros((n_batch, self.d_z), device=self.x_emb.weight.device)
+        # return torch.randn(n_batch, self.d_z,
+        #                  device=self.x_emb.weight.device)
+
+        return torch.zeros((n_batch, self.d_z), device=self.x_emb.weight.device)
 
 
     def sample(self, n_batch, max_len=100, z=None, temp=1.0):
