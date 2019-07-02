@@ -337,18 +337,20 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
         _, predict = torch.max(F.softmax(y[:, :-1], dim=-1), -1)
         # res = [model.tensor2string(ix) for ix in y[0, ...]]
 
-        for i in range(50):
-            sample = predict[i,...].tolist()
-            sample = list(filter(lambda x : x != '<eos>' and x != '<pad>', [vocab.i2c[sym] for sym in sample]))
-            x_ix = x[i,1:].tolist()
-            x_ix = list(filter(lambda x : x != '<eos>' and x != '<pad>', [vocab.i2c[sym] for sym in x_ix]))
-            print(selfies.decoder("".join(['[' + charset[sym] + ']' for sym in sample[:-1]])))
-            print(selfies.decoder("".join(['[' + charset[sym] + ']' for sym in x_ix[:-1]])))
+        correct = 0
+        correct_counter = 0
+        for i in range(predict.shape[0]):
+            try:
+                sample = predict[i,...].tolist()
+                sample = list(filter(lambda x : x != '<eos>' and x != '<pad>', [vocab.i2c[sym] for sym in sample]))
+                x_ix = x[i,1:].tolist()
+                x_ix = list(filter(lambda x : x != '<eos>' and x != '<pad>', [vocab.i2c[sym] for sym in x_ix]))
+                correct += int(selfies.decoder("".join(['[' + charset[sym] + ']' for sym in sample[:-1]]))  == selfies.decoder("".join(['[' + charset[sym] + ']' for sym in x_ix[:-1]])))
+                correct_counter += 1
+            except:
+                continue
 
-        exit()
-        # correct = float((x[:, 1:] == predict).sum().cpu().detach().item()) / float(x.shape[0] * x.shape[1])
-
-
+        correct = float(correct) / correct_counter
 
         kl_loss = torch.sum(kl_loss, 0)
         recon_loss = torch.sum(recon_loss, 0)
