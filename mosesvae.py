@@ -89,10 +89,10 @@ class VAE(nn.Module):
 
         d_cell = 'gru'
         d_n_layers = 2
-        d_dropout = 0.2
-        self.d_z = 188
+        d_dropout = 0.10
+        self.d_z = 128
         d_z = self.d_z
-        d_d_h=512
+        d_d_h=384
 
         self.vocabulary = vocab
         # Special symbols
@@ -106,8 +106,8 @@ class VAE(nn.Module):
 
         # Encoder
         self.encoder_rnn = nn.Sequential(
-            ConvSELU(106, 64, kernel_size=9),
-            ConvSELU(64, 48, kernel_size=9),
+            ConvSELU(106, 72, kernel_size=9),
+            ConvSELU(72, 48, kernel_size=9),
             ConvSELU(48, 32, kernel_size=11),
             ConvSELU(32, 10, kernel_size=11),
         )
