@@ -339,8 +339,8 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
 
         for i in range(50):
             sample = predict[i,...].tolist()
+            sample = [vocab.i2c[sym] for sym in sample]
             print(sample)
-            print(vocab.i2c[sample[0]])
             print(selfies.decoder("".join(['[' + charset[vocab.i2c[sym]] + ']' for sym in sample])))
         exit()
         # correct = float((x[:, 1:] == predict).sum().cpu().detach().item()) / float(x.shape[0] * x.shape[1])
