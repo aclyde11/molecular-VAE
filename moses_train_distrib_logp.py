@@ -296,13 +296,15 @@ n_epochs = 100
 
 model = mosesvae.VAE(vocab).cuda()
 model.apply(init_weights)
-# model.load_state_dict(torch.load("finetuning/trained_save_small.pt"))
+model.load_state_dict(torch.load("finetuning/trained_save_small.pt")['state_dict'])
 binding_optimizer = None
 
 # optimizer = optim.Adam(model.parameters() ,
 #                                lr=3*1e-3 )
 decoder_optimizer = optim.Adam(model.decoder.parameters(), lr=1e-4)
+decoder_optimizer.load_state_dict(torch.load("finetuning/trained_save_small.pt")['decoder_state_dict'])
 encoder_optimizer = optim.Adam(model.encoder.parameters(), lr=3e-4)
+encoder_optimizer.load_state_dict(torch.load("finetuning/trained_save_small.pt")['encoder_state_dict'])
 # model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
 # model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], output_device=args.local_rank, find_unused_parameters=True)
 
@@ -311,7 +313,7 @@ kl_annealer = 2e-4
 
 model.zero_grad()
 
-kl_annealer_rate = 0.00001
+kl_annealer_rate = 0.000001
 kl_weight = 0
 
 def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encoder_optim, decoder_optim):
@@ -339,7 +341,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
         kl_loss = torch.sum(kl_loss, 0)
         recon_loss = torch.sum(recon_loss, 0)
 
-        prob_decoder = bool(random.random() < 0.95)
+        prob_decoder = bool(random.random() < 0.5)
 
         # kl_weight =  min(kl_weight + 1e-3,1)
         loss = recon_loss
@@ -531,10 +533,10 @@ print("STARTING THING I WANT.....")
 # np.savez("z_vae_moses.npz", np.concatenate(vecs, axis=0))
 
 iters = 0
-kl_weight = 0
+kl_weight = torch.load("finetuning/trained_save_small.pt")['kl_weight']
 rate = 0.3
 
-for epoch in range(0, 1000):
+for epoch in range(torch.load("finetuning/trained_save_small.pt")['epoch'] + 1, 1000):
 
 
 
