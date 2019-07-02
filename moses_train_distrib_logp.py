@@ -301,8 +301,8 @@ binding_optimizer = None
 
 # optimizer = optim.Adam(model.parameters() ,
 #                                lr=3*1e-3 )
-decoder_optimizer = optim.Adam(model.decoder.parameters(), lr=1e-4)
-encoder_optimizer = optim.Adam(model.encoder.parameters(), lr=2.5e-4)
+decoder_optimizer = optim.Adam(model.decoder.parameters(), lr=3e-4)
+encoder_optimizer = optim.Adam(model.encoder.parameters(), lr=6e-4)
 # model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
 # model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], output_device=args.local_rank, find_unused_parameters=True)
 
@@ -574,7 +574,11 @@ for epoch in range(0, 1000):
         tqdm_data = tqdm(fine_tune_loader, desc='Fine tuning (epoch #{}'.format(epoch))
     postfix, kl_weight, iters, rate = _train_epoch_binding(model, epoch,
                                 tqdm_data, kl_weight, iters, rate, encoder_optim=encoder_optimizer, decoder_optim=None)
-    torch.save({'state_dict' : model.state_dict(), 'opt_state_dict' : encoder_optimizer.state_dict()}, OUTPUT_DIR + "trained_save_small.pt")
+    torch.save({'state_dict' : model.state_dict(),
+                'encoder_state_dict' : encoder_optimizer.state_dict(),
+                'decoder_state_dict' : decoder_optimizer.state_dict(),
+                'kl_weight' : kl_weight,
+                'epoch' : epoch }, OUTPUT_DIR + "trained_save_small.pt")
     # with open('vocab.pkl', 'wb') as f:
     #     pickle.dump(vocab, f)
 
