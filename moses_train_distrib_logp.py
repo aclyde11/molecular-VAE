@@ -334,11 +334,13 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
         input_batch = tuple(data.cuda() for data in input_batch)
         # Forwardd
         kl_loss, recon_loss, _, logvar, x, y = model(input_batch, rate)
-        # _, predict = torch.max(F.softmax(y[:, :-1], dim=-1), -1)
-        res = [model.tensor2string(ix) for ix in y[0, ...]]
+        _, predict = torch.max(F.softmax(y[:, :-1], dim=-1), -1)
+        # res = [model.tensor2string(ix) for ix in y[0, ...]]
 
         for i in range(50):
-            print(res[i])
+            sample = predict[i,...]
+            print(sample)
+            print(vocab.i2c(sample[0]))
             print(selfies.decoder("".join(['[' + charset[sym] + ']' for sym in res[i]])))
         exit()
         # correct = float((x[:, 1:] == predict).sum().cpu().detach().item()) / float(x.shape[0] * x.shape[1])
