@@ -92,7 +92,7 @@ class VAE(nn.Module):
         d_dropout = 0.10
         self.d_z = 128
         d_z = self.d_z
-        d_d_h=384
+        d_d_h=512
 
         self.vocabulary = vocab
         # Special symbols
