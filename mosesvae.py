@@ -88,7 +88,7 @@ class VAE(nn.Module):
 
 
         d_cell = 'gru'
-        d_n_layers = 2
+        d_n_layers = 3
         d_dropout = 0.10
         self.d_z = 128
         d_z = self.d_z
