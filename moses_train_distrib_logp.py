@@ -355,7 +355,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
         kl_loss = torch.sum(kl_loss, 0)
         recon_loss = torch.sum(recon_loss, 0)
 
-        prob_decoder = bool(random.random() < 0.8)
+        prob_decoder = bool(random.random() < 0.75)
 
         # kl_weight =  min(kl_weight + 1e-3,1)
         loss = recon_loss
@@ -548,11 +548,11 @@ print("STARTING THING I WANT.....")
 # np.savez("z_vae_moses.npz", np.concatenate(vecs, axis=0))
 
 iters = 0
-kl_weight = torch.load("finetuning/trained_save_small.pt")['kl_weight'] * 0.96
+kl_weight = torch.load("finetuning/trained_save_small.pt")['kl_weight']
 rate = 0.3
 
 for param_group in encoder_optimizer.param_groups:
-        param_group['lr'] = 6e-4
+        param_group['lr'] = 3e-4
 
 for param_group in decoder_optimizer.param_groups:
         param_group['lr'] = 1e-4
