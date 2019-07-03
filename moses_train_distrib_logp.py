@@ -313,7 +313,7 @@ kl_annealer = 2e-4
 
 model.zero_grad()
 
-kl_annealer_rate = 0.00001
+kl_annealer_rate = 0.00002
 kl_weight = 0
 
 def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encoder_optim, decoder_optim):
@@ -323,7 +323,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
     loss_values =mosesvocab.CircularBuffer(50)
     correct_values = mosesvocab.CircularBuffer(50)
     rate = max(0, rate - 0.1)
-    if epoch > 10 and epoch % 3 == 0:
+    if epoch > 10 and epoch % 2 == 0:
         kl_weight += kl_annealer_rate
 
     for i, (input_batch, _) in enumerate(tqdm_data):
