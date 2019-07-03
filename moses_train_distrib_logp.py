@@ -301,9 +301,9 @@ binding_optimizer = None
 
 # optimizer = optim.Adam(model.parameters() ,
 #                                lr=3*1e-3 )
-decoder_optimizer = optim.Adam(model.decoder.parameters(), lr=1e-4)
+decoder_optimizer = optim.Adam(model.decoder.parameters(), lr=8e-5)
 decoder_optimizer.load_state_dict(torch.load("finetuning/trained_save_small.pt")['decoder_state_dict'])
-encoder_optimizer = optim.Adam(model.encoder.parameters(), lr=3e-4)
+encoder_optimizer = optim.Adam(model.encoder.parameters(), lr=2e-4)
 encoder_optimizer.load_state_dict(torch.load("finetuning/trained_save_small.pt")['encoder_state_dict'])
 # model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
 # model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], output_device=args.local_rank, find_unused_parameters=True)
@@ -355,7 +355,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
         kl_loss = torch.sum(kl_loss, 0)
         recon_loss = torch.sum(recon_loss, 0)
 
-        prob_decoder = bool(random.random() < 0.75)
+        prob_decoder = bool(random.random() < 0.8)
 
         # kl_weight =  min(kl_weight + 1e-3,1)
         loss = recon_loss
