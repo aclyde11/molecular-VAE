@@ -321,7 +321,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
     kl_loss_values = mosesvocab.CircularBuffer(50)
     recon_loss_values = mosesvocab.CircularBuffer(50)
     loss_values =mosesvocab.CircularBuffer(50)
-
+    correct_values = mosesvocab.CircularBuffer(50)
     rate = max(0, rate - 0.1)
     if epoch > 10 and epoch % 4 == 0:
         kl_weight += kl_annealer_rate
@@ -351,7 +351,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
                 continue
 
         correct = float(correct) / correct_counter
-
+        correct_value.add(correct)
         kl_loss = torch.sum(kl_loss, 0)
         recon_loss = torch.sum(recon_loss, 0)
 
@@ -384,11 +384,12 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
         kl_loss_value = kl_loss_values.mean()
         recon_loss_value = recon_loss_values.mean()
         loss_value = loss_values.mean()
+        correct_value = correct_values.mean()
         postfix = [f'loss={loss_value:.5f}',
                    f'(kl={kl_loss_value:.5f}',
                    f'recon={recon_loss_value:.5f})',
                    f'klw={kl_weight:.5f} lr={lr:.5f}'
-                   f'correct={correct:.5f}']
+                   f'correct={correct_value:.5f}']
         tqdm_data.set_postfix_str(' '.join(postfix))
 
     postfix = {
