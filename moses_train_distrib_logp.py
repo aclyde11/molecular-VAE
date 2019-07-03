@@ -313,7 +313,7 @@ kl_annealer = 2e-4
 
 model.zero_grad()
 
-kl_annealer_rate = 0.000002
+kl_annealer_rate = 0.00001
 kl_weight = 0
 
 def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encoder_optim, decoder_optim):
@@ -552,10 +552,10 @@ kl_weight = torch.load("finetuning/trained_save_small.pt")['kl_weight'] * 0.96
 rate = 0.3
 
 for param_group in encoder_optimizer.param_groups:
-        param_group['lr'] = 2e-4
+        param_group['lr'] = 1e-4
 
 for param_group in decoder_optimizer.param_groups:
-        param_group['lr'] = 0.5e-4
+        param_group['lr'] = 8e-5
 
 for epoch in range(torch.load("finetuning/trained_save_small.pt")['epoch'] + 1, 1000):
 
