@@ -364,9 +364,9 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
 
         loss.backward()
         clip_grad_norm_((p for p in model.encoder.parameters() if p.requires_grad),
-                        50)
+                        15)
         clip_grad_norm_((p for p in model.decoder.parameters() if p.requires_grad),
-                        25)
+                        15)
 
         encoder_optimizer.step()
         if prob_decoder:
