@@ -313,7 +313,7 @@ kl_annealer = 2e-4
 
 model.zero_grad()
 
-kl_annealer_rate = 0.000001
+kl_annealer_rate = 0.000002
 kl_weight = 0
 
 def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encoder_optim, decoder_optim):
@@ -323,7 +323,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
     loss_values =mosesvocab.CircularBuffer(50)
 
     rate = max(0, rate - 0.1)
-    if epoch > 10 and epoch % 2 == 0:
+    if epoch > 10 and epoch % 4 == 0:
         kl_weight += kl_annealer_rate
 
     for i, (input_batch, _) in enumerate(tqdm_data):
@@ -345,7 +345,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
                 sample = list(filter(lambda x : x != '<eos>' and x != '<pad>', [vocab.i2c[sym] for sym in sample]))
                 x_ix = x[i,1:].tolist()
                 x_ix = list(filter(lambda x : x != '<eos>' and x != '<pad>', [vocab.i2c[sym] for sym in x_ix]))
-                correct += int(selfies.decoder("".join(['[' + charset[sym] + ']' for sym in sample[:-1]]))  == selfies.decoder("".join(['[' + charset[sym] + ']' for sym in x_ix[:-1]])))
+                correct += int("".join(['[' + charset[sym] + ']' for sym in sample[:-1]])  == "".join(['[' + charset[sym] + ']' for sym in x_ix[:-1]]))
                 correct_counter += 1
             except:
                 continue
@@ -355,7 +355,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
         kl_loss = torch.sum(kl_loss, 0)
         recon_loss = torch.sum(recon_loss, 0)
 
-        prob_decoder = bool(random.random() < 0.6)
+        prob_decoder = bool(random.random() < 0.5)
 
         # kl_weight =  min(kl_weight + 1e-3,1)
         loss = recon_loss
