@@ -323,7 +323,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
     loss_values =mosesvocab.CircularBuffer(50)
     correct_values = mosesvocab.CircularBuffer(50)
     rate = max(0, rate - 0.1)
-    if epoch > 10 and epoch % 2 == 0:
+    if epoch > 10 and epoch % 5 == 0:
         kl_weight += kl_annealer_rate
 
     for i, (input_batch, _) in enumerate(tqdm_data):
@@ -355,7 +355,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
         kl_loss = torch.sum(kl_loss, 0)
         recon_loss = torch.sum(recon_loss, 0)
 
-        prob_decoder = bool(random.random() < 0.5)
+        prob_decoder = bool(random.random() < 0.65)
 
         # kl_weight =  min(kl_weight + 1e-3,1)
         loss = recon_loss
@@ -549,10 +549,10 @@ print("STARTING THING I WANT.....")
 
 iters = 0
 kl_weight = torch.load("finetuning/trained_save_small.pt")['kl_weight']
-rate = 0.3
+rate = 0
 
 for param_group in encoder_optimizer.param_groups:
-        param_group['lr'] = 3e-4
+        param_group['lr'] = 2e-4
 
 for param_group in decoder_optimizer.param_groups:
         param_group['lr'] = 1e-4
