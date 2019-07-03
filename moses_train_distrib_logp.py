@@ -339,7 +339,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
 
         correct = 0
         correct_counter = 0
-        for i in range(predict.shape[0]):
+        for i in range(20):
             try:
                 sample = predict[i,...].tolist()
                 sample = list(filter(lambda x : x != '<eos>' and x != '<pad>', [vocab.i2c[sym] for sym in sample]))
@@ -355,7 +355,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
         kl_loss = torch.sum(kl_loss, 0)
         recon_loss = torch.sum(recon_loss, 0)
 
-        prob_decoder = bool(random.random() < 0.5)
+        prob_decoder = bool(random.random() < 0.6)
 
         # kl_weight =  min(kl_weight + 1e-3,1)
         loss = recon_loss
