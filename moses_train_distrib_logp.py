@@ -351,7 +351,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
                 continue
 
         correct = float(correct) / correct_counter
-        correct_value.add(correct)
+        correct_values.add(correct)
         kl_loss = torch.sum(kl_loss, 0)
         recon_loss = torch.sum(recon_loss, 0)
 
