@@ -201,6 +201,8 @@ class CircularBuffer:
         return self.data[self.pointer]
 
     def mean(self):
+        if self.size != self.max_size:
+            return float(self.data.sum()) /self.size
         return self.data.mean()
 
 
