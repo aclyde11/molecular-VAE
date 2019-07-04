@@ -324,9 +324,9 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
     recon_loss_values = mosesvocab.CircularBuffer(25)
     loss_values =mosesvocab.CircularBuffer(25)
     correct_values = mosesvocab.CircularBuffer(25)
-    rate = max(0, rate - 0.1)
-    if epoch > 10 and epoch % 5 == 0:
-        kl_weight += kl_annealer_rate * min(1.0, epoch *  0.02)
+    rate = 0
+    # if epoch > 10 and epoch % 5 == 0:
+    #     kl_weight += kl_annealer_rate * min(1.0, epoch *  0.02)
 
 
     for i, (input_batch, _) in enumerate(tqdm_data):
@@ -358,7 +358,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
         kl_loss = torch.sum(kl_loss, 0)
         recon_loss = torch.sum(recon_loss, 0)
 
-        prob = float((epoch % 5) + 1) / 4
+        prob = 0.75
         prob_decoder = bool(random.random() < prob)
 
         # kl_weight =  min(kl_weight + 1e-3,1)
@@ -368,9 +368,9 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
 
         loss.backward()
         clip_grad_norm_((p for p in model.encoder.parameters() if p.requires_grad),
-                        5)
+                        15)
         clip_grad_norm_((p for p in model.decoder.parameters() if p.requires_grad),
-                        5)
+                        15)
 
         encoder_optimizer.step()
         if prob_decoder:
@@ -553,9 +553,10 @@ print("STARTING THING I WANT.....")
 
 iters = 0
 # kl_weight = 0
-kl_weight = torch.load("finetuning/trained_save_small.pt")['kl_weight']
-if kl_weight == 0:
-    kl_weight = 1e-4
+kl_weight = 1e-3
+# kl_weight = torch.load("finetuning/trained_save_small.pt")['kl_weight']
+# if kl_weight == 0:
+#     kl_weight = 1e-4
 rate = 0
 
 for param_group in encoder_optimizer.param_groups:
