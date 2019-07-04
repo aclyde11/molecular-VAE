@@ -41,6 +41,7 @@ df = pd.read_csv("/workspace/python3jtnn/fast_molvae/sampled.smi", header=None)
 with open("/workspace/python3jtnn/fast_molvae/log.txt", 'w', buffering=1) as f:
     f.write("name,smiles,color,pdb_match,sim,ligand\n")
     for _, smi in df.iterrows():
+        print(smi)
         smi_name = smi[1]
         smi = smi[0]
         x_color, pdb_match = fast_rocs.get_color(smi)
