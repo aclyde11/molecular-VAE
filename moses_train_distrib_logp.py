@@ -367,7 +367,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
 
         loss.backward()
         clip_grad_norm_((p for p in model.encoder.parameters() if p.requires_grad),
-                        50)
+                        25)
         clip_grad_norm_((p for p in model.decoder.parameters() if p.requires_grad),
                         25)
 
@@ -556,10 +556,10 @@ kl_weight = 0
 rate = 0.5
 
 for param_group in encoder_optimizer.param_groups:
-        param_group['lr'] = 4e-4
+        param_group['lr'] = 2e-4
 
 for param_group in decoder_optimizer.param_groups:
-        param_group['lr'] = 2e-4
+        param_group['lr'] = 1e-4
 # torch.load("finetuning/trained_save_small.pt")['epoch']
 for epoch in range(0, 1000):
 
