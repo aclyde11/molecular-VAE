@@ -555,10 +555,10 @@ iters = 0
 kl_weight = torch.load("finetuning/trained_save_small.pt")['kl_weight']
 if kl_weight == 0:
     kl_weight = 1e-4
-rate = 0.5
+rate = 0
 
 for param_group in encoder_optimizer.param_groups:
-        param_group['lr'] = 3e-4
+        param_group['lr'] = 2e-4
 
 for param_group in decoder_optimizer.param_groups:
         param_group['lr'] = 1e-4
