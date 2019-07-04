@@ -553,6 +553,8 @@ print("STARTING THING I WANT.....")
 iters = 0
 # kl_weight = 0
 kl_weight = torch.load("finetuning/trained_save_small.pt")['kl_weight']
+if kl_weight == 0:
+    kl_weight = 1e-4
 rate = 0.5
 
 for param_group in encoder_optimizer.param_groups:
