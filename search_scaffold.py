@@ -44,11 +44,12 @@ with open("/workspace/python3jtnn/fast_molvae/log.txt", 'w', buffering=1) as f:
         print(smi)
         smi_name = smi[1]
         smi = smi[0]
-        x_color, pdb_match = fast_rocs.get_color(smi)
-        y, name = johnsim.simalarity_to_john(smi)
-        f.write(smi_name + ",")
-        f.write(smi + ",")
-        f.write(str(x_color) + ",")
-        f.write(str(pdb_match) + ",")
-        f.write(str(y) + ",")
-        f.write(str(name) + "\n")
+        x = fast_rocs.get_color(smi)
+        if x is not None:
+            y, name = johnsim.simalarity_to_john(smi)
+            f.write(smi_name + ",")
+            f.write(smi + ",")
+            f.write(str(x[0]) + ",")
+            f.write(str(x[1]) + ",")
+            f.write(str(y) + ",")
+            f.write(str(name) + "\n")
