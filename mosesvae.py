@@ -90,7 +90,7 @@ class VAE(nn.Module):
         d_cell = 'gru'
         d_n_layers = 3
         d_dropout = 0.15
-        self.d_z = 256
+        self.d_z = 188
         d_z = self.d_z
         d_d_h=512
 
@@ -121,7 +121,7 @@ class VAE(nn.Module):
         # Decoder
         if d_cell == 'gru':
             self.decoder_rnn = nn.GRU(
-                d_emb + d_z,
+                 d_z,
                 d_d_h,
                 num_layers=d_n_layers,
                 batch_first=True,
@@ -134,7 +134,7 @@ class VAE(nn.Module):
 
         self.decoder_lat = nn.Linear(d_z, d_d_h, bias=True)
         self.decoder_fc = nn.Linear(d_d_h, n_vocab, bias=True)
-
+        self.z_decoder = nn.Linear(d_z, d_z, bias=True)
 
         # Grouping the model's parameters
         self.encoder = nn.ModuleList([
@@ -147,7 +147,8 @@ class VAE(nn.Module):
         self.decoder = nn.ModuleList([
             self.decoder_rnn,
             self.decoder_lat,
-            self.decoder_fc
+            self.decoder_fc,
+            self.z_decoder
         ])
         self.vae = nn.ModuleList([
             self.x_emb,
@@ -258,7 +259,7 @@ class VAE(nn.Module):
         :param z: (n_batch, d_z) of floats, latent vector z
         :return: float, recon component of loss
         """
-
+        z = self.z_decoder(z)
         lengths = [len(i_x) for i_x in x]
 
         x = nn.utils.rnn.pad_sequence(x, batch_first=True,
@@ -270,7 +271,7 @@ class VAE(nn.Module):
             w = torch.tensor(self.bos, device=self.device).repeat(x.shape[0])
             x_emb = self.x_emb(w).unsqueeze(1).repeat((1, x.shape[1], 1))
         z_0 = z.unsqueeze(1).repeat(1, x_emb.size(1), 1)
-        x_input = torch.cat([x_emb, z_0], dim=-1)
+        x_input = torch.cat([z_0], dim=-1)
         x_input = nn.utils.rnn.pack_padded_sequence(x_input, lengths,
                                                     batch_first=True)
 
@@ -333,7 +334,7 @@ class VAE(nn.Module):
             # Generating cycle
             for i in range(1, max_len):
                 x_emb = self.x_emb(w).unsqueeze(1)
-                x_input = torch.cat([x_emb, z_0], dim=-1)
+                x_input = torch.cat([z_0], dim=-1)
 
                 o, h = self.decoder_rnn(x_input, h)
                 y = self.decoder_fc(o.squeeze(1))
