@@ -32,8 +32,8 @@ parser = argparse.ArgumentParser()
 # FOR DISTRIBUTED:  Parse for the local_rank argument, which will be supplied
 # automatically by torch.distributed.launch.
 parser.add_argument("--local_rank", default=0, type=int)
-parser.add_argument("--batch_size", default=1024, type=int)
-parser.add_argument("--encoder_batch_size", default=1024, type=int)
+parser.add_argument("--batch_size", default=512, type=int)
+parser.add_argument("--encoder_batch_size", default=512, type=int)
 parser.add_argument("--lr", default=1e-3, type=float)
 args = parser.parse_args()
 torch.cuda.set_device(args.local_rank)
@@ -358,7 +358,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
         kl_loss = torch.sum(kl_loss, 0)
         recon_loss = torch.sum(recon_loss, 0)
 
-        prob = 0.75
+        prob = 0.9
         prob_decoder = bool(random.random() < prob)
 
         # kl_weight =  min(kl_weight + 1e-3,1)
@@ -553,7 +553,7 @@ print("STARTING THING I WANT.....")
 
 iters = 0
 # kl_weight = 0
-kl_weight = 1e-3
+kl_weight = 1.25e-3
 # kl_weight = torch.load("finetuning/trained_save_small.pt")['kl_weight']
 # if kl_weight == 0:
 #     kl_weight = 1e-4
