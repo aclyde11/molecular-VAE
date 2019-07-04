@@ -358,7 +358,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
         kl_loss = torch.sum(kl_loss, 0)
         recon_loss = torch.sum(recon_loss, 0)
 
-        prob_decoder = bool(random.random() < 0.85)
+        prob_decoder = bool(random.random() < 1.0)
 
         # kl_weight =  min(kl_weight + 1e-3,1)
         loss = recon_loss
@@ -553,13 +553,13 @@ print("STARTING THING I WANT.....")
 iters = 0
 kl_weight = 0
 # kl_weight = torch.load("finetuning/trained_save_small.pt")['kl_weight']
-rate = 0.4
+rate = 0.5
 
 for param_group in encoder_optimizer.param_groups:
-        param_group['lr'] = 5e-4
+        param_group['lr'] = 8e-4
 
 for param_group in decoder_optimizer.param_groups:
-        param_group['lr'] = 3e-4
+        param_group['lr'] = 8e-4
 # torch.load("finetuning/trained_save_small.pt")['epoch']
 for epoch in range(0, 1000):
 
@@ -580,15 +580,16 @@ for epoch in range(0, 1000):
     # with open('vocab.pkl', 'wb') as f:
     #     pickle.dump(vocab, f)
 
-    res, _ = model.sample(120)
-    pd.DataFrame([res]).to_csv(OUTPUT_DIR + "out_tests.csv")
-    try:
-        for i in range(50):
-            print(selfies.decoder("".join(['[' + charset[sym] + ']' for sym in res[i]])))
-            # print("".join([ charset[sym] for sym in res[i]]))
-    except Exception as e:
-        print("error...")
-        print("Not sure why nothing printed..")
-        print(str(e))
+    if epoch > 5:
+        res, _ = model.sample(120)
+        pd.DataFrame([res]).to_csv(OUTPUT_DIR + "out_tests.csv")
+        try:
+            for i in range(50):
+                print(selfies.decoder("".join(['[' + charset[sym] + ']' for sym in res[i]])))
+                # print("".join([ charset[sym] for sym in res[i]]))
+        except Exception as e:
+            print("error...")
+            print("Not sure why nothing printed..")
+            print(str(e))
 
     # Epoch end
