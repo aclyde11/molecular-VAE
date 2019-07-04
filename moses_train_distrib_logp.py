@@ -561,11 +561,11 @@ for epoch in range(torch.load("finetuning/trained_save_small.pt")['epoch'] + 1, 
 
 
 
-    if epoch < 12000:
-        tqdm_data = tqdm(train_loader,
-                         desc='Training (epoch #{})'.format(epoch))
-    else:
-        tqdm_data = tqdm(fine_tune_loader, desc='Fine tuning (epoch #{}'.format(epoch))
+    # if epoch < 12000:
+    #     tqdm_data = tqdm(train_loader,
+    #                      desc='Training (epoch #{})'.format(epoch))
+    # else:
+    tqdm_data = tqdm(fine_tune_loader, desc='Fine tuning (epoch #{}'.format(epoch))
     postfix, kl_weight, iters, rate = _train_epoch_binding(model, epoch,
                                 tqdm_data, kl_weight, iters, rate, encoder_optim=encoder_optimizer, decoder_optim=None)
     torch.save({'state_dict' : model.state_dict(),
