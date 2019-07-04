@@ -10,30 +10,44 @@ from oe_analysis import FastRocker
 
 class JohnSim():
     def __init__(self):
-        self.df  = pd.read_csv("/workspace/john_smiles_kinasei.smi", sep=' ', header=None)
-        self.df = self.df.set_index(self.df.columns[1])
-        self.john_fps = [FingerprintMols.FingerprintMol(Chem.MolFromSmiles(x[1][0])) for x in tqdm(self.df.iterrows())]
+        self.df  = pd.read_csv("/workspace/pdb.smi", sep=' ', header=None)
+        self.fingerprints = []
+        for i, row in tqdm(self.df.iterrows()):
+            smile = row[0]
+            name = row[1]
+            try:
+                fp = FingerprintMols.FingerprintMol(Chem.MolFromSmiles(smile))
+                self.fingerprints.append((name, fp))
+            except:
+                continue
+
 
 
     def simalarity_to_john(self, s1):
         fp_ms = FingerprintMols.FingerprintMol(Chem.MolFromSmiles(s1))
         maxes = 0
-        for fp in self.john_fps:
-            maxes = max(maxes, DataStructs.FingerprintSimilarity(fp_ms, fp))
-        return maxes
+        argmax = 0
+        for name,fp in self.fingerprints:
+            tmp = DataStructs.FingerprintSimilarity(fp_ms, fp)
+            if tmp > maxes:
+                maxes = tmp
+                argmax = name
+        return maxes, argmax
 
 johnsim = JohnSim()
 fast_rocs = FastRocker("../data.oeb")
-df = pd.read_csv("finetuning/out_samples.smi", header=None)
+df = pd.read_csv("/workspace/hits.smi", header=None)
 
 with open("log.txt", 'w', buffering=1) as f:
-    f.write("smiles,color,pdb_match,sim\n")
+    f.write("name,smiles,color,pdb_match,sim,ligand\n")
     for _, smi in df.iterrows():
+        smi_name = smi[1]
         smi = smi[0]
-        x = fast_rocs.get_color(smi)
-        y = johnsim.simalarity_to_john(smi)
-        if x is not None:
-            f.write(smi + ",")
-            f.write(str(x[0]) + ",")
-            f.write(str(x[1]) + ",")
-            f.write(str(y) + "\n")
+        x_color, pdb_match = fast_rocs.get_color(smi)
+        y, name = johnsim.simalarity_to_john(smi)
+        f.write(smi_name + ",")
+        f.write(smi + ",")
+        f.write(str(x_color) + ",")
+        f.write(str(pdb_match) + ",")
+        f.write(str(y) + ",")
+        f.write(str(name) + "\n")
