@@ -201,6 +201,8 @@ for i in tqdm_range:
                 sym_table[sym] = chr(counter)
                 counter += 1
                 selfien.append(sym_table[sym])
+        if len(selfien) > 118:
+            continue
         selfs.append(selfien)
         cannon_smiles.append(cannmon)
 
@@ -216,8 +218,6 @@ tqdm_range = tqdm(range(df_fine_tune.shape[0]))
 for i in tqdm_range:
     try:
         original = str(df_fine_tune.iloc[i,0])
-        if len(original) > 100:
-            continue
         m = Chem.MolFromSmiles(original)
         cannmon = Chem.MolToSmiles(m)
         selfie = cannmon
@@ -231,7 +231,7 @@ for i in tqdm_range:
                 sym_table[sym] = chr(counter)
                 counter += 1
                 selfien.append(sym_table[sym])
-        if len(selfien) > 100:
+        if len(selfien) > 118:
             continue
         fine_tune_selfie.append(selfien)
         fine_tune_cannon.append(cannmon)
@@ -560,8 +560,8 @@ for param_group in encoder_optimizer.param_groups:
 
 for param_group in decoder_optimizer.param_groups:
         param_group['lr'] = 6e-4
-
-for epoch in range(torch.load("finetuning/trained_save_small.pt")['epoch'] + 1, 1000):
+# torch.load("finetuning/trained_save_small.pt")['epoch']
+for epoch in range(0, 1000):
 
 
 
