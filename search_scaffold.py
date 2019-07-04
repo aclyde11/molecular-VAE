@@ -36,9 +36,9 @@ class JohnSim():
 
 johnsim = JohnSim()
 fast_rocs = FastRocker("../data.oeb")
-df = pd.read_csv("/workspace/hits.smi", header=None)
+df = pd.read_csv("/workspace/python3jtnn/fast_molvae/sampled.smi", header=None)
 
-with open("log.txt", 'w', buffering=1) as f:
+with open("/workspace/python3jtnn/fast_molvae/log.txt", 'w', buffering=1) as f:
     f.write("name,smiles,color,pdb_match,sim,ligand\n")
     for _, smi in df.iterrows():
         smi_name = smi[1]
