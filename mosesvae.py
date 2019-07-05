@@ -132,7 +132,7 @@ class VAE(nn.Module):
         print(n_vocab, d_emb)
         self.x_emb = nn.Embedding(n_vocab, d_emb, self.pad)
         self.x_emb.weight.data.copy_(vocab.vectors)
-
+        self.max_length = 120
         # Encoder
         self.encoder_rnn = nn.Sequential(
             ConvSELU(120, 9, kernel_size=9),
