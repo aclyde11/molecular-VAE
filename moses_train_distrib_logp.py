@@ -296,14 +296,16 @@ fine_tune_loader = torch.utils.data.DataLoader(fine_tune_data, batch_size=args.b
                                                worker_init_fn=mosesvocab.set_torch_seed_to_all_gens, pin_memory=True)
 n_epochs = 100
 
+# binding_model = mosesvae.BindingModel()
 model = mosesvae.VAE(vocab).cuda()
 model.apply(init_weights)
 # model.load_state_dict(torch.load("finetuning/trained_save_small.pt")['state_dict'])
-binding_optimizer = None
+# binding_optimizer = optim.Adam(binding_model.parameters(), lr=1e-4)
 
 # optimizer = optim.Adam(model.parameters() ,
 #                                lr=3*1e-3 )
 decoder_optimizer = optim.Adam(model.parameters(), lr=8e-5)
+
 # decoder_optimizer.load_state_dict(torch.load("finetuning/trained_save_small.pt")['decoder_state_dict'])
 # encoder_optimizer = optim.Adam(model.encoder.parameters(), lr=2e-4)
 # encoder_optimizer.load_state_dict(torch.load("finetuning/trained_save_small.pt")['encoder_state_dict'])
@@ -335,7 +337,8 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
         decoder_optimizer.zero_grad()
         input_batch = tuple(data.cuda() for data in input_batch)
         # Forwardd
-        kl_loss, recon_loss, _, logvar, x, y = model(input_batch, rate)
+        kl_loss, recon_loss, z, _, x, y = model(input_batch, rate)
+        # _, binding_loss = binding_model(z, y_binding)
         _, predict = torch.max(F.softmax(y[:, :-1], dim=-1), -1)
         # res = [model.tensor2string(ix) for ix in y[0, ...]]
 

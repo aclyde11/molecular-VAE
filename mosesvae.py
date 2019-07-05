@@ -89,26 +89,22 @@ def ConvSELU(i, o, kernel_size=3, padding=0, p=0.):
     return nn.Sequential(*model)
 
 
+
+
 class BindingModel(nn.Module):
-    def __init__(self, z_size=128):
+    def __init__(self, z_size=188):
         super().__init__()
         self.binding_model = nn.Sequential(
-            nn.Linear(z_size, 256),
-            nn.BatchNorm1d(256),
-            nn.Tanh(),
-
-            nn.Linear(256, 256),
+            nn.Linear(z_size, z_size),
             nn.ReLU(),
-
-            nn.Linear(256, 64),
-            nn.BatchNorm1d(64),
+            nn.Linear(128, 64),
             nn.ReLU(),
-
-            nn.Linear(64, 1),
+            nn.Linear(64, 1)
         )
 
-    def forward(self, x):
-        return self.binding_model(x )
+    def forward(self, x, y):
+        pred = self.binding_model(x )
+        return pred, F.mse_loss(x, pred).mean()
 
 class VAE(nn.Module):
     def __init__(self, vocab):
@@ -116,8 +112,8 @@ class VAE(nn.Module):
 
 
         d_cell = 'gru'
-        d_n_layers = 2
-        d_dropout = 0.1
+        d_n_layers = 3
+        d_dropout = 0
         self.d_z = 188
         d_z = self.d_z
         d_d_h=501
@@ -152,7 +148,7 @@ class VAE(nn.Module):
                  d_z,
                 d_d_h,
                 num_layers=d_n_layers,
-                bidirectional=True,
+                bidirectional=False,
                 batch_first=True,
                 dropout=d_dropout if d_n_layers > 1 else 0
             )
@@ -161,7 +157,7 @@ class VAE(nn.Module):
                 "Invalid d_cell type, should be one of the ('gru',)"
             )
 
-        self.decoder_fc = TimeDistributed(nn.Linear(d_d_h * 2, n_vocab, bias=True))
+        self.decoder_fc = TimeDistributed(nn.Linear(d_d_h , n_vocab, bias=True))
         self.z_decoder = nn.Linear(d_z, d_z, bias=True)
 
         # Grouping the model's parameters
