@@ -3,6 +3,34 @@ import torch.nn as nn
 import torch.nn.functional as F
 import random
 
+class TimeDistributed(nn.Module):
+
+    def __init__(self, module, batch_first=True):
+        super(TimeDistributed, self).__init__()
+        self.module = module
+        self.batch_first = batch_first
+
+    def forward(self, x):
+
+        if len(x.size()) <= 2:
+            return self.module(x)
+
+        # Squash samples and timesteps into a single axis
+        # (samples * timesteps, input_size)
+        x_reshape = x.contiguous().view(-1, x.size(-1))
+
+        y = self.module(x_reshape)
+
+        # We have to reshape Y
+        if self.batch_first:
+            # (samples, timesteps, output_size)
+            y = y.contiguous().view(x.size(0), -1, y.size(-1))
+        else:
+            # (timesteps, samples, output_size)
+            y = y.view(-1, x.size(1), y.size(-1))
+
+        return y
+
 class AttnDecoderRNN(nn.Module):
     def __init__(self, hidden_size, output_size, dropout_p=0.1, max_length=110):
         super(AttnDecoderRNN, self).__init__()
@@ -88,11 +116,11 @@ class VAE(nn.Module):
 
 
         d_cell = 'gru'
-        d_n_layers = 2
-        d_dropout = 0.15
-        self.d_z = 256
+        d_n_layers = 3
+        d_dropout = 0
+        self.d_z = 56
         d_z = self.d_z
-        d_d_h=512
+        d_d_h=501
 
         self.vocabulary = vocab
         # Special symbols
@@ -101,6 +129,7 @@ class VAE(nn.Module):
 
         # Word embeddings layer
         n_vocab, d_emb = len(vocab), vocab.vectors.size(1)
+        print(n_vocab, d_emb)
         self.x_emb = nn.Embedding(n_vocab, d_emb, self.pad)
         self.x_emb.weight.data.copy_(vocab.vectors)
 
@@ -111,11 +140,11 @@ class VAE(nn.Module):
             ConvSELU(9, 10, kernel_size=11),
         )
 
-        self.flatten = nn.Sequential(nn.Linear(590, 512, bias=True),
-                      SELU(inplace=True))
+        self.flatten = nn.Sequential(nn.Linear(590, 435, bias=True),
+                      nn.ReLU())
 
-        self.q_mu =  nn.Linear(512, d_z, bias=True)
-        self.q_logvar =  nn.Linear(512, d_z, bias=True)
+        self.q_mu =  nn.Linear(435, d_z, bias=True)
+        self.q_logvar =  nn.Linear(435, d_z, bias=True)
 
         # Decoder
         if d_cell == 'gru':
@@ -131,8 +160,7 @@ class VAE(nn.Module):
                 "Invalid d_cell type, should be one of the ('gru',)"
             )
 
-        self.decoder_lat = nn.Linear(d_z, d_d_h, bias=True)
-        self.decoder_fc = nn.Linear(d_d_h, n_vocab, bias=True)
+        self.decoder_fc = TimeDistributed(nn.Linear(d_d_h, n_vocab, bias=True))
         self.z_decoder = nn.Linear(d_z, d_z, bias=True)
 
         # Grouping the model's parameters
@@ -145,7 +173,6 @@ class VAE(nn.Module):
         ])
         self.decoder = nn.ModuleList([
             self.decoder_rnn,
-            self.decoder_lat,
             self.decoder_fc,
             self.z_decoder
         ])
@@ -214,42 +241,6 @@ class VAE(nn.Module):
 
         return z, kl_loss, logvar
 
-    #
-    # def decoder_step(self, input_tensor, target_tensor, z):
-    #     import random
-    #     decoder = AttnDecoderRNN(hidden_size=512, output_size=100)
-    #     input_length = input_tensor.size(0)
-    #     target_length = target_tensor.size(0)
-    #
-    #     x_emb = self.x_emb(input_tensor)
-    #     encoder_outputs = z.unsqueeze(1).repeat(1, x_emb.size(1), 1)
-    #
-    #     decoder_input = torch.tensor([[self.eos]], device='cuda')
-    #
-    #     decoder_hidden = encoder_outputs
-    #
-    #     teacher_forcing_ratio = 0.5
-    #     use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
-    #
-    #     if use_teacher_forcing:
-    #         # Teacher forcing: Feed the target as the next input
-    #         for di in range(target_length):
-    #             decoder_output, decoder_hidden, decoder_attention = decoder(
-    #                 decoder_input, decoder_hidden, encoder_outputs)
-    #             loss += criterion(decoder_output, target_tensor[di])
-    #             decoder_input = target_tensor[di]  # Teacher forcing
-    #
-    #     else:
-    #         # Without teacher forcing: use its own predictions as the next input
-    #         for di in range(target_length):
-    #             decoder_output, decoder_hidden, decoder_attention = decoder(
-    #                 decoder_input, decoder_hidden, encoder_outputs)
-    #             topv, topi = decoder_output.topk(1)
-    #             decoder_input = topi.squeeze().detach()  # detach from history as input
-    #
-    #             loss += criterion(decoder_output, target_tensor[di])
-    #             if decoder_input.item() == self.eos:
-    #                 break
 
     def forward_decoder(self, x, z, rate=0.5):
         """Decoder step, emulating x ~ G(z)
@@ -259,27 +250,12 @@ class VAE(nn.Module):
         :return: float, recon component of loss
         """
         z = self.z_decoder(z)
-        lengths = [len(i_x) for i_x in x]
 
-        x = nn.utils.rnn.pad_sequence(x, batch_first=True,
-                                      padding_value=self.pad)
 
-        # if random.random() < rate:
-        x_emb = self.x_emb(x)
-        # else:
-        #     w = torch.tensor(self.bos, device=self.device).repeat(x.shape[0])
-        #     x_emb = self.x_emb(w).unsqueeze(1).repeat((1, x.shape[1], 1))
-        z_0 = z.unsqueeze(1).repeat(1, x_emb.size(1), 1)
-        x_input = torch.cat([z_0], dim=-1)
-        x_input = nn.utils.rnn.pack_padded_sequence(x_input, lengths,
-                                                    batch_first=True)
+        z = z.view(z.shape[0], 1, z.shape[1]).repeat((1, self.max_length,1))
 
-        h_0 = self.decoder_lat(z)
-        h_0 = h_0.unsqueeze(0).repeat(self.decoder_rnn.num_layers, 1, 1)
+        output, _ = self.decoder_rnn(z)
 
-        output, _ = self.decoder_rnn(x_input, h_0)
-
-        output, _ = nn.utils.rnn.pad_packed_sequence(output, batch_first=True)
         y = self.decoder_fc(output)
 
         recon_loss = F.cross_entropy(
