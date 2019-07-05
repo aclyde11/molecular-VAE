@@ -131,7 +131,7 @@ class VAE(nn.Module):
         self.max_length = 120
         # Encoder
         self.encoder_rnn = nn.Sequential(
-            ConvSELU(120, 9, kernel_size=9),
+            ConvSELU(107, 9, kernel_size=9),
             ConvSELU(9, 9, kernel_size=9),
             ConvSELU(9, 10, kernel_size=11),
         )
