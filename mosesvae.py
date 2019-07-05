@@ -136,7 +136,7 @@ class VAE(nn.Module):
             ConvSELU(32, 8, kernel_size=11),
         )
 
-        self.flatten = nn.Sequential(nn.Linear(752, 512, bias=True),
+        self.flatten = nn.Sequential(nn.Linear(648, 512, bias=True),
                       nn.ReLU())
 
         self.q_mu =  nn.Linear(512, d_z, bias=True)
