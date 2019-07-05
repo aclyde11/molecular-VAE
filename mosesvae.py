@@ -251,6 +251,9 @@ class VAE(nn.Module):
         """
         z = self.z_decoder(z)
 
+        x = nn.utils.rnn.pack_sequence(x)
+        x, _ = nn.utils.rnn.pad_packed_sequence(x, batch_first=True, total_length=120)
+
 
         z = z.view(z.shape[0], 1, z.shape[1]).repeat((1, self.max_length,1))
 
