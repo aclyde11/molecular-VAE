@@ -112,11 +112,11 @@ class VAE(nn.Module):
             ConvSELU(32, 10, kernel_size=11),
         )
 
-        self.flatten = nn.Sequential(nn.Linear(720, 512, bias=True),
+        self.flatten = nn.Sequential(nn.Linear(590, 512, bias=True),
                       SELU(inplace=True))
 
-        self.q_mu = nn.Sequential( nn.Linear(512, d_z, bias=True))
-        self.q_logvar = nn.Sequential( nn.Linear(512, d_z, bias=True))
+        self.q_mu =  nn.Linear(512, d_z, bias=True)
+        self.q_logvar =  nn.Linear(512, d_z, bias=True)
 
         # Decoder
         if d_cell == 'gru':
