@@ -131,7 +131,7 @@ class VAE(nn.Module):
         self.max_length = 120
         # Encoder
         self.encoder_rnn = nn.Sequential(
-            ConvSELU(107, 64, kernel_size=9),
+            ConvSELU(120, 64, kernel_size=9),
             ConvSELU(64, 32, kernel_size=9),
             ConvSELU(32, 8, kernel_size=11),
         )
@@ -225,7 +225,7 @@ class VAE(nn.Module):
         x = [self.x_emb(i_x) for i_x in x]
         x = nn.utils.rnn.pack_sequence(x)
         output, _ = nn.utils.rnn.pad_packed_sequence(x, batch_first=True, total_length=120)
-        output=output.permute((0, 2, 1))
+        # output=output.permute((0, 2, 1))
         x = self.encoder_rnn(output).view(output.shape[0], -1)
         x = self.flatten(x)
 
