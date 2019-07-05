@@ -128,7 +128,7 @@ class VAE(nn.Module):
             setattr(self, ss, getattr(vocab, ss))
 
         # Word embeddings layer
-        n_vocab, d_emb = len(vocab), 85
+        n_vocab, d_emb = len(vocab), vocab.vectors.size(1)
         print(n_vocab, d_emb)
         self.x_emb = nn.Embedding(n_vocab, d_emb, self.pad)
         self.x_emb.weight.data.copy_(vocab.vectors)
