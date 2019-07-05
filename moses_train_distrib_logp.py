@@ -298,15 +298,15 @@ n_epochs = 100
 
 model = mosesvae.VAE(vocab).cuda()
 model.apply(init_weights)
-model.load_state_dict(torch.load("finetuning/trained_save_small.pt")['state_dict'])
+# model.load_state_dict(torch.load("finetuning/trained_save_small.pt")['state_dict'])
 binding_optimizer = None
 
 # optimizer = optim.Adam(model.parameters() ,
 #                                lr=3*1e-3 )
 decoder_optimizer = optim.Adam(model.decoder.parameters(), lr=8e-5)
-decoder_optimizer.load_state_dict(torch.load("finetuning/trained_save_small.pt")['decoder_state_dict'])
+# decoder_optimizer.load_state_dict(torch.load("finetuning/trained_save_small.pt")['decoder_state_dict'])
 encoder_optimizer = optim.Adam(model.encoder.parameters(), lr=2e-4)
-encoder_optimizer.load_state_dict(torch.load("finetuning/trained_save_small.pt")['encoder_state_dict'])
+# encoder_optimizer.load_state_dict(torch.load("finetuning/trained_save_small.pt")['encoder_state_dict'])
 # model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
 # model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], output_device=args.local_rank, find_unused_parameters=True)
 
