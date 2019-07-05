@@ -128,7 +128,7 @@ class VAE(nn.Module):
             setattr(self, ss, getattr(vocab, ss))
 
         # Word embeddings layer
-        n_vocab, d_emb = len(vocab), vocab.vectors.size(1)
+        n_vocab, d_emb = len(vocab), 85
         print(n_vocab, d_emb)
         self.x_emb = nn.Embedding(n_vocab, d_emb, self.pad)
         self.x_emb.weight.data.copy_(vocab.vectors)
@@ -140,7 +140,7 @@ class VAE(nn.Module):
             ConvSELU(9, 10, kernel_size=11),
         )
 
-        self.flatten = nn.Sequential(nn.Linear(590, 435, bias=True),
+        self.flatten = nn.Sequential(nn.Linear(810, 435, bias=True),
                       nn.ReLU())
 
         self.q_mu =  nn.Linear(435, d_z, bias=True)
@@ -295,9 +295,7 @@ class VAE(nn.Module):
             z_0 = z.unsqueeze(1)
 
             # Initial values
-            h = self.decoder_lat(z)
-            h = h.unsqueeze(0).repeat(self.decoder_rnn.num_layers, 1, 1)
-            w = torch.tensor(self.bos, device=self.device).repeat(n_batch)
+            h = None
             x = torch.tensor([self.pad], device=self.device).repeat(n_batch,
                                                                     max_len)
             x[:, 0] = self.bos
@@ -308,8 +306,7 @@ class VAE(nn.Module):
 
             # Generating cycle
             for i in range(1, max_len):
-                x_emb = self.x_emb(w).unsqueeze(1)
-                x_input = torch.cat([z_0], dim=-1)
+                x_input = z_0
 
                 o, h = self.decoder_rnn(x_input, h)
                 y = self.decoder_fc(o.squeeze(1))
