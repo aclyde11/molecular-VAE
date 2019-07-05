@@ -152,6 +152,7 @@ class VAE(nn.Module):
                  d_z,
                 d_d_h,
                 num_layers=d_n_layers,
+                bidirectional=True,
                 batch_first=True,
                 dropout=d_dropout if d_n_layers > 1 else 0
             )
@@ -160,7 +161,7 @@ class VAE(nn.Module):
                 "Invalid d_cell type, should be one of the ('gru',)"
             )
 
-        self.decoder_fc = TimeDistributed(nn.Linear(d_d_h, n_vocab, bias=True))
+        self.decoder_fc = TimeDistributed(nn.Linear(d_d_h * 2, n_vocab, bias=True))
         self.z_decoder = nn.Linear(d_z, d_z, bias=True)
 
         # Grouping the model's parameters

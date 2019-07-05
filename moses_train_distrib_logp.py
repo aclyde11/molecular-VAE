@@ -303,9 +303,9 @@ binding_optimizer = None
 
 # optimizer = optim.Adam(model.parameters() ,
 #                                lr=3*1e-3 )
-decoder_optimizer = optim.Adam(model.decoder.parameters(), lr=8e-5)
+decoder_optimizer = optim.Adam(model.parameters(), lr=8e-5)
 # decoder_optimizer.load_state_dict(torch.load("finetuning/trained_save_small.pt")['decoder_state_dict'])
-encoder_optimizer = optim.Adam(model.encoder.parameters(), lr=2e-4)
+# encoder_optimizer = optim.Adam(model.encoder.parameters(), lr=2e-4)
 # encoder_optimizer.load_state_dict(torch.load("finetuning/trained_save_small.pt")['encoder_state_dict'])
 # model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
 # model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], output_device=args.local_rank, find_unused_parameters=True)
@@ -332,7 +332,6 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
     for i, (input_batch, _) in enumerate(tqdm_data):
         iters += 1
 
-        encoder_optimizer.zero_grad()
         decoder_optimizer.zero_grad()
         input_batch = tuple(data.cuda() for data in input_batch)
         # Forwardd
@@ -366,14 +365,10 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
         # loss = kl_loss + recon_loss
 
         loss.backward()
-        clip_grad_norm_((p for p in model.encoder.parameters() if p.requires_grad),
+        clip_grad_norm_((p for p in model.parameters() if p.requires_grad),
                         15)
-        clip_grad_norm_((p for p in model.decoder.parameters() if p.requires_grad),
-                        15)
-
         # prob = 0.85
         # prob_decoder = bool(random.random() < prob)
-        encoder_optimizer.step()
         # if prob_decoder:
         decoder_optimizer.step()
 
@@ -560,11 +555,9 @@ kl_weight = 0
 #     kl_weight = 1e-4
 rate = 0
 
-for param_group in encoder_optimizer.param_groups:
-        param_group['lr'] = 4e-4
 
 for param_group in decoder_optimizer.param_groups:
-        param_group['lr'] = 2e-4
+        param_group['lr'] = 6e-4
 #
 for epoch in range(0, 1000):
 
@@ -576,9 +569,8 @@ for epoch in range(0, 1000):
     # else:
     tqdm_data = tqdm(fine_tune_loader, desc='Fine tuning (epoch #{}'.format(epoch))
     postfix, kl_weight, iters, rate = _train_epoch_binding(model, epoch,
-                                tqdm_data, kl_weight, iters, rate, encoder_optim=encoder_optimizer, decoder_optim=None)
+                                tqdm_data, kl_weight, iters, rate, encoder_optim=decoder_optimizer, decoder_optim=None)
     torch.save({'state_dict' : model.state_dict(),
-                'encoder_state_dict' : encoder_optimizer.state_dict(),
                 'decoder_state_dict' : decoder_optimizer.state_dict(),
                 'kl_weight' : kl_weight,
                 'epoch' : epoch }, OUTPUT_DIR + "trained_save_small.pt")
