@@ -561,10 +561,10 @@ kl_weight = 0
 rate = 0
 
 for param_group in encoder_optimizer.param_groups:
-        param_group['lr'] = 8e-4
+        param_group['lr'] = 4e-4
 
 for param_group in decoder_optimizer.param_groups:
-        param_group['lr'] = 8e-4
+        param_group['lr'] = 2e-4
 #
 for epoch in range(0, 1000):
 
