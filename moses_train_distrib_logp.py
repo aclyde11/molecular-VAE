@@ -325,7 +325,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
     loss_values =mosesvocab.CircularBuffer(25)
     correct_values = mosesvocab.CircularBuffer(25)
     rate = 0
-    if epoch > 10 and epoch % 5 == 0:
+    if epoch > 20 and epoch % 10 == 0:
         kl_weight += kl_annealer_rate
 
 
@@ -342,7 +342,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
 
         correct = 0
         correct_counter = 0
-        for i in range(20):
+        for i in range(input_batch.shape[0]):
             try:
                 sample = predict[i,...].tolist()
                 sample = list(filter(lambda x : x != '<eos>' and x != '<pad>', [vocab.i2c[sym] for sym in sample]))
@@ -358,8 +358,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
         kl_loss = torch.sum(kl_loss, 0)
         recon_loss = torch.sum(recon_loss, 0)
 
-        prob = 0.85
-        prob_decoder = bool(random.random() < prob)
+
 
         # kl_weight =  min(kl_weight + 1e-3,1)
         loss = recon_loss
@@ -368,13 +367,15 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
 
         loss.backward()
         clip_grad_norm_((p for p in model.encoder.parameters() if p.requires_grad),
-                        25)
+                        15)
         clip_grad_norm_((p for p in model.decoder.parameters() if p.requires_grad),
-                        25)
+                        15)
 
+        # prob = 0.85
+        # prob_decoder = bool(random.random() < prob)
         encoder_optimizer.step()
-        if prob_decoder:
-            decoder_optimizer.step()
+        # if prob_decoder:
+        decoder_optimizer.step()
 
         # Log
         kl_loss_values.add(kl_loss.item())
@@ -560,10 +561,10 @@ kl_weight = 0
 rate = 0
 
 for param_group in encoder_optimizer.param_groups:
-        param_group['lr'] = 1e-3
+        param_group['lr'] = 8e-4
 
 for param_group in decoder_optimizer.param_groups:
-        param_group['lr'] = 1e-3
+        param_group['lr'] = 8e-4
 #
 for epoch in range(0, 1000):
 
