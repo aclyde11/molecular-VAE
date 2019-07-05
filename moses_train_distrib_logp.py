@@ -342,7 +342,7 @@ def _train_epoch_binding(model, epoch, tqdm_data, kl_weight, iters, rate, encode
 
         correct = 0
         correct_counter = 0
-        for i in range(input_batch.shape[0]):
+        for i in range(x.shape[0]):
             try:
                 sample = predict[i,...].tolist()
                 sample = list(filter(lambda x : x != '<eos>' and x != '<pad>', [vocab.i2c[sym] for sym in sample]))
