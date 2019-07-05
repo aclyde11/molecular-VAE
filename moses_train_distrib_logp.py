@@ -552,20 +552,20 @@ print("STARTING THING I WANT.....")
 # np.savez("z_vae_moses.npz", np.concatenate(vecs, axis=0))
 
 iters = 0
-# kl_weight = 0
+kl_weight = 0
 # kl_weight = 2e-3
-kl_weight = torch.load("finetuning/trained_save_small.pt")['kl_weight']
+# kl_weight = torch.load("finetuning/trained_save_small.pt")['kl_weight']
 # if kl_weight == 0:
 #     kl_weight = 1e-4
 rate = 0
 
 for param_group in encoder_optimizer.param_groups:
-        param_group['lr'] = 2e-4
+        param_group['lr'] = 8e-4
 
 for param_group in decoder_optimizer.param_groups:
-        param_group['lr'] = 1e-4
+        param_group['lr'] = 4e-4
 #
-for epoch in range(torch.load("finetuning/trained_save_small.pt")['epoch'] + 1, 1000):
+for epoch in range(0, 1000):
 
 
 

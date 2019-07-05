@@ -88,9 +88,9 @@ class VAE(nn.Module):
 
 
         d_cell = 'gru'
-        d_n_layers = 3
+        d_n_layers = 2
         d_dropout = 0.15
-        self.d_z = 188
+        self.d_z = 256
         d_z = self.d_z
         d_d_h=512
 
@@ -202,7 +202,7 @@ class VAE(nn.Module):
         x = [self.x_emb(i_x) for i_x in x]
         x = nn.utils.rnn.pack_sequence(x)
         output, _ = nn.utils.rnn.pad_packed_sequence(x, batch_first=True, total_length=120)
-        output=output.permute((0, 2, 1))
+        # output=output.permute((0, 2, 1))
         x = self.encoder_rnn(output).view(output.shape[0], -1)
         x = self.flatten(x)
 
