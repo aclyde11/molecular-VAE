@@ -32,8 +32,8 @@ parser = argparse.ArgumentParser()
 # FOR DISTRIBUTED:  Parse for the local_rank argument, which will be supplied
 # automatically by torch.distributed.launch.
 parser.add_argument("--local_rank", default=0, type=int)
-parser.add_argument("--batch_size", default=512, type=int)
-parser.add_argument("--encoder_batch_size", default=512, type=int)
+parser.add_argument("--batch_size", default=128, type=int)
+parser.add_argument("--encoder_batch_size", default=128, type=int)
 parser.add_argument("--lr", default=1e-3, type=float)
 args = parser.parse_args()
 torch.cuda.set_device(args.local_rank)
@@ -553,8 +553,8 @@ print("STARTING THING I WANT.....")
 
 iters = 0
 # kl_weight = 0
-kl_weight = 2e-3
-# kl_weight = torch.load("finetuning/trained_save_small.pt")['kl_weight']
+# kl_weight = 2e-3
+kl_weight = torch.load("finetuning/trained_save_small.pt")['kl_weight']
 # if kl_weight == 0:
 #     kl_weight = 1e-4
 rate = 0
@@ -569,11 +569,11 @@ for epoch in range(torch.load("finetuning/trained_save_small.pt")['epoch'] + 1, 
 
 
 
-    if epoch < 12000:
-        tqdm_data = tqdm(train_loader,
-                         desc='Training (epoch #{})'.format(epoch))
-    else:
-        tqdm_data = tqdm(fine_tune_loader, desc='Fine tuning (epoch #{}'.format(epoch))
+    # if epoch < 12000:
+    #     tqdm_data = tqdm(train_loader,
+    #                      desc='Training (epoch #{})'.format(epoch))
+    # else:
+    tqdm_data = tqdm(fine_tune_loader, desc='Fine tuning (epoch #{}'.format(epoch))
     postfix, kl_weight, iters, rate = _train_epoch_binding(model, epoch,
                                 tqdm_data, kl_weight, iters, rate, encoder_optim=encoder_optimizer, decoder_optim=None)
     torch.save({'state_dict' : model.state_dict(),
